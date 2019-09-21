@@ -8,11 +8,12 @@ class MyStore {
     readonly id: string = uuid.v1();
 
     @observable
-    name: string = 'no name';
+    name: string = localStorage.getItem('screen_name') || 'no name';
 
     @action
-    set setName(name: string) {
+    setName(name: string) {
         this.name = name;
+        localStorage.setItem('screen_name', this.name);
     }
 
     @observable
@@ -43,24 +44,6 @@ class MyStore {
             console.log(ev);
             const auth = {auth: 'default@890', passowrd: '19861012'};
             _ws.send(JSON.stringify(auth));
-            if (this.pcA) {
-                this.pcA.createOffer().then((offer) => {
-                    console.log('pcA create offer');
-                    return this.pcA!.setLocalDescription(offer);
-                }).then(() => {
-                    console.log('pcA set local desc(offer)');
-                    this.preOffer = uuid.v1();
-                    const json = {to: 'default@890', data: {
-                        id: this.id,
-                        to: 'any',
-                        preOffer: this.preOffer
-                    }};
-                    this.ws!.send(JSON.stringify(json));
-                    console.log('pcA send "pre" offer')
-                }).catch((err) => {
-                    console.error(err);
-                });
-            }
         };
         _ws.onmessage = (ev) => {
             const data = JSON.parse(ev.data);
@@ -184,7 +167,7 @@ class MyStore {
                             const json = {to: 'default@890', data: {
                                 id: this.id,
                                 to: id,
-                                answer
+                                answer: answer!.sdp
                             }};
                             this.ws!.send(JSON.stringify(json));
                             console.log('send pcC answer');
@@ -195,9 +178,7 @@ class MyStore {
                 }
             }
         };
-        _ws.onerror = (ev) => {
-            console.error(ev);
-        };
+        _ws.onerror = (ev) => { console.error(ev); };
         this.ws = _ws;
     }
 
@@ -213,11 +194,46 @@ class MyStore {
     pcBtgtId: string | null = null;
     @observable 
     pcCtgtId: string | null = null;
+    @observable
+    pcAState: string = 'n/a';
+    @observable
+    pcBState: string = 'n/a';
+    @observable
+    pcCState: string = 'n/a';
     dcA: RTCDataChannel | null = null;
     dcB: RTCDataChannel | null = null;
     dcC: RTCDataChannel | null = null;
     preOffer: string | null = null;
     candidateQueue: Array<RTCIceCandidate> = [];
+
+    pcAMakeOffer() {
+        let label: any | null = null;
+        if (this.pcA !== null) {
+            this.pcA.createOffer().then((offer) => {
+                console.log('pcA create offer');
+                return this.pcA!.setLocalDescription(offer);
+            }).then(() => {
+                console.log('pcA set local desc(offer)');
+                this.preOffer = uuid.v1();
+                const json = {to: 'default@890', data: {
+                    id: this.id,
+                    to: 'any',
+                    preOffer: this.preOffer
+                }};
+                label = setInterval(() => {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify(json));
+                        console.log('pcA send "pre" offer')
+                        clearInterval(label);
+                    } else {
+                        console.log('pending send pre offer');
+                    }
+                }, 1000);
+            }).catch((err) => {
+                console.error(err);
+            });
+        }
+    }
 
     @action
     createPCA() {
@@ -231,8 +247,10 @@ class MyStore {
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
+            this.pcAState = ev.currentTarget.iceConnectionState;
             if (ev.currentTarget.iceConnectionState === 'disconnected') {
                 this.pcAtgtId = null;
+                this.createPCA();
             }
         })
         .setOnIcecandidate((ev) => {
@@ -245,9 +263,8 @@ class MyStore {
         })
         .build();
         this.pcAtgtId = null;
-        if (this.pcA !== null) {
-            this.dcA = this.pcA.createDataChannel('chat');
-        }
+        this.dcA = this.pcA!.createDataChannel('chat');
+        this.pcAMakeOffer();
     }
 
     @action
@@ -260,6 +277,7 @@ class MyStore {
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
+            this.pcBState = ev.currentTarget.iceConnectionState;
             if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
                 console.log(prefix, 'connected:', this.pcBtgtId);
                 clearTimeout(timer);
@@ -309,6 +327,7 @@ class MyStore {
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
+            this.pcCState = ev.currentTarget.iceConnectionState;
             if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
                 console.log(prefix, 'connected:', this.pcCtgtId);
                 clearTimeout(timer);
@@ -359,19 +378,19 @@ type MyStoreType = {
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
     pcC: RTCPeerConnection | null
-    dcA: RTCDataChannelEvent | null
-    dcB: RTCDataChannelEvent | null
-    dcC: RTCDataChannelEvent | null
     pcAtgtId: string | null
     pcBtgtId: string | null
     pcCtgtId: string | null
-    setName: (name: string) => void
-    addSay: (say: SayType) => void
-    timeLine: () => Array<SayType>
-    createWs: () => void
-    createPCA: () => void
-    createPCB: () => void
-    createPCC: () => void
+    pcAState: string
+    pcBState: string
+    pcCState: string
+    setName(name: string): void
+    addSay(say: SayType): void
+    timeLine: Array<SayType>
+    createWs(): void
+    createPCA(): void
+    createPCB(): void
+    createPCC(): void
 }
 
 export {
