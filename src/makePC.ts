@@ -7,10 +7,16 @@ function makePC(): RTCPeerConnection {
 class PCBuilder {
     pc: RTCPeerConnection | null = null;
     private constructor() {
-        this.pc = makePC()
+        this.pc = makePC();
     }
     static builder(): PCBuilder {
         return new PCBuilder();
+    }
+    setOnIceConnectionstateChange(handler: (ev: any) => void): PCBuilder {
+        if (this.pc !== null) {
+            this.pc.addEventListener('iceconnectionstatechange', handler);
+        }
+        return this;
     }
     setOnNegotiationNeeded(handler: (ev: any) => void): PCBuilder {
         if (this.pc !== null) {
