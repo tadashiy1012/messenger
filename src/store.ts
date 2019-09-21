@@ -44,23 +44,19 @@ class MyStore {
             const auth = {auth: 'default@890', passowrd: '19861012'};
             _ws.send(JSON.stringify(auth));
             if (this.pcA) {
-                let desc: RTCSessionDescriptionInit | null = null;
                 this.pcA.createOffer().then((offer) => {
                     console.log('pcA create offer');
-                    desc = offer;
                     return this.pcA!.setLocalDescription(offer);
                 }).then(() => {
                     console.log('pcA set local desc(offer)');
-                    if (this.ws && this.ws.readyState == WebSocket.OPEN) {
-                        const json = {to: 'default@890', data: {
-                            id: this.id,
-                            to: 'any',
-                            offer: desc!.sdp,
-                            from: 'pcA'
-                        }};
-                        this.ws.send(JSON.stringify(json));
-                        console.log('pcA send offer')
-                    }
+                    this.preOffer = uuid.v1();
+                    const json = {to: 'default@890', data: {
+                        id: this.id,
+                        to: 'any',
+                        preOffer: this.preOffer
+                    }};
+                    this.ws!.send(JSON.stringify(json));
+                    console.log('pcA send "pre" offer')
                 }).catch((err) => {
                     console.error(err);
                 });
@@ -68,91 +64,134 @@ class MyStore {
         };
         _ws.onmessage = (ev) => {
             const data = JSON.parse(ev.data);
-            console.log(ev, data);
+            console.log(data);
             if (data.data) {
-                const {id, to, offer, answer, candidate, from} = data.data;
+                const {id, to, offer, answer, candidate, preOffer, preAnswer} = data.data;
                 if (id !== this.id && to === 'any') {
                     console.log('message for all');
-                    const pendingTimeA = Math.floor(Math.random() * 5 + 1);
-                    const pendingTimeB = Math.floor(Math.random() * 5 + 1);
-                    if (offer && this.pcB && this.pcB.remoteDescription === null) {
-                        console.log('pending.. ' + pendingTimeA + 'sec');
+                    const pendingTime = Math.floor(Math.random() * 5 + 1);
+                    if (preOffer) {
+                        console.log('pending.. ' + pendingTime + 'sec');
                         setTimeout(() => {
-                            this.pcBtgtId = id;
-                            let answer: RTCSessionDescriptionInit | null = null;
-                            const offerDesc = new RTCSessionDescription({
-                                type: 'offer',
-                                sdp: offer
-                            });
-                            this.pcB!.setRemoteDescription(offerDesc).then(() => {
-                                console.log('pcB set remote desc(received offer)');
-                                return this.pcB!.createAnswer();
-                            }).then((desc) => {
-                                answer = desc;
-                                return this.pcB!.setLocalDescription(desc);
-                            }).then(() => {
-                                console.log('pcB set local desc(pcB answer)')
-                                if (this.ws && this.ws.readyState == WebSocket.OPEN) {
-                                    const json = {to: 'default@890', data: {
-                                        id: this.id,
-                                        to: id,
-                                        answer,
-                                        from: 'pcB'
-                                    }};
-                                    this.ws.send(JSON.stringify(json));
-                                    console.log('send pcB answer');
-                                }
-                            }).catch((err) => console.error(err));
-                        }, pendingTimeA * 1000);
-                    } else if (offer && this.pcC && this.pcC.remoteDescription === null) {
-                        console.log('pending.. ' + pendingTimeB + 'sec');
-                        setTimeout(() => {
-                            this.pcCtgtId = id;
-                            let answer: RTCSessionDescriptionInit | null = null;
-                            const offerDesc = new RTCSessionDescription({
-                                type: 'offer',
-                                sdp: offer
-                            });
-                            this.pcC!.setRemoteDescription(offerDesc).then(() => {
-                                console.log('pcC set remote desc(received offer)');
-                                return this.pcC!.createAnswer();
-                            }).then((desc) => {
-                                answer = desc;
-                                return this.pcC!.setLocalDescription(desc);
-                            }).then(() => {
-                                console.log('pcC set local desc(pcC answer)')
-                                if (this.ws && this.ws.readyState == WebSocket.OPEN) {
-                                    const json = {to: 'default@890', data: {
-                                        id: this.id,
-                                        to: id,
-                                        answer,
-                                        from: 'pcC'
-                                    }};
-                                    this.ws.send(JSON.stringify(json));
-                                    console.log('send pcC answer');
-                                }
-                            }).catch((err) => console.error(err));
-                        }, pendingTimeB * 1000);
-                    }
+                            console.log('receive pre offer');
+                            const json = {to: 'default@890', data: {
+                                id: this.id,
+                                to: id,
+                                preAnswer: preOffer
+                            }};
+                            this.ws!.send(JSON.stringify(json));
+                            console.log('send pre answer');
+                        }, pendingTime * 1000);
+                    } 
                 } else if (id !== this.id && to === this.id) {
                     console.log('message for me');
-                    if (answer && from && this.pcA && this.pcA.remoteDescription === null) {
-                        console.log('pcA set answer');
-                        this.pcAtgtId = id
+                    if (preAnswer && preAnswer === this.preOffer) {
+                        console.log('receive pre answer');
+                        const json = {to: 'default@890', data: {
+                            id: this.id,
+                            to: id,
+                            offer: this.pcA!.localDescription!.sdp,
+                            from: 'pcA'
+                        }};
+                        this.ws!.send(JSON.stringify(json));
+                        this.preOffer = null;
+                        console.log('pcA send offer');
+                    } else if (answer) {
                         const desc = new RTCSessionDescription({
                             type: 'answer',
-                            sdp: answer.sdp
+                            sdp: answer
                         });
-                        this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
-                    } else if (candidate && this.pcA && this.pcA.iceGatheringState !== 'complete') {
-                        console.log('pcA add candidate');
+                        if (this.pcBtgtId === id && this.pcB && this.pcB.remoteDescription === null) {
+                            this.pcB.setRemoteDescription(desc).catch((err) => console.error(err));
+                            console.log('pcB set answer');
+                        } else if (this.pcCtgtId === id && this.pcC && this.pcC.remoteDescription === null) {
+                            this.pcC.setRemoteDescription(desc).catch((err) => console.error(err));
+                            console.log('pcC set answer');
+                        } else if (this.pcA && this.pcA.remoteDescription === null) {
+                            this.pcAtgtId = id
+                            this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
+                            console.log('pcA set answer');
+                            this.candidateQueue.forEach(e => {
+                                const json = {
+                                    to: 'default@890', data: {
+                                        id: this.id,
+                                        to: id,
+                                        candidate: e
+                                    }
+                                };
+                                this.ws!.send(JSON.stringify(json));
+                                console.log('send pcA candidate');
+                            });
+                            this.candidateQueue = [];
+                        }
+                    } else if (candidate) {
                         const cd = new RTCIceCandidate({
                             candidate: candidate.candidate,
                             sdpMLineIndex: candidate.sdpMLineIndex,
                             sdpMid: candidate.sdpMid
                         });
-                        this.pcA.addIceCandidate(cd).catch((err) => console.error(err));
-                    } 
+                        if (id === this.pcAtgtId && this.pcA) {
+                            console.log('pcA add candidate');
+                            this.pcA.addIceCandidate(cd).catch((err) => console.error(err));
+                        } else if (id === this.pcBtgtId && this.pcB) {
+                            console.log('pcB add candidate');
+                            this.pcB.addIceCandidate(cd).catch((err) => console.error(err));
+                        } else if (id === this.pcCtgtId && this.pcC) {
+                            console.log('pcC add candidate');
+                            this.pcC.addIceCandidate(cd).catch((err) => console.error(err));
+                        } else {
+                            console.warn('no hit!');
+                            console.log(this.pcAtgtId, this.pcBtgtId, this.pcCtgtId);
+                        }
+                    } else if (offer && this.pcB && this.pcB.remoteDescription === null) {
+                        this.pcBtgtId = id;
+                        let answer: RTCSessionDescriptionInit | null = null;
+                        const offerDesc = new RTCSessionDescription({
+                            type: 'offer',
+                            sdp: offer
+                        });
+                        this.pcB!.setRemoteDescription(offerDesc).then(() => {
+                            console.log('pcB set remote desc(received offer)');
+                            return this.pcB!.createAnswer();
+                        }).then((desc) => {
+                            answer = desc;
+                            return this.pcB!.setLocalDescription(desc);
+                        }).then(() => {
+                            console.log('pcB set local desc(pcB answer)')
+                            const json = {to: 'default@890', data: {
+                                id: this.id,
+                                to: id,
+                                answer: answer!.sdp
+                            }};
+                            this.ws!.send(JSON.stringify(json));
+                            console.log('send pcB answer');
+                        }).catch((err) => console.error(err));
+                    } else if (offer && this.pcC && this.pcC.remoteDescription === null) {
+                        this.pcCtgtId = id;
+                        let answer: RTCSessionDescriptionInit | null = null;
+                        const offerDesc = new RTCSessionDescription({
+                            type: 'offer',
+                            sdp: offer
+                        });
+                        this.pcC!.setRemoteDescription(offerDesc).then(() => {
+                            console.log('pcC set remote desc(received offer)');
+                            return this.pcC!.createAnswer();
+                        }).then((desc) => {
+                            answer = desc;
+                            return this.pcC!.setLocalDescription(desc);
+                        }).then(() => {
+                            console.log('pcC set local desc(pcC answer)')
+                            const json = {to: 'default@890', data: {
+                                id: this.id,
+                                to: id,
+                                answer
+                            }};
+                            this.ws!.send(JSON.stringify(json));
+                            console.log('send pcC answer');
+                        }).catch((err) => console.error(err));
+                    } else {
+                        console.log('[Less than condition]');
+                    }
                 }
             }
         };
@@ -177,8 +216,8 @@ class MyStore {
     dcA: RTCDataChannel | null = null;
     dcB: RTCDataChannel | null = null;
     dcC: RTCDataChannel | null = null;
-    pcBTimer: any | null = null;
-    pcCTimer: any | null = null;
+    preOffer: string | null = null;
+    candidateQueue: Array<RTCIceCandidate> = [];
 
     @action
     createPCA() {
@@ -198,6 +237,7 @@ class MyStore {
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
+            this.candidateQueue.push(ev.candidate);
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log(prefix, ev);
@@ -213,25 +253,27 @@ class MyStore {
     @action
     createPCB() {
         const prefix = 'pcB';
+        let timer: any | null = null;
         this.pcB = PCBuilder.builder()
         .setOnNegotiationNeeded((ev) => {
             console.log(prefix, ev);
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
-            if (ev.currentTarget.iceConnectionState === 'connected' && this.pcBTimer !== null) {
+            if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
                 console.log(prefix, 'connected:', this.pcBtgtId);
-                clearTimeout(this.pcBTimer);
-                console.log(prefix, 'clear:', this.pcBTimer);
-                this.pcBTimer = null;
+                clearTimeout(timer);
+                console.log(prefix, 'clear:', timer);
+                timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
+                clearTimeout(timer);
                 this.createPCB();
             }
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
             if (ev.currentTarget.iceGatheringState === 'gathering') {
-                this.pcBTimer = setTimeout(() => {
+                timer = setTimeout(() => {
                     console.log(prefix, 'time out');
                     this.createPCB();
                 }, 50000);
@@ -260,25 +302,27 @@ class MyStore {
     @action
     createPCC() {
         const prefix = 'pcC';
+        let timer: any | null = null;
         this.pcC = PCBuilder.builder()
         .setOnNegotiationNeeded((ev) => {
             console.log(prefix, ev);
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
-            if (ev.currentTarget.iceConnectionState === 'connected' && this.pcCTimer !== null) {
+            if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
                 console.log(prefix, 'connected:', this.pcCtgtId);
-                clearTimeout(this.pcCTimer);
-                console.log(prefix, 'clear:', this.pcCTimer);
-                this.pcCTimer = null;
+                clearTimeout(timer);
+                console.log(prefix, 'clear:', timer);
+                timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
+                clearTimeout(timer);
                 this.createPCC();
             }
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
             if (ev.currentTarget.iceGatheringState === 'gathering') {
-                this.pcCTimer = setTimeout(() => {
+                timer = setTimeout(() => {
                     console.log(prefix, 'time out');
                     this.createPCC();
                 }, 50000);
