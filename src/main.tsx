@@ -1,7 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {observer, inject, Provider} from 'mobx-react';
+import * as uuid from 'uuid';
 import {MyStore, MyStoreType} from './store';
+import { SayType } from './SayType';
 
 const store = new MyStore();
 
@@ -28,9 +30,9 @@ class PcStatus extends React.Component<PcStatusProps> {
     render() {
         const {store} = this.props;
         return <ul>
-            <li>pcA:{store!.pcAtgtId} [{store!.pcAState}]</li>
-            <li>pcB:{store!.pcBtgtId} [{store!.pcBState}]</li>
-            <li>pcC:{store!.pcCtgtId} [{store!.pcCState}]</li>
+            <li>pcA:{store!.pcAtgtId} [{store!.pcAState}] [{store!.dcAState}]</li>
+            <li>pcB:{store!.pcBtgtId} [{store!.pcBState}] [{store!.dcBState}]</li>
+            <li>pcC:{store!.pcCtgtId} [{store!.pcCState}] [{store!.dcCState}]</li>
         </ul>
     }
 }
@@ -54,6 +56,16 @@ class Writer extends React.Component<WriterProps> {
     sendClickHandler(ev: React.MouseEvent) {
         console.log(ev);
         console.log(this._inSayRef.current!.value);
+        const {store} = this.props;
+        const say: SayType = {
+            id: uuid.v1(),
+            date: Date.now(),
+            author: store!.name,
+            authorId: store!.id,
+            say: this._inSayRef.current!.value
+        };
+        console.log(say);
+        store!.addSay(say);
     }
     render() {
         const {store} = this.props;

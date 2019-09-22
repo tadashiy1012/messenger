@@ -5,7 +5,11 @@ import {PCBuilder} from './makePC';
 
 class MyStore {
    
-    readonly id: string = uuid.v1();
+    readonly id: string = localStorage.getItem('user_id') || (() => {
+        const _id = uuid.v1();
+        localStorage.setItem('user_id', _id);
+        return _id;
+    })();
 
     @observable
     name: string = localStorage.getItem('screen_name') || 'no name';
@@ -23,16 +27,19 @@ class MyStore {
 
     @action
     addSay(say: SayType) {
-        this.say.push(say);
+        this.say.unshift(say);
     }
 
     @computed
     get timeLine(): Array<SayType> {
         const says = [...this.say, ...this.hear];
         return says.sort((a, b) => {
-            return a.date.getTime() - b.date.getTime()
+            return a.date - b.date
         });
     }
+
+    private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
+    private prevCacheLength: number = this.cache.length;
 
     @observable
     ws: WebSocket | null = null;
@@ -52,8 +59,8 @@ class MyStore {
                 const {id, to, offer, answer, candidate, preOffer, preAnswer} = data.data;
                 if (id !== this.id && to === 'any') {
                     console.log('message for all');
-                    const pendingTime = Math.floor(Math.random() * 5 + 1);
                     if (preOffer) {
+                        const pendingTime = Math.floor(Math.random() * 5 + 1);
                         console.log('pending.. ' + pendingTime + 'sec');
                         setTimeout(() => {
                             console.log('receive pre offer');
@@ -65,7 +72,7 @@ class MyStore {
                             this.ws!.send(JSON.stringify(json));
                             console.log('send pre answer');
                         }, pendingTime * 1000);
-                    } 
+                    }
                 } else if (id !== this.id && to === this.id) {
                     console.log('message for me');
                     if (preAnswer && preAnswer === this.preOffer) {
@@ -203,6 +210,12 @@ class MyStore {
     dcA: RTCDataChannel | null = null;
     dcB: RTCDataChannel | null = null;
     dcC: RTCDataChannel | null = null;
+    @observable
+    dcAState: string = 'n/a';
+    @observable
+    dcBState: string = 'n/a';
+    @observable
+    dcCState: string = 'n/a';
     preOffer: string | null = null;
     candidateQueue: Array<RTCIceCandidate> = [];
 
@@ -244,13 +257,23 @@ class MyStore {
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
+            if (this.pcAState !== 'connected' && ev.currentTarget.iceGatheringState === 'complete') {
+                console.log('=== recreate pcA ===');
+                this.pcA!.close();
+                this.dcA!.close();
+                this.createPCA();
+            }
         })
         .setOnIceConnectionstateChange((ev) => {
             console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
             this.pcAState = ev.currentTarget.iceConnectionState;
-            if (ev.currentTarget.iceConnectionState === 'disconnected') {
-                this.pcAtgtId = null;
+            if (this.pcAState === 'disconnected' || this.pcAState === 'failed' || this.pcAState === 'closed') {
+                console.log('=== recreate pcA ===');
+                this.pcA!.close();
+                this.dcA!.close();
                 this.createPCA();
+            } else if (this.pcAState === 'connected') {
+                console.log(prefix, 'connected:', this.pcAtgtId);
             }
         })
         .setOnIcecandidate((ev) => {
@@ -264,6 +287,10 @@ class MyStore {
         .build();
         this.pcAtgtId = null;
         this.dcA = this.pcA!.createDataChannel('chat');
+        this.setupDC(this.dcA, (state) => {
+            console.log(prefix, 'dc', state);
+            this.dcAState = state;
+        });
         this.pcAMakeOffer();
     }
 
@@ -285,14 +312,20 @@ class MyStore {
                 timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
                 clearTimeout(timer);
+                this.pcB!.close();
+                this.dcB!.close();
+                this.dcB = null;
                 this.createPCB();
             }
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (ev.currentTarget.iceGatheringState === 'gathering') {
+            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
                 timer = setTimeout(() => {
                     console.log(prefix, 'time out');
+                    this.pcB!.close();
+                    this.dcB!.close();
+                    this.dcB = null;
                     this.createPCB();
                 }, 50000);
             }
@@ -312,6 +345,10 @@ class MyStore {
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
             this.dcB = ev.channel;
+            this.setupDC(this.dcB, (state) => {
+                console.log(prefix, 'dc', state);
+                this.dcBState = state;
+            });
         })
         .build();
         this.pcBtgtId = null;
@@ -335,14 +372,20 @@ class MyStore {
                 timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
                 clearTimeout(timer);
+                this.pcC!.close();
+                this.dcC!.close();
+                this.dcC = null;
                 this.createPCC();
             }
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (ev.currentTarget.iceGatheringState === 'gathering') {
+            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
                 timer = setTimeout(() => {
                     console.log(prefix, 'time out');
+                    this.pcC!.close();
+                    this.dcC!.close();
+                    this.dcC = null;
                     this.createPCC();
                 }, 50000);
             }
@@ -362,9 +405,72 @@ class MyStore {
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
             this.dcC = ev.channel;
+            this.setupDC(this.dcC, (state) => {
+                console.log(prefix, 'dc', state);
+                this.dcCState = state;
+            });
         })
         .build();
         this.pcCtgtId = null;
+    }
+
+    setupDC(dc: RTCDataChannel, stateCb: (state: RTCDataChannelState) => void) {
+        dc.onopen = (ev) => {
+            console.log(ev, dc.readyState);
+            stateCb(dc.readyState);
+        };
+        dc.onmessage = (ev) => {
+            console.log(ev);
+            const data = JSON.parse(ev.data);
+            const {id, timestamp, payload} = data;
+            if (id && timestamp && payload && payload.say) {
+                const tgt = this.cache.find(e => e.id === id)
+                if (tgt) {
+                    const idx = this.cache.indexOf(tgt);
+                    this.cache.splice(idx, 1, {
+                        id, timestamp, says: payload.say
+                    });
+                } else {
+                    this.cache.push({
+                        id, timestamp, says: payload.say
+                    });
+                }
+            }
+        };
+        dc.onclose = (ev) => {
+            console.log(ev, dc.readyState);
+            stateCb(dc.readyState);
+            clearInterval(timer);
+            console.log('!!!clear timer:', timer);
+        };
+        let beforeSend: number = -1;
+        const timer = setInterval(() => {
+            if (dc.readyState !== 'open') {
+                return;
+            }
+            if (this.say.length > 0 && this.say[0].date > beforeSend) {
+                const json = {
+                    id: this.id,
+                    timestamp: Date.now(),
+                    payload: {
+                        say: this.say
+                    }
+                };
+                dc.send(JSON.stringify(json));
+                beforeSend = this.say[0].date;
+                console.log('[[send say]]');
+            } 
+        }, 1500);
+        stateCb(dc.readyState);
+    }
+
+    constructor() {
+        setInterval(() => {
+            if (this.cache.length !== this.prevCacheLength) {
+                this.prevCacheLength = this.cache.length;
+                console.log('cache changed! cache size:' + this.cache.length);
+            }
+        }, 1500);
     }
 
 }
@@ -384,6 +490,9 @@ type MyStoreType = {
     pcAState: string
     pcBState: string
     pcCState: string
+    dcAState: string 
+    dcBState: string 
+    dcCState: string 
     setName(name: string): void
     addSay(say: SayType): void
     timeLine: Array<SayType>
