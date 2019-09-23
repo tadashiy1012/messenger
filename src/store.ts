@@ -21,25 +21,28 @@ class MyStore {
     }
 
     @observable
-    say: Array<SayType> = [];
+    say: Array<SayType> = (() => {
+        return JSON.parse(localStorage.getItem('user_message') || '[]');
+    })() || [];
     @observable
     hear: Array<SayType> = [];
 
     @action
     addSay(say: SayType) {
         this.say.unshift(say);
+        localStorage.setItem('user_message', JSON.stringify(this.say));
     }
 
     @computed
     get timeLine(): Array<SayType> {
-        const says = [...this.say, ...this.hear];
+        const says = [...this.say, ...this.hear.filter(e => e.authorId !== this.id)];
         return says.sort((a, b) => {
             return a.date - b.date
         });
     }
 
     private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
-    private prevCacheLength: number = this.cache.length;
+    private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
 
     @observable
     ws: WebSocket | null = null;
@@ -420,19 +423,27 @@ class MyStore {
             stateCb(dc.readyState);
         };
         dc.onmessage = (ev) => {
-            console.log(ev);
             const data = JSON.parse(ev.data);
-            const {id, timestamp, payload} = data;
-            if (id && timestamp && payload && payload.say) {
-                const tgt = this.cache.find(e => e.id === id)
+            console.log(ev, data);
+            const {from, origin, payload} = data;
+            if (from && origin && payload && payload.say) {
+                console.log('<<received say>>', from);
+                this.cache.push({
+                    id: origin, timestamp: Date.now(), says: payload.say
+                });
+            } else if (from && origin && payload && payload.cache) {
+                console.log('<<received cache>>', from);
+                const tgt = this.cache.find(e => e.id === origin);
                 if (tgt) {
-                    const idx = this.cache.indexOf(tgt);
-                    this.cache.splice(idx, 1, {
-                        id, timestamp, says: payload.say
-                    });
+                    if (JSON.stringify(tgt.says) !== JSON.stringify(payload.cache)) {
+                        const idx = this.cache.indexOf(tgt);
+                        this.cache.splice(idx, 1, {
+                            id: origin, timestamp: Date.now(), says: payload.cache
+                        });
+                    }
                 } else {
                     this.cache.push({
-                        id, timestamp, says: payload.say
+                        id: origin, timestamp: Date.now(), says: payload.cache
                     });
                 }
             }
@@ -440,35 +451,79 @@ class MyStore {
         dc.onclose = (ev) => {
             console.log(ev, dc.readyState);
             stateCb(dc.readyState);
-            clearInterval(timer);
-            console.log('!!!clear timer:', timer);
         };
-        let beforeSend: number = -1;
-        const timer = setInterval(() => {
-            if (dc.readyState !== 'open') {
-                return;
-            }
-            if (this.say.length > 0 && this.say[0].date > beforeSend) {
-                const json = {
-                    id: this.id,
-                    timestamp: Date.now(),
-                    payload: {
-                        say: this.say
-                    }
-                };
-                dc.send(JSON.stringify(json));
-                beforeSend = this.say[0].date;
-                console.log('[[send say]]');
-            } 
-        }, 1500);
         stateCb(dc.readyState);
     }
 
     constructor() {
+        let beforeSend: number = -1;
+        let beforeCacheSend: number = -1;
         setInterval(() => {
-            if (this.cache.length !== this.prevCacheLength) {
-                this.prevCacheLength = this.cache.length;
-                console.log('cache changed! cache size:' + this.cache.length);
+            if (JSON.stringify(this.cache) !== JSON.stringify(this.prevCache)) {
+                this.prevCache = Object.assign([], this.cache);
+                console.log('!cache changed!', this.cache);
+                let ids: Set<string> = new Set();
+                this.cache.forEach(e => ids.add(e.id));
+                let newHear: Array<SayType> = [];
+                ids.forEach(e => {
+                    let filtered = this.cache.filter(ee => ee.id === e);
+                    console.log(filtered);
+                    if (filtered && filtered.length > 0) {
+                        if (filtered.length >= 2) {
+                            console.log('>sort!');
+                            filtered = filtered.sort((a, b) => {
+                                return a.timestamp - b.timestamp;
+                            });
+                        }
+                        if (filtered[0].says) {
+                            newHear = [...filtered[0].says, ...newHear];
+                        }
+                    } 
+                });
+                this.hear = Object.assign([], newHear);
+            }
+            if (this.say.length > 0 && this.say[0].date > beforeSend) {
+                const json = {
+                    from: this.id,
+                    origin: this.say[0].authorId,
+                    payload: {
+                        say: this.say
+                    }
+                };
+                let count = 0;
+                [this.dcA, this.dcB, this.dcC].forEach(dc => {
+                    if (dc) {
+                        dc.send(JSON.stringify(json))
+                        count += 1;
+                    }
+                });
+                if (count > 0) {
+                    beforeSend = Date.now();
+                    console.log('[[send say]]');
+                }
+            }
+            if (this.cache.length > 0 
+                    && this.cache[this.cache.length - 1].timestamp > beforeCacheSend) {
+                let count = 0;
+                this.cache.forEach(e => {
+                    const json = {
+                        from: this.id,
+                        origin: e.says[0].authorId,
+                        payload: {
+                            cache: e.says
+                        }
+                    };
+                    [this.dcB, this.dcC].forEach(dc => {
+                        if (dc) {
+                            dc.send(JSON.stringify(json))
+                            count += 1;
+                        }
+                    });
+                });
+                if (count > 0) {
+                    beforeCacheSend = Date.now();
+                    console.log('[[send cache]]');
+                }
             }
         }, 1500);
     }

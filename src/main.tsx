@@ -95,7 +95,7 @@ interface TimeLineProps {
 class TimeLine extends React.Component<TimeLineProps> {
     render() {
         const {store} = this.props;
-        const child = store!.timeLine.map(e => {
+        const child = store!.timeLine.reverse().map(e => {
             return <li key={e.id}>
                 <span>{e.author}</span>
                 <span>:</span>
