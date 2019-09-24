@@ -8,15 +8,20 @@ import {
     WEB_SOCKET_PASSWORD
 } from './const';
 import { SayType } from './SayType';
+import { UserType } from './UserType';
 import { PCBuilder } from './makePC';
 
 class MyStore {
    
     @observable
-    id: string = 'no id';
+    id: string = uuid.v1();
+
+    serial: string = 'no serial';
 
     @observable
     name: string = 'no name';
+
+    userPassword: string = 'no password';
 
     @action
     setName(name: string) {
@@ -49,6 +54,8 @@ class MyStore {
 
     private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
     private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
+
+    private userList: Array<UserType> = [];
 
     private ws: WebSocket | null = null;
 
@@ -521,6 +528,10 @@ class MyStore {
                         id: origin, timestamp: Date.now(), says: payload.cache
                     });
                 }
+            } else if (from && payload && payload.userList) {
+                console.log('<<received userList>>', from);
+                const lsSet = new Set<UserType>([...this.userList, ...payload.userList]);
+                this.userList = Array.from(lsSet);
             }
         };
         dc.onclose = (ev) => {
@@ -537,6 +548,7 @@ class MyStore {
         this.createPCC();
         let beforeSend: number = -1;
         let beforeCacheSend: number = -1;
+        let beforeListSend: number = 0;
         setInterval(() => {
             if (JSON.stringify(this.cache) !== JSON.stringify(this.prevCache)) {
                 this.prevCache = Object.assign([], this.cache);
@@ -604,14 +616,37 @@ class MyStore {
                     console.log('[[send cache]]');
                 }
             }
+            if (this.userList.length > 0 && this.userList.length > beforeListSend) {
+                let count = 0;
+                const json = {
+                    from: this.id,
+                    payload: {
+                        userList: this.userList
+                    }
+                };
+                [this.dcA, this.dcB, this.dcC].forEach(dc => {
+                    if (dc && dc.readyState === 'open') {
+                        dc.send(JSON.stringify(json));
+                        count += 1;
+                    }
+                });
+                if (count > 0) {
+                    beforeListSend = this.userList.length;
+                    console.log('[[send userList]]');
+                }
+            }
         }, 1500);
         (async () => {
-            this.id = await localForage.getItem('user_id') || (() => {
-                const _id = uuid.v1();
-                localForage.setItem('user_id', _id).catch((err) => console.error(err));
-                return _id;
+            this.serial = await localForage.getItem('user_serial') || (() => {
+                const serial = uuid.v1();
+                localForage.setItem('user_serial', serial).catch((err) => console.error(err));
+                return serial;
             })();
             this.name = await localForage.getItem('user_screen_name') || 'no name';
+            this.userPassword = await localForage.getItem('user_password') || '＠nopassword';
+            this.userList = this.userPassword === '＠nopassword' ? [] : [
+                {serial: this.serial, name: this.name, password: this.userPassword}
+            ];
             this.say = await localForage.getItem('user_message') || [];
             this.cache = await localForage.getItem('user_message_cache') || [];
             console.log(this.id, this.name);
@@ -622,7 +657,9 @@ class MyStore {
 
 type MyStoreType = {
     id: string
+    serial: string
     name: string
+    userPassword: string
     say: Array<SayType>
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
