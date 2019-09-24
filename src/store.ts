@@ -59,7 +59,7 @@ class MyStore {
             const data = JSON.parse(ev.data);
             console.log(data);
             if (data.data) {
-                const {id, to, offer, answer, candidate, preOffer, preAnswer} = data.data;
+                const {id, to, pc, offer, answer, candidate, preOffer, preAnswer} = data.data;
                 if (id !== this.id && to === 'any') {
                     console.log('message for all');
                     if (preOffer) {
@@ -83,25 +83,54 @@ class MyStore {
                         const json = {to: 'default@890', data: {
                             id: this.id,
                             to: id,
-                            offer: this.pcA!.localDescription!.sdp,
-                            from: 'pcA'
+                            offer: this.pcA!.localDescription!.sdp
                         }};
                         this.ws!.send(JSON.stringify(json));
                         this.preOffer = null;
                         console.log('pcA send offer');
                     } else if (answer) {
+                        console.log('pc<<', pc);
                         const desc = new RTCSessionDescription({
                             type: 'answer',
                             sdp: answer
                         });
-                        if (this.pcBtgtId === id && this.pcB && this.pcB.remoteDescription === null) {
+                        if (this.pcBtgtId === id && pc && this.pcB && this.pcB.remoteDescription === null) {
+                            this.pcBtgtPc = pc;
                             this.pcB.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcB set answer');
-                        } else if (this.pcCtgtId === id && this.pcC && this.pcC.remoteDescription === null) {
+                            this.cdQueueB.forEach(e => {
+                                const json = {
+                                    to: 'default@890', data: {
+                                        id: this.id,
+                                        to: id,
+                                        pc,
+                                        candidate: e
+                                    }
+                                };
+                                this.ws!.send(JSON.stringify(json));
+                                console.log('send pcC candidate');
+                            });
+                            this.cdQueueB = [];
+                        } else if (this.pcCtgtId === id && pc && this.pcC && this.pcC.remoteDescription === null) {
+                            this.pcCtgtPc = pc;
                             this.pcC.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcC set answer');
+                            this.cdQueueC.forEach(e => {
+                                const json = {
+                                    to: 'default@890', data: {
+                                        id: this.id,
+                                        to: id,
+                                        pc,
+                                        candidate: e
+                                    }
+                                };
+                                this.ws!.send(JSON.stringify(json));
+                                console.log('send pcC candidate');
+                            });
+                            this.cdQueueC = [];
                         } else if (this.pcA && this.pcA.remoteDescription === null) {
-                            this.pcAtgtId = id
+                            this.pcAtgtId = id;
+                            this.pcAtgtPc = pc;
                             this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcA set answer');
                             this.candidateQueue.forEach(e => {
@@ -109,6 +138,7 @@ class MyStore {
                                     to: 'default@890', data: {
                                         id: this.id,
                                         to: id,
+                                        pc,
                                         candidate: e
                                     }
                                 };
@@ -117,20 +147,20 @@ class MyStore {
                             });
                             this.candidateQueue = [];
                         }
-                    } else if (candidate) {
+                    } else if (candidate && pc) {
                         const cd = new RTCIceCandidate({
                             candidate: candidate.candidate,
                             sdpMLineIndex: candidate.sdpMLineIndex,
                             sdpMid: candidate.sdpMid
                         });
-                        if (id === this.pcAtgtId && this.pcA) {
-                            console.log('pcA add candidate');
+                        if (id === this.pcAtgtId && pc == 'A' && this.pcA) {
+                            console.log('pcA add candidate', pc);
                             this.pcA.addIceCandidate(cd).catch((err) => console.error(err));
-                        } else if (id === this.pcBtgtId && this.pcB) {
-                            console.log('pcB add candidate');
+                        } else if (id === this.pcBtgtId && pc == 'B' && this.pcB) {
+                            console.log('pcB add candidate', pc);
                             this.pcB.addIceCandidate(cd).catch((err) => console.error(err));
-                        } else if (id === this.pcCtgtId && this.pcC) {
-                            console.log('pcC add candidate');
+                        } else if (id === this.pcCtgtId && pc == 'C' && this.pcC) {
+                            console.log('pcC add candidate', pc);
                             this.pcC.addIceCandidate(cd).catch((err) => console.error(err));
                         } else {
                             console.warn('no hit!');
@@ -154,6 +184,7 @@ class MyStore {
                             const json = {to: 'default@890', data: {
                                 id: this.id,
                                 to: id,
+                                pc: 'B',
                                 answer: answer!.sdp
                             }};
                             this.ws!.send(JSON.stringify(json));
@@ -177,6 +208,7 @@ class MyStore {
                             const json = {to: 'default@890', data: {
                                 id: this.id,
                                 to: id,
+                                pc: 'C',
                                 answer: answer!.sdp
                             }};
                             this.ws!.send(JSON.stringify(json));
@@ -210,17 +242,22 @@ class MyStore {
     pcBState: string = 'n/a';
     @observable
     pcCState: string = 'n/a';
-    dcA: RTCDataChannel | null = null;
-    dcB: RTCDataChannel | null = null;
-    dcC: RTCDataChannel | null = null;
+    private dcA: RTCDataChannel | null = null;
+    private dcB: RTCDataChannel | null = null;
+    private dcC: RTCDataChannel | null = null;
     @observable
     dcAState: string = 'n/a';
     @observable
     dcBState: string = 'n/a';
     @observable
     dcCState: string = 'n/a';
-    preOffer: string | null = null;
-    candidateQueue: Array<RTCIceCandidate> = [];
+    private preOffer: string | null = null;
+    private candidateQueue: Array<RTCIceCandidate> = [];
+    private cdQueueB: Array<RTCIceCandidate> = [];
+    private cdQueueC: Array<RTCIceCandidate> = [];
+    private pcAtgtPc: string | null = null;
+    private pcBtgtPc: string | null = null;
+    private pcCtgtPc: string | null = null;
 
     pcAMakeOffer() {
         let label: any | null = null;
@@ -335,15 +372,18 @@ class MyStore {
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
-            if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcBtgtId !== null) {
+            console.log('pc>>', this.pcBtgtPc);
+            /*if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcBtgtId !== null) {
                 const json = {to: 'default@890', data: {
                     id: this.id,
                     to: this.pcBtgtId,
+                    pc: this.pcBtgtPc,
                     candidate: ev.candidate
                 }};
                 this.ws.send(JSON.stringify(json));
                 console.log('send pcB candidate');
-            }
+            }*/
+            this.cdQueueB.push(ev.candidate);
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
@@ -395,15 +435,18 @@ class MyStore {
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
-            if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcCtgtId !== null) {
+            console.log('pc>>', this.pcCtgtPc);
+            /*if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcCtgtId !== null) {
                 const json = {to: 'default@890', data: {
                     id: this.id,
                     to: this.pcCtgtId,
+                    pc: this.pcCtgtPc,
                     candidate: ev.candidate
                 }};
                 this.ws.send(JSON.stringify(json));
                 console.log('send pcC candidate');
-            }
+            }*/
+            this.cdQueueC.push(ev.candidate);
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
