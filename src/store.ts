@@ -1,41 +1,47 @@
 import {observable, computed, action} from 'mobx';
+import * as localForage from 'localforage';
 import * as uuid from 'uuid';
-import {SayType} from './SayType';
-import {PCBuilder} from './makePC';
+import {
+    APP_NAME, VERSION,
+    WEB_SOCKET_URL,
+    WEB_SOCKET_USER,
+    WEB_SOCKET_PASSWORD
+} from './const';
+import { SayType } from './SayType';
+import { PCBuilder } from './makePC';
 
 class MyStore {
    
-    readonly id: string = localStorage.getItem('user_id') || (() => {
-        const _id = uuid.v1();
-        localStorage.setItem('user_id', _id);
-        return _id;
-    })();
+    @observable
+    id: string = 'no id';
 
     @observable
-    name: string = localStorage.getItem('screen_name') || 'no name';
+    name: string = 'no name';
 
     @action
     setName(name: string) {
         this.name = name;
-        localStorage.setItem('screen_name', this.name);
+        localForage.setItem('user_screen_name', this.name).catch((err) => console.error(err));
     }
 
     @observable
-    say: Array<SayType> = (() => {
-        return JSON.parse(localStorage.getItem('user_message') || '[]');
-    })() || [];
+    say: Array<SayType> = [];
+
     @observable
-    hear: Array<SayType> = [];
+    private hear: Array<SayType> = [];
 
     @action
     addSay(say: SayType) {
         this.say.unshift(say);
-        localStorage.setItem('user_message', JSON.stringify(this.say));
+        localForage.setItem('user_message', this.say).catch((err) => console.error(err));
     }
 
     @computed
     get timeLine(): Array<SayType> {
-        const says = [...this.say, ...this.hear.filter(e => e.authorId !== this.id)];
+        const says = [...this.say, ...this.hear].filter((e, idx, self) => {
+            const len = self.filter(ee => ee.id === e.id).length;
+            return len === 1 ? true : false;
+        });
         return says.sort((a, b) => {
             return a.date - b.date
         });
@@ -44,15 +50,13 @@ class MyStore {
     private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
     private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
 
-    @observable
-    ws: WebSocket | null = null;
+    private ws: WebSocket | null = null;
 
-    @action
-    createWs() {
-        const _ws = new WebSocket('wss://cloud.achex.ca');
+    private createWs() {
+        const _ws = new WebSocket(WEB_SOCKET_URL);
         _ws.onopen = (ev) => {
             console.log(ev);
-            const auth = {auth: 'default@890', passowrd: '19861012'};
+            const auth = {auth: WEB_SOCKET_USER, passowrd: WEB_SOCKET_PASSWORD};
             _ws.send(JSON.stringify(auth));
         };
         _ws.onmessage = (ev) => {
@@ -67,27 +71,29 @@ class MyStore {
                         console.log('pending.. ' + pendingTime + 'sec');
                         setTimeout(() => {
                             console.log('receive pre offer');
-                            const json = {to: 'default@890', data: {
+                            const data = {
                                 id: this.id,
                                 to: id,
                                 preAnswer: preOffer
-                            }};
-                            this.ws!.send(JSON.stringify(json));
-                            console.log('send pre answer');
+                            };
+                            this.wsSend(data).then(() => {
+                                console.log('send pre answer');
+                            }).catch(err => console.error(err));
                         }, pendingTime * 1000);
                     }
                 } else if (id !== this.id && to === this.id) {
                     console.log('message for me');
                     if (preAnswer && preAnswer === this.preOffer) {
                         console.log('receive pre answer');
-                        const json = {to: 'default@890', data: {
+                        const data = {
                             id: this.id,
                             to: id,
                             offer: this.pcA!.localDescription!.sdp
-                        }};
-                        this.ws!.send(JSON.stringify(json));
-                        this.preOffer = null;
-                        console.log('pcA send offer');
+                        };
+                        this.wsSend(data).then(() => {
+                            this.preOffer = null;
+                            console.log('pcA send offer');
+                        }).catch(err => console.error(err));
                     } else if (answer) {
                         console.log('pc<<', pc);
                         const desc = new RTCSessionDescription({
@@ -99,16 +105,15 @@ class MyStore {
                             this.pcB.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcB set answer');
                             this.cdQueueB.forEach(e => {
-                                const json = {
-                                    to: 'default@890', data: {
-                                        id: this.id,
-                                        to: id,
-                                        pc,
-                                        candidate: e
-                                    }
+                                const data = {
+                                    id: this.id,
+                                    to: id,
+                                    pc,
+                                    candidate: e
                                 };
-                                this.ws!.send(JSON.stringify(json));
-                                console.log('send pcC candidate');
+                                this.wsSend(data).then(() => {
+                                    console.log('send pcC candidate');
+                                }).catch((err) => console.error(err));
                             });
                             this.cdQueueB = [];
                         } else if (this.pcCtgtId === id && pc && this.pcC && this.pcC.remoteDescription === null) {
@@ -116,16 +121,15 @@ class MyStore {
                             this.pcC.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcC set answer');
                             this.cdQueueC.forEach(e => {
-                                const json = {
-                                    to: 'default@890', data: {
-                                        id: this.id,
-                                        to: id,
-                                        pc,
-                                        candidate: e
-                                    }
+                                const data = {
+                                    id: this.id,
+                                    to: id,
+                                    pc,
+                                    candidate: e
                                 };
-                                this.ws!.send(JSON.stringify(json));
-                                console.log('send pcC candidate');
+                                this.wsSend(data).catch(() => {
+                                    console.log('send pcC candidate');
+                                }).catch((err) => console.error(err));
                             });
                             this.cdQueueC = [];
                         } else if (this.pcA && this.pcA.remoteDescription === null) {
@@ -134,16 +138,15 @@ class MyStore {
                             this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcA set answer');
                             this.candidateQueue.forEach(e => {
-                                const json = {
-                                    to: 'default@890', data: {
-                                        id: this.id,
-                                        to: id,
-                                        pc,
-                                        candidate: e
-                                    }
+                                const data = {
+                                    id: this.id,
+                                    to: id,
+                                    pc,
+                                    candidate: e
                                 };
-                                this.ws!.send(JSON.stringify(json));
-                                console.log('send pcA candidate');
+                                this.wsSend(data).then(() => {
+                                    console.log('send pcA candidate');
+                                }).catch(err => console.error(err));
                             });
                             this.candidateQueue = [];
                         }
@@ -181,14 +184,15 @@ class MyStore {
                             return this.pcB!.setLocalDescription(desc);
                         }).then(() => {
                             console.log('pcB set local desc(pcB answer)')
-                            const json = {to: 'default@890', data: {
+                            const data = {
                                 id: this.id,
                                 to: id,
                                 pc: 'B',
                                 answer: answer!.sdp
-                            }};
-                            this.ws!.send(JSON.stringify(json));
-                            console.log('send pcB answer');
+                            };
+                            this.wsSend(data).then(() => {
+                                console.log('send pcB answer');
+                            }).catch((err) => console.error(err));
                         }).catch((err) => console.error(err));
                     } else if (offer && this.pcC && this.pcC.remoteDescription === null) {
                         this.pcCtgtId = id;
@@ -205,14 +209,15 @@ class MyStore {
                             return this.pcC!.setLocalDescription(desc);
                         }).then(() => {
                             console.log('pcC set local desc(pcC answer)')
-                            const json = {to: 'default@890', data: {
+                            const data = {
                                 id: this.id,
                                 to: id,
                                 pc: 'C',
                                 answer: answer!.sdp
-                            }};
-                            this.ws!.send(JSON.stringify(json));
-                            console.log('send pcC answer');
+                            };
+                            this.wsSend(data).then(() => {
+                                console.log('send pcC answer');
+                            }).catch((err) => console.error(err));
                         }).catch((err) => console.error(err));
                     } else {
                         console.log('[Less than condition]');
@@ -222,6 +227,23 @@ class MyStore {
         };
         _ws.onerror = (ev) => { console.error(ev); };
         this.ws = _ws;
+    }
+
+    private wsSend(data: object): Promise<Boolean> {
+        return new Promise<Boolean>((resolve, reject) => {
+            const json = {
+                to: WEB_SOCKET_USER,
+                app: APP_NAME + '@' + VERSION,
+                data: data
+            };
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify(json));
+                resolve(true);
+            } else {
+                reject(new Error('websocket error'));
+            }
+        });
+        
     }
 
     @observable
@@ -259,7 +281,7 @@ class MyStore {
     private pcBtgtPc: string | null = null;
     private pcCtgtPc: string | null = null;
 
-    pcAMakeOffer() {
+    private pcAMakeOffer() {
         let label: any | null = null;
         if (this.pcA !== null) {
             this.pcA.createOffer().then((offer) => {
@@ -268,19 +290,19 @@ class MyStore {
             }).then(() => {
                 console.log('pcA set local desc(offer)');
                 this.preOffer = uuid.v1();
-                const json = {to: 'default@890', data: {
+                const data = {
                     id: this.id,
                     to: 'any',
                     preOffer: this.preOffer
-                }};
+                };
                 label = setInterval(() => {
-                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                        this.ws.send(JSON.stringify(json));
+                    this.wsSend(data).then(() => {
                         console.log('pcA send "pre" offer')
                         clearInterval(label);
-                    } else {
+                    }).catch((err) => {
+                        console.error(err);
                         console.log('pending send pre offer');
-                    }
+                    });
                 }, 1000);
             }).catch((err) => {
                 console.error(err);
@@ -367,22 +389,12 @@ class MyStore {
                     this.dcB!.close();
                     this.dcB = null;
                     this.createPCB();
-                }, 50000);
+                }, 42000);
             }
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
             console.log('pc>>', this.pcBtgtPc);
-            /*if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcBtgtId !== null) {
-                const json = {to: 'default@890', data: {
-                    id: this.id,
-                    to: this.pcBtgtId,
-                    pc: this.pcBtgtPc,
-                    candidate: ev.candidate
-                }};
-                this.ws.send(JSON.stringify(json));
-                console.log('send pcB candidate');
-            }*/
             this.cdQueueB.push(ev.candidate);
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
@@ -430,22 +442,12 @@ class MyStore {
                     this.dcC!.close();
                     this.dcC = null;
                     this.createPCC();
-                }, 50000);
+                }, 42000);
             }
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
             console.log('pc>>', this.pcCtgtPc);
-            /*if (ev.candidate && this.ws && this.ws.readyState === WebSocket.OPEN && this.pcCtgtId !== null) {
-                const json = {to: 'default@890', data: {
-                    id: this.id,
-                    to: this.pcCtgtId,
-                    pc: this.pcCtgtPc,
-                    candidate: ev.candidate
-                }};
-                this.ws.send(JSON.stringify(json));
-                console.log('send pcC candidate');
-            }*/
             this.cdQueueC.push(ev.candidate);
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
@@ -460,10 +462,20 @@ class MyStore {
         this.pcCtgtId = null;
     }
 
-    setupDC(dc: RTCDataChannel, stateCb: (state: RTCDataChannelState) => void) {
+    private setupDC(dc: RTCDataChannel, stateCb: (state: RTCDataChannelState) => void) {
         dc.onopen = (ev) => {
             console.log(ev, dc.readyState);
             stateCb(dc.readyState);
+            this.cache.forEach(e => {
+                const json = {
+                    from: this.id,
+                    origin: e.says[0].authorId,
+                    payload: {
+                        cache: e.says
+                    }
+                };
+                dc.send(JSON.stringify(json))
+            });
         };
         dc.onmessage = (ev) => {
             const data = JSON.parse(ev.data);
@@ -499,11 +511,16 @@ class MyStore {
     }
 
     constructor() {
+        this.createWs();
+        this.createPCA();
+        this.createPCB();
+        this.createPCC();
         let beforeSend: number = -1;
         let beforeCacheSend: number = -1;
         setInterval(() => {
             if (JSON.stringify(this.cache) !== JSON.stringify(this.prevCache)) {
                 this.prevCache = Object.assign([], this.cache);
+                localForage.setItem('user_message_cache', this.cache).catch((err) => console.error(err));
                 console.log('!cache changed!', this.cache);
                 let ids: Set<string> = new Set();
                 this.cache.forEach(e => ids.add(e.id));
@@ -513,9 +530,8 @@ class MyStore {
                     console.log(filtered);
                     if (filtered && filtered.length > 0) {
                         if (filtered.length >= 2) {
-                            console.log('>sort!');
                             filtered = filtered.sort((a, b) => {
-                                return a.timestamp - b.timestamp;
+                                return b.timestamp - a.timestamp;
                             });
                         }
                         if (filtered[0].says) {
@@ -535,7 +551,7 @@ class MyStore {
                 };
                 let count = 0;
                 [this.dcA, this.dcB, this.dcC].forEach(dc => {
-                    if (dc) {
+                    if (dc && dc.readyState === 'open') {
                         dc.send(JSON.stringify(json))
                         count += 1;
                     }
@@ -557,7 +573,7 @@ class MyStore {
                         }
                     };
                     [this.dcB, this.dcC].forEach(dc => {
-                        if (dc) {
+                        if (dc && dc.readyState === 'open') {
                             dc.send(JSON.stringify(json))
                             count += 1;
                         }
@@ -569,6 +585,17 @@ class MyStore {
                 }
             }
         }, 1500);
+        (async () => {
+            this.id = await localForage.getItem('user_id') || (() => {
+                const _id = uuid.v1();
+                localForage.setItem('user_id', _id).catch((err) => console.error(err));
+                return _id;
+            })();
+            this.name = await localForage.getItem('user_screen_name') || 'no name';
+            this.say = await localForage.getItem('user_message') || [];
+            this.cache = await localForage.getItem('user_message_cache') || [];
+            console.log(this.id, this.name);
+        })();
     }
 
 }
@@ -578,7 +605,6 @@ type MyStoreType = {
     name: string
     say: Array<SayType>
     hear: Array<SayType>
-    ws: WebSocket | null
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
     pcC: RTCPeerConnection | null
@@ -594,7 +620,6 @@ type MyStoreType = {
     setName(name: string): void
     addSay(say: SayType): void
     timeLine: Array<SayType>
-    createWs(): void
     createPCA(): void
     createPCB(): void
     createPCC(): void

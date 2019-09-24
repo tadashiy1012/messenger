@@ -1,11 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {observer, inject, Provider} from 'mobx-react';
+import { observer, inject, Provider } from 'mobx-react';
 import * as uuid from 'uuid';
-import {MyStore, MyStoreType} from './store';
+import { MyStore, MyStoreType } from './store';
 import { SayType } from './SayType';
-
-const store = new MyStore();
 
 interface HeaderProps {
     store?: MyStoreType
@@ -50,11 +48,9 @@ class Writer extends React.Component<WriterProps> {
         this._inSayRef = React.createRef<HTMLInputElement>();
     }
     nameChangeHandler(ev: React.ChangeEvent<HTMLInputElement>) {
-        console.log(ev.currentTarget.value);
         this.props.store!.setName(ev.currentTarget.value);
     }
     sendClickHandler(ev: React.MouseEvent) {
-        console.log(ev);
         console.log(this._inSayRef.current!.value);
         const {store} = this.props;
         const say: SayType = {
@@ -64,7 +60,6 @@ class Writer extends React.Component<WriterProps> {
             authorId: store!.id,
             say: this._inSayRef.current!.value
         };
-        console.log(say);
         store!.addSay(say);
     }
     render() {
@@ -107,7 +102,7 @@ class TimeLine extends React.Component<TimeLineProps> {
 }
 
 const App = () => (
-    <Provider store={store}>
+    <Provider store={new MyStore()}>
         <React.Fragment>
             <MyHeader />
             <PcStatus />
@@ -121,10 +116,3 @@ ReactDOM.render(
     <App />,
     document.getElementById('app')
 );
-
-console.log(store.id);
-store.createWs();
-store.createPCA();
-store.createPCB();
-store.createPCC();
-console.log(store.pcA, store.pcB, store.pcC);
