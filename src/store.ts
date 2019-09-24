@@ -62,7 +62,8 @@ class MyStore {
         _ws.onmessage = (ev) => {
             const data = JSON.parse(ev.data);
             console.log(data);
-            if (data.data) {
+            const {app} = data;
+            if (app && app === (APP_NAME + '@' + VERSION) && data.data) {
                 const {id, to, pc, offer, answer, candidate, preOffer, preAnswer} = data.data;
                 if (id !== this.id && to === 'any') {
                     console.log('message for all');
@@ -101,7 +102,6 @@ class MyStore {
                             sdp: answer
                         });
                         if (this.pcBtgtId === id && pc && this.pcB && this.pcB.remoteDescription === null) {
-                            this.pcBtgtPc = pc;
                             this.pcB.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcB set answer');
                             this.cdQueueB.forEach(e => {
@@ -117,7 +117,6 @@ class MyStore {
                             });
                             this.cdQueueB = [];
                         } else if (this.pcCtgtId === id && pc && this.pcC && this.pcC.remoteDescription === null) {
-                            this.pcCtgtPc = pc;
                             this.pcC.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcC set answer');
                             this.cdQueueC.forEach(e => {
@@ -134,7 +133,6 @@ class MyStore {
                             this.cdQueueC = [];
                         } else if (this.pcA && this.pcA.remoteDescription === null) {
                             this.pcAtgtId = id;
-                            this.pcAtgtPc = pc;
                             this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcA set answer');
                             this.candidateQueue.forEach(e => {
@@ -277,9 +275,6 @@ class MyStore {
     private candidateQueue: Array<RTCIceCandidate> = [];
     private cdQueueB: Array<RTCIceCandidate> = [];
     private cdQueueC: Array<RTCIceCandidate> = [];
-    private pcAtgtPc: string | null = null;
-    private pcBtgtPc: string | null = null;
-    private pcCtgtPc: string | null = null;
 
     private pcAMakeOffer() {
         let label: any | null = null;
@@ -313,14 +308,26 @@ class MyStore {
     @action
     createPCA() {
         const prefix = 'pcA';
+        let timer: any | null = null;
         this.pcA = PCBuilder.builder()
         .setOnNegotiationNeeded((ev) => {
             console.log(prefix, ev);
         })
         .setOnIceGatheringStateChange((ev) => {
             console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (this.pcAState !== 'connected' && ev.currentTarget.iceGatheringState === 'complete') {
+            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
+                timer = setTimeout(() => {
+                    console.log('=== time out! recreate pcA ===');
+                    this.pcA!.close();
+                    this.dcA!.close();
+                    this.dcA = null;
+                    this.createPCA();
+                }, 12000);
+                console.log(prefix, 'set timer');
+            } else if (this.pcAState !== 'connected' && ev.currentTarget.iceGatheringState === 'complete') {
                 console.log('=== recreate pcA ===');
+                clearTimeout(timer);
+                timer = null;
                 this.pcA!.close();
                 this.dcA!.close();
                 this.createPCA();
@@ -331,22 +338,29 @@ class MyStore {
             this.pcAState = ev.currentTarget.iceConnectionState;
             if (this.pcAState === 'disconnected' || this.pcAState === 'failed' || this.pcAState === 'closed') {
                 console.log('=== recreate pcA ===');
+                clearTimeout(timer);
+                timer = null;
                 this.pcA!.close();
                 this.dcA!.close();
                 this.createPCA();
             } else if (this.pcAState === 'connected') {
-                console.log(prefix, 'connected:', this.pcAtgtId);
+                console.log(prefix, '@@@ connected:', this.pcAtgtId, '@@@');
+                clearTimeout(timer);
+                timer = null;
             }
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
-            this.candidateQueue.push(ev.candidate);
+            if (ev.candidate) {
+                this.candidateQueue.push(ev.candidate);
+            }
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log(prefix, ev);
             this.dcA = ev.channel;
         })
         .build();
+        console.log(prefix, 'create pc complete!');
         this.pcAtgtId = null;
         this.dcA = this.pcA!.createDataChannel('chat');
         this.setupDC(this.dcA, (state) => {
@@ -374,8 +388,9 @@ class MyStore {
                 timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
                 clearTimeout(timer);
+                timer = null;
                 this.pcB!.close();
-                this.dcB!.close();
+                if (this.dcB) {this.dcB.close();}
                 this.dcB = null;
                 this.createPCB();
             }
@@ -386,7 +401,7 @@ class MyStore {
                 timer = setTimeout(() => {
                     console.log(prefix, 'time out');
                     this.pcB!.close();
-                    this.dcB!.close();
+                    if (this.dcB) {this.dcB.close();}
                     this.dcB = null;
                     this.createPCB();
                 }, 42000);
@@ -394,8 +409,9 @@ class MyStore {
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
-            console.log('pc>>', this.pcBtgtPc);
-            this.cdQueueB.push(ev.candidate);
+            if (ev.candidate) {
+                this.cdQueueB.push(ev.candidate);
+            }
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
@@ -407,6 +423,7 @@ class MyStore {
         })
         .build();
         this.pcBtgtId = null;
+        console.log(prefix, 'create pc complete!');
     }
     
     @action
@@ -427,8 +444,9 @@ class MyStore {
                 timer = null;
             } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
                 clearTimeout(timer);
+                timer = null;
                 this.pcC!.close();
-                this.dcC!.close();
+                if (this.dcC) {this.dcC.close();}
                 this.dcC = null;
                 this.createPCC();
             }
@@ -439,7 +457,7 @@ class MyStore {
                 timer = setTimeout(() => {
                     console.log(prefix, 'time out');
                     this.pcC!.close();
-                    this.dcC!.close();
+                    if (this.dcC) {this.dcC.close();}
                     this.dcC = null;
                     this.createPCC();
                 }, 42000);
@@ -447,8 +465,9 @@ class MyStore {
         })
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
-            console.log('pc>>', this.pcCtgtPc);
-            this.cdQueueC.push(ev.candidate);
+            if (ev.candidate) {
+                this.cdQueueC.push(ev.candidate);
+            }
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
             console.log('>>>>', prefix, ev);
@@ -460,6 +479,7 @@ class MyStore {
         })
         .build();
         this.pcCtgtId = null;
+        console.log(prefix, 'create pc complete!');
     }
 
     private setupDC(dc: RTCDataChannel, stateCb: (state: RTCDataChannelState) => void) {
@@ -604,7 +624,6 @@ type MyStoreType = {
     id: string
     name: string
     say: Array<SayType>
-    hear: Array<SayType>
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
     pcC: RTCPeerConnection | null
