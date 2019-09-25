@@ -1,6 +1,7 @@
 import {observable, computed, action} from 'mobx';
 import * as localForage from 'localforage';
 import * as uuid from 'uuid';
+import * as bcrypt from 'bcryptjs';
 import {
     APP_NAME, VERSION,
     WEB_SOCKET_URL,
@@ -71,8 +72,8 @@ class MyStore {
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
-            const found = this.userList.find(e => e.email === email && e.password === password);
-            if (found) {
+            const found = this.userList.find(e => e.email === email);
+            if (found && bcrypt.compareSync(password, found.password)) {
                 this.serial = found.serial;
                 this.name = found.name;
                 this.email = found.email;
@@ -108,10 +109,12 @@ class MyStore {
             if (filtered.length > 0 || pass !== password) {
                 resolve(false);
             } else {
+                const salt = bcrypt.genSaltSync(10);
+                const hash = bcrypt.hashSync(password, salt);
                 this.serial = uuid.v1();
                 this.name = name;
                 this.email = email;
-                this.password = password;
+                this.password = hash;
                 this.userList.push({
                     serial: this.serial, name: this.name, 
                     email: this.email, password: this.password,
