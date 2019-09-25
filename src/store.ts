@@ -207,7 +207,7 @@ class MyStore {
                             this.pcAtgtId = id;
                             this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                             console.log('pcA set answer');
-                            this.candidateQueue.forEach(e => {
+                            this.cdQueueA.forEach(e => {
                                 const data = {
                                     id: this.id,
                                     to: id,
@@ -218,7 +218,7 @@ class MyStore {
                                     console.log('send pcA candidate');
                                 }).catch(err => console.error(err));
                             });
-                            this.candidateQueue = [];
+                            this.cdQueueA = [];
                         }
                     } else if (candidate && pc) {
                         const cd = new RTCIceCandidate({
@@ -235,9 +235,6 @@ class MyStore {
                         } else if (id === this.pcCtgtId && pc == 'C' && this.pcC) {
                             console.log('pcC add candidate', pc);
                             this.pcC.addIceCandidate(cd).catch((err) => console.error(err));
-                        } else {
-                            console.warn('no hit!');
-                            console.log(this.pcAtgtId, this.pcBtgtId, this.pcCtgtId);
                         }
                     } else if (offer && this.pcB && this.pcB.remoteDescription === null) {
                         this.pcBtgtId = id;
@@ -316,17 +313,17 @@ class MyStore {
         
     }
 
+    private pcA: RTCPeerConnection | null = null;
+    private pcB: RTCPeerConnection | null = null;
+    private pcC: RTCPeerConnection | null = null;
+    private dcA: RTCDataChannel | null = null;
+    private dcB: RTCDataChannel | null = null;
+    private dcC: RTCDataChannel | null = null;
     @observable
-    pcA: RTCPeerConnection | null = null;
-    @observable
-    pcB: RTCPeerConnection | null = null;
-    @observable
-    pcC: RTCPeerConnection | null = null;
-    @observable 
     pcAtgtId: string | null = null;
-    @observable 
+    @observable
     pcBtgtId: string | null = null;
-    @observable 
+    @observable
     pcCtgtId: string | null = null;
     @observable
     pcAState: string = 'n/a';
@@ -334,9 +331,6 @@ class MyStore {
     pcBState: string = 'n/a';
     @observable
     pcCState: string = 'n/a';
-    private dcA: RTCDataChannel | null = null;
-    private dcB: RTCDataChannel | null = null;
-    private dcC: RTCDataChannel | null = null;
     @observable
     dcAState: string = 'n/a';
     @observable
@@ -344,12 +338,12 @@ class MyStore {
     @observable
     dcCState: string = 'n/a';
     private preOffer: string | null = null;
-    private candidateQueue: Array<RTCIceCandidate> = [];
+    private cdQueueA: Array<RTCIceCandidate> = [];
     private cdQueueB: Array<RTCIceCandidate> = [];
     private cdQueueC: Array<RTCIceCandidate> = [];
 
     private pcAMakeOffer() {
-        let label: any | null = null;
+        let timer: any | null = null;
         if (this.pcA !== null) {
             this.pcA.createOffer().then((offer) => {
                 console.log('pcA create offer');
@@ -362,10 +356,10 @@ class MyStore {
                     to: 'any',
                     preOffer: this.preOffer
                 };
-                label = setInterval(() => {
+                timer = setInterval(() => {
                     this.wsSend(data).then(() => {
                         console.log('pcA send "pre" offer')
-                        clearInterval(label);
+                        clearInterval(timer);
                     }).catch((err) => {
                         console.error(err);
                         console.log('pending send pre offer');
@@ -377,8 +371,7 @@ class MyStore {
         }
     }
 
-    @action
-    createPCA() {
+    private createPCA() {
         const prefix = 'pcA';
         let timer: any | null = null;
         this.pcA = PCBuilder.builder()
@@ -424,7 +417,7 @@ class MyStore {
         .setOnIcecandidate((ev) => {
             console.log(prefix, ev);
             if (ev.candidate) {
-                this.candidateQueue.push(ev.candidate);
+                this.cdQueueA.push(ev.candidate);
             }
         })
         .setOnDataChannel((ev: RTCDataChannelEvent) => {
@@ -442,8 +435,7 @@ class MyStore {
         this.pcAMakeOffer();
     }
 
-    @action
-    createPCB() {
+    private createPCB() {
         const prefix = 'pcB';
         let timer: any | null = null;
         this.pcB = PCBuilder.builder()
@@ -498,8 +490,7 @@ class MyStore {
         console.log(prefix, 'create pc complete!');
     }
     
-    @action
-    createPCC() {
+    private createPCC() {
         const prefix = 'pcC';
         let timer: any | null = null;
         this.pcC = PCBuilder.builder()
@@ -732,10 +723,14 @@ class MyStore {
             }
         }, 1500);
         (async () => {
-            this.userList = await localForage.getItem<Array<UserType>>('user_list') || [];
-            this.say = await localForage.getItem('user_message') || [];
-            this.cache = await localForage.getItem('user_message_cache') || [];
-            console.log(this.id, this.name);
+            try {
+                this.userList = await localForage.getItem<Array<UserType>>('user_list') || [];
+                this.say = await localForage.getItem('user_message') || [];
+                this.cache = await localForage.getItem('user_message_cache') || [];   
+            } catch (error) {
+                console.error(error);
+            }
+            console.log(this.id, this.serial);
             console.log(this.cache);
             console.log(this.userList);
         })();
@@ -757,21 +752,15 @@ type MyStoreType = {
     login(email: string, password: string): Promise<Boolean>
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
-    pcA: RTCPeerConnection | null
-    pcB: RTCPeerConnection | null
-    pcC: RTCPeerConnection | null
-    pcAtgtId: string | null
-    pcBtgtId: string | null
-    pcCtgtId: string | null
+    pcAtgtId: string
+    pcBtgtId: string
+    pcCtgtId: string
     pcAState: string
     pcBState: string
     pcCState: string
     dcAState: string 
     dcBState: string 
     dcCState: string 
-    createPCA(): void
-    createPCB(): void
-    createPCC(): void
 }
 
 export {

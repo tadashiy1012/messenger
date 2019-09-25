@@ -14,7 +14,10 @@ interface HeaderProps {
 class MyHeader extends React.Component<HeaderProps> {
     render() {
         const {store} = this.props;
-        return <h1>id:{store!.id || 'no id'}</h1>
+        return <React.Fragment>
+            <h1>id:{store!.id || 'no id'}</h1>
+            <PcStatus />
+        </React.Fragment>
     }
 }
 
@@ -191,10 +194,13 @@ class Writer extends React.Component<WriterProps> {
             id: uuid.v1(),
             date: Date.now(),
             author: store!.name,
-            authorId: store!.id,
+            authorId: store!.serial,
             say: this._inSayRef.current!.value
         };
-        store!.addSay(say);
+        store!.addSay(say).catch((err) => {
+            console.error(err);
+            alert('say send fail!!');
+        });
     }
     render() {
         const {store} = this.props;
@@ -233,7 +239,6 @@ const App = () => (
     <Provider store={new MyStore()}>
         <React.Fragment>
             <MyHeader />
-            <PcStatus />
             <LoginContainer />
             <h3>main</h3>
             <Writer />
