@@ -8,8 +8,7 @@ import {
     WEB_SOCKET_USER,
     WEB_SOCKET_PASSWORD
 } from './const';
-import { SayType } from './SayType';
-import { UserType } from './UserType';
+import { SayType, UserType } from './types';
 import { PCBuilder } from './makePC';
 
 class MyStore {
@@ -123,6 +122,14 @@ class MyStore {
                 resolve(true);
             }
         });
+    }
+
+    @observable
+    showDetail: Boolean = false;
+
+    @action
+    setShowDetail(show: Boolean) {
+        this.showDetail = show;
     }
 
     private ws: WebSocket | null = null;
@@ -760,6 +767,8 @@ type MyStoreType = {
     login(email: string, password: string): Promise<Boolean>
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
+    showDetail: Boolean
+    setShowDetail(show: Boolean): void
     pcAtgtId: string
     pcBtgtId: string
     pcCtgtId: string
