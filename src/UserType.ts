@@ -3,4 +3,5 @@ export type UserType = {
     serial: string
     email: string
     password: string
+    clientId: string
 };
