@@ -35,6 +35,143 @@ class PcStatus extends React.Component<PcStatusProps> {
     }
 }
 
+interface RegistrationProps {
+    store?: MyStoreType
+}
+
+@inject('store')
+@observer
+class Registration extends React.Component<RegistrationProps> {
+    private emailRef: React.RefObject<HTMLInputElement>;
+    private passRef: React.RefObject<HTMLInputElement>;
+    private nameRef: React.RefObject<HTMLInputElement>;
+    constructor(props: Readonly<RegistrationProps>) {
+        super(props);
+        this.emailRef = React.createRef();
+        this.passRef = React.createRef();
+        this.nameRef = React.createRef();
+    }
+    registrationClickHandler(ev: React.MouseEvent) {
+        const {store} = this.props;
+        const email = this.emailRef.current!.value;
+        const password = this.passRef.current!.value;
+        const name = this.nameRef.current!.value;
+        store!.registration(name, email, password).then((result) => {
+            if (result) {
+                alert('registration success!');
+            } else {
+                alert('registration fail!');
+            }
+        }).catch((err) => {
+            console.error(err);
+            alert('registration fail');
+        });
+    };
+    render() {
+        return <React.Fragment>
+            <h3>registration</h3>
+            <label>
+                <span>email</span>
+                <input type="email" ref={this.emailRef} />
+            </label>
+            <br/>
+            <label>
+                <span>password</span>
+                <input type="password" ref={this.passRef} />
+            </label>
+            <br/>
+            <label>
+                <span>screen name</span>
+                <input type="text" ref={this.nameRef} />
+            </label>
+            <br/>
+            <button onClick={(ev) => {this.registrationClickHandler(ev)}}>
+                registration
+            </button>
+        </React.Fragment>
+    }
+}
+
+interface LogoutProps {
+    store?: MyStoreType
+}
+
+@inject('store')
+@observer
+class Logout extends React.Component<LogoutProps> {
+    logoutClickHandler() {
+        this.props.store!.logout().catch((err) => console.error(err));
+    }
+    render() {
+        return <button onClick={() => {this.logoutClickHandler()}}>logout</button>
+    }
+}
+
+interface LoginProps {
+    store?: MyStoreType
+}
+
+@inject('store')
+@observer
+class Login extends React.Component<LoginProps> {
+    emailRef: React.RefObject<HTMLInputElement>;
+    passRef: React.RefObject<HTMLInputElement>;
+    constructor(props: Readonly<LoginProps>) {
+        super(props);
+        this.emailRef = React.createRef();
+        this.passRef = React.createRef();
+    }
+    loginClickHandler(ev: React.MouseEvent) {
+        const {store} = this.props;
+        const email = this.emailRef.current!.value;
+        const password = this.passRef.current!.value;
+        store!.login(email, password).then((result) => {
+            if (result) {
+                store!.setLogged(true);
+            } else {
+                alert('login fail!');
+            }
+        }).catch((err) => {
+            console.error(err);
+            alert('login fail!');
+        });
+    }
+    render() {
+        return <React.Fragment>
+            <h3>login</h3>
+            <label>
+                <span>email</span>
+                <input type="email" ref={this.emailRef} />
+            </label>
+            <br/>
+            <label>
+                <span>password</span>
+                <input type="password" ref={this.passRef} />
+            </label>
+            <br/>
+            <button onClick={(ev) => {this.loginClickHandler(ev)}}>login</button>
+        </React.Fragment>
+    }
+}
+
+interface LoginContainerProps {
+    store?: MyStoreType
+}
+
+@inject('store')
+@observer
+class LoginContainer extends React.Component<LoginContainerProps> {
+    render() {
+        const {store} = this.props;
+        return <React.Fragment>
+            {store!.logged ? <Logout /> : <React.Fragment>
+                <Login />
+                <Registration />
+            </React.Fragment>}
+        </React.Fragment>
+    }
+}
+
 interface WriterProps {
     store?: MyStoreType
 }
@@ -46,9 +183,6 @@ class Writer extends React.Component<WriterProps> {
     constructor(props: Readonly<WriterProps>) {
         super(props);
         this._inSayRef = React.createRef<HTMLInputElement>();
-    }
-    nameChangeHandler(ev: React.ChangeEvent<HTMLInputElement>) {
-        this.props.store!.setName(ev.currentTarget.value);
     }
     sendClickHandler(ev: React.MouseEvent) {
         console.log(this._inSayRef.current!.value);
@@ -66,17 +200,11 @@ class Writer extends React.Component<WriterProps> {
         const {store} = this.props;
         return <div>
             <label>
-                <span>name</span>
-                <input type="text" 
-                    onChange={(ev) => {this.nameChangeHandler(ev)}}
-                    value={store!.name} />
-            </label>
-            <label>
-                <span> say</span>
-                <input type="text" ref={this._inSayRef} />
+                <span>{store!.name}'s say:</span>
+                <input type="text" ref={this._inSayRef} disabled={store!.logged ? false:true} />
             </label>
             <span> </span>
-            <button onClick={(ev) => {this.sendClickHandler(ev)}}>send</button>
+            <button onClick={(ev) => {this.sendClickHandler(ev)}} disabled={store!.logged ? false:true}>send</button>
         </div>
     }
 }
@@ -106,6 +234,8 @@ const App = () => (
         <React.Fragment>
             <MyHeader />
             <PcStatus />
+            <LoginContainer />
+            <h3>main</h3>
             <Writer />
             <TimeLine />
         </React.Fragment>

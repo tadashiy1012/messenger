@@ -8,20 +8,27 @@ import {
     WEB_SOCKET_PASSWORD
 } from './const';
 import { SayType } from './SayType';
+import { UserType } from './UserType';
 import { PCBuilder } from './makePC';
 
 class MyStore {
    
     @observable
-    id: string = 'no id';
+    id: string = uuid.v1();
 
     @observable
     name: string = 'no name';
+    
+    serial: string = 'no serial';
+    email: string = 'no email';
+    password: string = 'no password';
+
+    @observable
+    logged: Boolean = false;
 
     @action
-    setName(name: string) {
-        this.name = name;
-        localForage.setItem('user_screen_name', this.name).catch((err) => console.error(err));
+    setLogged(logged: Boolean) {
+        this.logged = logged;
     }
 
     @observable
@@ -31,9 +38,17 @@ class MyStore {
     private hear: Array<SayType> = [];
 
     @action
-    addSay(say: SayType) {
-        this.say.unshift(say);
-        localForage.setItem('user_message', this.say).catch((err) => console.error(err));
+    addSay(say: SayType): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const found = this.userList.find(e => e.serial === this.serial);
+            if (found && found.clientId === this.id) {
+                this.say.unshift(say);
+                localForage.setItem('user_message', this.say).catch((err) => console.error(err));
+                resolve(true);
+            } else {
+                reject(new Error('login state error!!'));
+            }
+        });
     }
 
     @computed
@@ -49,6 +64,63 @@ class MyStore {
 
     private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
     private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
+
+    private userList: Array<UserType> = [];
+    private prevList: Array<UserType> = [];
+
+    @action
+    login(email: string, password: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const found = this.userList.find(e => e.email === email && e.password === password);
+            if (found) {
+                this.serial = found.serial;
+                this.name = found.name;
+                this.email = found.email;
+                this.password = found.password;
+                found.clientId = this.id;
+                console.log(this.userList);
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+    }
+
+    @action
+    logout(): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            this.setLogged(false);
+            const found = this.userList.find(e => e.serial === this.serial);
+            if (found) {
+                found.clientId = 'no id';
+                resolve(true);
+            } else {
+                reject(new Error('user not found'));
+            }
+        });
+    }
+
+    @action
+    registration(name: string, email: string, password: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const filtered = this.userList.filter(e => e.email === email);
+            const pass = encodeURI(password);
+            if (filtered.length > 0 || pass !== password) {
+                resolve(false);
+            } else {
+                this.serial = uuid.v1();
+                this.name = name;
+                this.email = email;
+                this.password = password;
+                this.userList.push({
+                    serial: this.serial, name: this.name, 
+                    email: this.email, password: this.password,
+                    clientId: 'no id'
+                });
+                resolve(true);
+            }
+        });
+    }
 
     private ws: WebSocket | null = null;
 
@@ -496,6 +568,13 @@ class MyStore {
                 };
                 dc.send(JSON.stringify(json))
             });
+            const json = {
+                from: this.id,
+                payload: {
+                    userList: this.userList
+                }
+            };
+            dc.send(JSON.stringify(json));
         };
         dc.onmessage = (ev) => {
             const data = JSON.parse(ev.data);
@@ -521,6 +600,24 @@ class MyStore {
                         id: origin, timestamp: Date.now(), says: payload.cache
                     });
                 }
+            } else if (from && payload && payload.userList) {
+                console.log('<<received userList>>', from);
+                payload.userList.forEach((e: UserType) => {
+                    const found = this.userList.find(ee => ee.serial === e.serial);
+                    if (found) {
+                        const idx = this.userList.indexOf(found);
+                        this.userList.splice(idx, 1, e);
+                    } else {
+                        this.userList.push(e);
+                    }
+                });
+                (async () => {
+                    try {
+                        await localForage.setItem('user_list', this.userList);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                })();
             }
         };
         dc.onclose = (ev) => {
@@ -537,9 +634,10 @@ class MyStore {
         this.createPCC();
         let beforeSend: number = -1;
         let beforeCacheSend: number = -1;
+        let beforeListSend: number = 0;
         setInterval(() => {
             if (JSON.stringify(this.cache) !== JSON.stringify(this.prevCache)) {
-                this.prevCache = Object.assign([], this.cache);
+                this.prevCache = JSON.parse(JSON.stringify(this.cache));
                 localForage.setItem('user_message_cache', this.cache).catch((err) => console.error(err));
                 console.log('!cache changed!', this.cache);
                 let ids: Set<string> = new Set();
@@ -604,17 +702,42 @@ class MyStore {
                     console.log('[[send cache]]');
                 }
             }
+            if ((this.userList.length > 0 && this.userList.length > beforeListSend) ||
+                    (JSON.stringify(this.userList) !== JSON.stringify(this.prevList))) {
+                this.prevList = JSON.parse(JSON.stringify(this.userList));
+                let count = 0;
+                const json = {
+                    from: this.id,
+                    payload: {
+                        userList: this.userList
+                    }
+                };
+                [this.dcA, this.dcB, this.dcC].forEach(dc => {
+                    if (dc && dc.readyState === 'open') {
+                        dc.send(JSON.stringify(json));
+                        count += 1;
+                    }
+                });
+                if (count > 0) {
+                    beforeListSend = this.userList.length;
+                    console.log('[[send userList]]');
+                }
+                (async () => {
+                    try {
+                        await localForage.setItem('user_list', this.userList);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                })();
+            }
         }, 1500);
         (async () => {
-            this.id = await localForage.getItem('user_id') || (() => {
-                const _id = uuid.v1();
-                localForage.setItem('user_id', _id).catch((err) => console.error(err));
-                return _id;
-            })();
-            this.name = await localForage.getItem('user_screen_name') || 'no name';
+            this.userList = await localForage.getItem<Array<UserType>>('user_list') || [];
             this.say = await localForage.getItem('user_message') || [];
             this.cache = await localForage.getItem('user_message_cache') || [];
             console.log(this.id, this.name);
+            console.log(this.cache);
+            console.log(this.userList);
         })();
     }
 
@@ -623,7 +746,17 @@ class MyStore {
 type MyStoreType = {
     id: string
     name: string
+    serial: string
+    email: string
+    password: string
+    logged: Boolean
+    setLogged(logged: Boolean): void
     say: Array<SayType>
+    addSay(say: SayType): Promise<Boolean>
+    timeLine: Array<SayType>
+    login(email: string, password: string): Promise<Boolean>
+    logout(): Promise<Boolean>
+    registration(name: string, email: string, password: string): Promise<Boolean>
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
     pcC: RTCPeerConnection | null
@@ -636,9 +769,6 @@ type MyStoreType = {
     dcAState: string 
     dcBState: string 
     dcCState: string 
-    setName(name: string): void
-    addSay(say: SayType): void
-    timeLine: Array<SayType>
     createPCA(): void
     createPCB(): void
     createPCC(): void
