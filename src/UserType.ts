@@ -1,5 +1,6 @@
 export type UserType = {
-    serial: string
     name: string
+    serial: string
+    email: string
     password: string
 };

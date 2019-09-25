@@ -16,18 +16,18 @@ class MyStore {
     @observable
     id: string = uuid.v1();
 
-    serial: string = 'no serial';
-
     @observable
     name: string = 'no name';
-
-    userPassword: string = 'no password';
 
     @action
     setName(name: string) {
         this.name = name;
         localForage.setItem('user_screen_name', this.name).catch((err) => console.error(err));
     }
+
+    serial: string = 'no serial';
+    email: string = 'no email';
+    password: string = 'no password';
 
     @observable
     say: Array<SayType> = [];
@@ -56,6 +56,13 @@ class MyStore {
     private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
 
     private userList: Array<UserType> = [];
+
+    @action
+    login(email: string, password: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            
+        });
+    }
 
     private ws: WebSocket | null = null;
 
@@ -643,9 +650,9 @@ class MyStore {
                 return serial;
             })();
             this.name = await localForage.getItem('user_screen_name') || 'no name';
-            this.userPassword = await localForage.getItem('user_password') || '＠nopassword';
-            this.userList = this.userPassword === '＠nopassword' ? [] : [
-                {serial: this.serial, name: this.name, password: this.userPassword}
+            this.password = await localForage.getItem('user_password') || '＠nopassword';
+            this.userList = this.password === '＠nopassword' ? [] : [
+                {serial: this.serial, name: this.name, password: this.password}
             ];
             this.say = await localForage.getItem('user_message') || [];
             this.cache = await localForage.getItem('user_message_cache') || [];
@@ -657,10 +664,15 @@ class MyStore {
 
 type MyStoreType = {
     id: string
-    serial: string
     name: string
-    userPassword: string
+    setName(name: string): void
+    serial: string
+    email: string
+    password: string
     say: Array<SayType>
+    addSay(say: SayType): void
+    timeLine: Array<SayType>
+    login(email: string, password: string): Promise<Boolean>
     pcA: RTCPeerConnection | null
     pcB: RTCPeerConnection | null
     pcC: RTCPeerConnection | null
@@ -673,9 +685,6 @@ type MyStoreType = {
     dcAState: string 
     dcBState: string 
     dcCState: string 
-    setName(name: string): void
-    addSay(say: SayType): void
-    timeLine: Array<SayType>
     createPCA(): void
     createPCB(): void
     createPCC(): void
