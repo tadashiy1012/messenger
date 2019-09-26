@@ -151,6 +151,14 @@ class MyStore {
         this.showDetail = show;
     }
 
+    @observable
+    showSetting: Boolean = false;
+
+    @action
+    setSHowSetting(show: Boolean) {
+        this.showSetting = show;
+    }
+
     private ws: WebSocket | null = null;
 
     private createWs(...messageHandlers: Array<(payload: any) => Promise<Boolean>>): Promise<WebSocket> {
@@ -875,6 +883,8 @@ type MyStoreType = {
     registration(name: string, email: string, password: string): Promise<Boolean>
     showDetail: Boolean
     setShowDetail(show: Boolean): void
+    showSetting: Boolean
+    setShowSetting(show: Boolean): void
     pcAtgtId: string
     pcBtgtId: string
     pcCtgtId: string
