@@ -13,10 +13,10 @@ interface WriterProps {
 @inject('store')
 @observer
 export default class Writer extends React.Component<WriterProps> {
-    private _inSayRef: React.RefObject<HTMLInputElement>;
+    private _inSayRef: React.RefObject<HTMLTextAreaElement>;
     constructor(props: Readonly<WriterProps>) {
         super(props);
-        this._inSayRef = React.createRef<HTMLInputElement>();
+        this._inSayRef = React.createRef<HTMLTextAreaElement>();
     }
     sendClickHandler(ev: React.MouseEvent) {
         console.log(this._inSayRef.current!.value);
@@ -35,13 +35,13 @@ export default class Writer extends React.Component<WriterProps> {
     }
     render() {
         const {store} = this.props;
-        return <div className="pure-form">
-            <label>
-                <span>{store!.name}'s say: </span>
-                <input type="text"  className="pure-input-rounded pure-input-1-3"
-                    ref={this._inSayRef} disabled={store!.logged ? false:true} />
-            </label>
-            <span> </span>
+        return <div className="pure-form" css={{display:'flex', alignItems:'center'}}>
+            <img src={store!.icon} width="32" height="32" css={{
+                borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
+            <span>{store!.name}'s say: </span>
+            <textarea className="pure-input pure-input-1-3"
+                css={{margin:'0px 4px'}}
+                ref={this._inSayRef} disabled={store!.logged ? false:true}></textarea>
             <button className="pure-button" 
                 onClick={(ev) => {this.sendClickHandler(ev)}} 
                 disabled={store!.logged ? false : true}>send</button>

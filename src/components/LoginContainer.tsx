@@ -3,9 +3,9 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../store';
-import Logout from './Logout';
 import Login from './Login';
 import Registration from './Registration';
+import LoggedContainer from './LoggedContainer';
 
 interface LoginContainerProps {
     store?: MyStoreType
@@ -23,7 +23,7 @@ export default class LoginContainer extends React.Component<LoginContainerProps,
     render() {
         const {store} = this.props;
         return <React.Fragment>
-            {store!.logged ? <Logout /> : <React.Fragment>
+            {store!.logged ? <LoggedContainer /> : <React.Fragment>
                 <div css={{display:this.state.login ? 'block':'none'}}>
                     <Login />
                     <a href="#" onClick={(ev) => {
