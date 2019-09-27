@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../store';
-import { noImage } from '../noImageIcon';
+import { noImage } from '../utils/noImageIcon';
 
 const ICON_MAX_WIDTH = 256;
 const ICON_MAX_HEIGHT = 256;

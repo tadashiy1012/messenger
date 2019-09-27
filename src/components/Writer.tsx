@@ -5,7 +5,7 @@ import {css, jsx} from '@emotion/core';
 import * as uuid from 'uuid';
 import { MyStoreType } from '../store';
 import { SayType } from '../types';
-import { noImage } from '../noImageIcon';
+import { noImage } from '../utils/noImageIcon';
 
 interface WriterProps {
     store?: MyStoreType

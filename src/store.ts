@@ -2,15 +2,11 @@ import {observable, computed, action} from 'mobx';
 import * as localForage from 'localforage';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import {
-    APP_NAME, VERSION,
-    WEB_SOCKET_URL,
-    WEB_SOCKET_USER,
-    WEB_SOCKET_PASSWORD
-} from './const';
-import { SayType, UserType } from './types';
-import { PCBuilder } from './makePC';
-import { noImage } from './noImageIcon';
+import { SayType, UserType, CacheType } from './types';
+import { noImage } from './utils/noImageIcon';
+import makeWs from './utils/mekeWS';
+import MyWebSocket from './utils/MyWebSocket';
+import { setupDC, makePCA, makePreOffer, makePCBC } from './utils';
 
 class MyStore {
    
@@ -120,8 +116,8 @@ class MyStore {
         }
     }
 
-    private cache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
-    private prevCache: Array<{id: string, timestamp: number, says: Array<SayType>}> = [];
+    private cache: Array<CacheType> = [];
+    private prevCache: Array<CacheType> = [];
 
     private userList: Array<UserType> = [];
     private prevList: Array<UserType> = [];
@@ -196,7 +192,7 @@ class MyStore {
     }
 
     @observable
-    showDetail: Boolean = false;
+    showDetail: Boolean = true;
 
     @action
     setShowDetail(show: Boolean) {
@@ -227,52 +223,7 @@ class MyStore {
         });
     }
 
-    private ws: WebSocket | null = null;
-
-    private createWs(...messageHandlers: Array<(payload: any) => Promise<Boolean>>): Promise<WebSocket> {
-        return new Promise((resolve, reject) => {
-            const _ws = new WebSocket(WEB_SOCKET_URL);
-            _ws.onopen = (ev) => {
-                console.log(ev);
-                const auth = {auth: WEB_SOCKET_USER, passowrd: WEB_SOCKET_PASSWORD};
-                _ws.send(JSON.stringify(auth));
-                resolve(_ws);
-            };
-            _ws.onmessage = (ev) => {
-                const data = JSON.parse(ev.data);
-                console.log(data);
-                const {app} = data;
-                if (app && app === (APP_NAME + '@' + VERSION) && data.payload) {
-                    const tasks = messageHandlers.map((handler) => handler(data.payload));
-                    Promise.all(tasks).then((results) => {
-                        console.log(results);
-                        const filtered = results.filter(e => e === true);
-                        if (filtered.length === 0) {
-                            console.log('[less than condition]');
-                        }
-                    }).catch((err) => console.error(err));
-                }
-            };
-            _ws.onerror = (ev) => { console.error(ev); };
-        });
-    }
-
-    private wsSend(data: object): Promise<Boolean> {
-        return new Promise<Boolean>((resolve, reject) => {
-            const json = {
-                to: WEB_SOCKET_USER,
-                app: APP_NAME + '@' + VERSION,
-                payload: data
-            };
-            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                this.ws.send(JSON.stringify(json));
-                resolve(true);
-            } else {
-                reject(new Error('websocket error'));
-            }
-        });
-        
-    }
+    private ws: MyWebSocket | null = null;
 
     private pcA: RTCPeerConnection | null = null;
     private pcB: RTCPeerConnection | null = null;
@@ -302,291 +253,7 @@ class MyStore {
     private cdQueueA: Array<RTCIceCandidate> = [];
     private cdQueueB: Array<RTCIceCandidate> = [];
     private cdQueueC: Array<RTCIceCandidate> = [];
-
-    private pcAMakeOffer() {
-        let timer: any | null = null;
-        if (this.pcA !== null) {
-            this.pcA.createOffer().then((offer) => {
-                console.log('pcA create offer');
-                return this.pcA!.setLocalDescription(offer);
-            }).then(() => {
-                console.log('pcA set local desc(offer)');
-                this.preOffer = uuid.v1();
-                const data = {
-                    id: this.id,
-                    to: 'any',
-                    preOffer: this.preOffer
-                };
-                timer = setInterval(() => {
-                    this.wsSend(data).then(() => {
-                        console.log('pcA send "pre" offer')
-                        clearInterval(timer);
-                    }).catch((err) => {
-                        console.error(err);
-                        console.log('pending send pre offer');
-                    });
-                }, 1000);
-            }).catch((err) => {
-                console.error(err);
-            });
-        }
-    }
-
-    private createPCA() {
-        const prefix = 'pcA';
-        let timer: any | null = null;
-        this.pcA = PCBuilder.builder()
-        .setOnNegotiationNeeded((ev) => {
-            console.log(prefix, ev);
-        })
-        .setOnIceGatheringStateChange((ev) => {
-            console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
-                timer = setTimeout(() => {
-                    console.log('=== time out! recreate pcA ===');
-                    this.pcA!.close();
-                    this.dcA!.close();
-                    this.dcA = null;
-                    this.createPCA();
-                }, 12000);
-                console.log(prefix, 'set timer');
-            } else if (this.pcAState !== 'connected' && ev.currentTarget.iceGatheringState === 'complete') {
-                console.log('=== recreate pcA ===');
-                clearTimeout(timer);
-                timer = null;
-                this.pcA!.close();
-                this.dcA!.close();
-                this.createPCA();
-            }
-        })
-        .setOnIceConnectionstateChange((ev) => {
-            console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
-            this.pcAState = ev.currentTarget.iceConnectionState;
-            if (this.pcAState === 'disconnected' || this.pcAState === 'failed' || this.pcAState === 'closed') {
-                console.log('=== recreate pcA ===');
-                clearTimeout(timer);
-                timer = null;
-                this.pcA!.close();
-                this.dcA!.close();
-                this.createPCA();
-            } else if (this.pcAState === 'connected') {
-                console.log(prefix, '@@@ connected:', this.pcAtgtId, '@@@');
-                clearTimeout(timer);
-                timer = null;
-            }
-        })
-        .setOnIcecandidate((ev) => {
-            console.log(prefix, ev);
-            if (ev.candidate) {
-                this.cdQueueA.push(ev.candidate);
-            }
-        })
-        .setOnDataChannel((ev: RTCDataChannelEvent) => {
-            console.log(prefix, ev);
-            this.dcA = ev.channel;
-        })
-        .build();
-        console.log(prefix, 'create pc complete!');
-        this.pcAtgtId = null;
-        this.dcA = this.pcA!.createDataChannel('chat');
-        this.setupDC(this.dcA, (state) => {
-            console.log(prefix, 'dc', state);
-            this.dcAState = state;
-        });
-        this.pcAMakeOffer();
-    }
-
-    private createPCB() {
-        const prefix = 'pcB';
-        let timer: any | null = null;
-        this.pcB = PCBuilder.builder()
-        .setOnNegotiationNeeded((ev) => {
-            console.log(prefix, ev);
-        })
-        .setOnIceConnectionstateChange((ev) => {
-            console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
-            this.pcBState = ev.currentTarget.iceConnectionState;
-            if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
-                console.log(prefix, 'connected:', this.pcBtgtId);
-                clearTimeout(timer);
-                console.log(prefix, 'clear:', timer);
-                timer = null;
-            } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
-                clearTimeout(timer);
-                timer = null;
-                this.pcB!.close();
-                if (this.dcB) {this.dcB.close();}
-                this.dcB = null;
-                this.createPCB();
-            }
-        })
-        .setOnIceGatheringStateChange((ev) => {
-            console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
-                timer = setTimeout(() => {
-                    console.log(prefix, 'time out');
-                    this.pcB!.close();
-                    if (this.dcB) {this.dcB.close();}
-                    this.dcB = null;
-                    this.createPCB();
-                }, 42000);
-            }
-        })
-        .setOnIcecandidate((ev) => {
-            console.log(prefix, ev);
-            if (ev.candidate) {
-                this.cdQueueB.push(ev.candidate);
-            }
-        })
-        .setOnDataChannel((ev: RTCDataChannelEvent) => {
-            console.log('>>>>', prefix, ev);
-            this.dcB = ev.channel;
-            this.setupDC(this.dcB, (state) => {
-                console.log(prefix, 'dc', state);
-                this.dcBState = state;
-            });
-        })
-        .build();
-        this.pcBtgtId = null;
-        console.log(prefix, 'create pc complete!');
-    }
     
-    private createPCC() {
-        const prefix = 'pcC';
-        let timer: any | null = null;
-        this.pcC = PCBuilder.builder()
-        .setOnNegotiationNeeded((ev) => {
-            console.log(prefix, ev);
-        })
-        .setOnIceConnectionstateChange((ev) => {
-            console.log(prefix, 'iceConnectionState:', ev.currentTarget.iceConnectionState);
-            this.pcCState = ev.currentTarget.iceConnectionState;
-            if (ev.currentTarget.iceConnectionState === 'connected' && timer !== null) {
-                console.log(prefix, 'connected:', this.pcCtgtId);
-                clearTimeout(timer);
-                console.log(prefix, 'clear:', timer);
-                timer = null;
-            } else if (ev.currentTarget.iceConnectionState === 'disconnected') {
-                clearTimeout(timer);
-                timer = null;
-                this.pcC!.close();
-                if (this.dcC) {this.dcC.close();}
-                this.dcC = null;
-                this.createPCC();
-            }
-        })
-        .setOnIceGatheringStateChange((ev) => {
-            console.log(prefix, 'iceGatheringState:', ev.currentTarget.iceGatheringState);
-            if (ev.currentTarget.iceGatheringState === 'gathering' && timer === null) {
-                timer = setTimeout(() => {
-                    console.log(prefix, 'time out');
-                    this.pcC!.close();
-                    if (this.dcC) {this.dcC.close();}
-                    this.dcC = null;
-                    this.createPCC();
-                }, 42000);
-            }
-        })
-        .setOnIcecandidate((ev) => {
-            console.log(prefix, ev);
-            if (ev.candidate) {
-                this.cdQueueC.push(ev.candidate);
-            }
-        })
-        .setOnDataChannel((ev: RTCDataChannelEvent) => {
-            console.log('>>>>', prefix, ev);
-            this.dcC = ev.channel;
-            this.setupDC(this.dcC, (state) => {
-                console.log(prefix, 'dc', state);
-                this.dcCState = state;
-            });
-        })
-        .build();
-        this.pcCtgtId = null;
-        console.log(prefix, 'create pc complete!');
-    }
-
-    private setupDC(dc: RTCDataChannel, stateCb: (state: RTCDataChannelState) => void) {
-        dc.onopen = (ev) => {
-            console.log(ev, dc.readyState);
-            stateCb(dc.readyState);
-            this.cache.forEach(e => {
-                const json = {
-                    from: this.id,
-                    origin: e.says[0].authorId,
-                    payload: {
-                        cache: e.says
-                    }
-                };
-                dc.send(JSON.stringify(json))
-            });
-            const json = {
-                from: this.id,
-                payload: {
-                    userList: this.userList
-                }
-            };
-            dc.send(JSON.stringify(json));
-        };
-        dc.onmessage = (ev) => {
-            const data = JSON.parse(ev.data);
-            console.log(ev, data);
-            const {from, origin, sendTime, payload} = data;
-            if (from && origin && payload && payload.cache) {
-                console.log('<<received cache>>', from);
-                const tgt = this.cache.find(e => e.id === origin);
-                if (tgt) {
-                    if (tgt.says && payload.cache) {
-                        console.log('>>tgt found!<<', tgt);
-                        let update = false;
-                        payload.cache.forEach((say: SayType) => {
-                            const foundId = tgt.says.find(e => e.id === say.id);
-                            if (!foundId) {
-                                console.log ('>>>push say<<<')
-                                tgt.says.push(say);
-                                update = true;
-                            }
-                        });
-                        if (update) {
-                            tgt.timestamp = Date.now();
-                        }
-                    }
-                } else {
-                    this.cache.push({
-                        id: origin, timestamp: Date.now(), says: payload.cache
-                    });
-                }
-            } else if (from && payload && payload.userList) {
-                console.log('<<received userList>>', from);
-                payload.userList.forEach((e: UserType) => {
-                    const found = this.userList.find(ee => ee.serial === e.serial);
-                    if (found) {
-                        if (found.update < e.update) {
-                            const idx = this.userList.indexOf(found);
-                            this.userList.splice(idx, 1, e);
-                            console.log('(( user list update! ))');
-                        }
-                    } else {
-                        this.userList.push(e);
-                        console.log('(( new user added! ))');
-                    }
-                });
-                (async () => {
-                    try {
-                        await localForage.setItem('user_list', this.userList);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                })();
-            }
-        };
-        dc.onclose = (ev) => {
-            console.log(ev, dc.readyState);
-            stateCb(dc.readyState);
-        };
-        stateCb(dc.readyState);
-    }
-
     constructor() {
         (async () => {
             try {
@@ -599,7 +266,7 @@ class MyStore {
             console.log(this.cache);
             console.log(this.userList);
         })();
-        this.createWs((payload: any) => {
+        makeWs((payload: any) => {
             return new Promise<Boolean>((resolve) => {
                 const {id, to, preOffer} = payload;
                 if (id !== this.id && to === 'any') {
@@ -614,7 +281,7 @@ class MyStore {
                                 to: id,
                                 preAnswer: preOffer
                             };
-                            this.wsSend(data).then(() => {
+                            this.ws!.send(data).then(() => {
                                 console.log('send pre answer');
                             }).catch(err => console.error(err));
                         }, pendingTime);
@@ -630,13 +297,13 @@ class MyStore {
             return new Promise<Boolean>((resolve) => {
                 const {id, to, preAnswer} = payload;
                 if (id !== this.id && to === this.id && preAnswer && preAnswer === this.preOffer) {
-                    console.log('receive pre answer');
+                    console.log('receive pre answer', this.preOffer);
                     const data = {
                         id: this.id,
                         to: id,
                         offer: this.pcA!.localDescription!.sdp
                     };
-                    this.wsSend(data).then(() => {
+                    this.ws!.send(data).then(() => {
                         this.preOffer = null;
                         console.log('pcA send offer');
                     }).catch(err => console.error(err));
@@ -649,44 +316,12 @@ class MyStore {
             return new Promise<Boolean>((resolve) => {
                 const {id, to, pc, answer} = payload;
                 if (id !== this.id && to === this.id && answer) {
-                    console.log('pc<<', pc);
-                    const desc = new RTCSessionDescription({
-                        type: 'answer',
-                        sdp: answer
-                    });
-                    if (this.pcBtgtId === id && pc && this.pcB && this.pcB.remoteDescription === null) {
-                        this.pcB.setRemoteDescription(desc).catch((err) => console.error(err));
-                        console.log('pcB set answer');
-                        this.cdQueueB.forEach(e => {
-                            const data = {
-                                id: this.id,
-                                to: id,
-                                pc,
-                                candidate: e
-                            };
-                            this.wsSend(data).then(() => {
-                                console.log('send pcC candidate');
-                            }).catch((err) => console.error(err));
+                    console.log('pc<<', pc, ':', id);
+                    if (this.pcA && this.pcA.remoteDescription === null) {
+                        const desc = new RTCSessionDescription({
+                            type: 'answer',
+                            sdp: answer
                         });
-                        this.cdQueueB = [];
-                        resolve(true);
-                    } else if (this.pcCtgtId === id && pc && this.pcC && this.pcC.remoteDescription === null) {
-                        this.pcC.setRemoteDescription(desc).catch((err) => console.error(err));
-                        console.log('pcC set answer');
-                        this.cdQueueC.forEach(e => {
-                            const data = {
-                                id: this.id,
-                                to: id,
-                                pc,
-                                candidate: e
-                            };
-                            this.wsSend(data).catch(() => {
-                                console.log('send pcC candidate');
-                            }).catch((err) => console.error(err));
-                        });
-                        this.cdQueueC = [];
-                        resolve(true);
-                    } else if (this.pcA && this.pcA.remoteDescription === null) {
                         this.pcAtgtId = id;
                         this.pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                         console.log('pcA set answer');
@@ -694,15 +329,17 @@ class MyStore {
                             const data = {
                                 id: this.id,
                                 to: id,
-                                pc,
+                                pc: pc,
                                 candidate: e
                             };
-                            this.wsSend(data).then(() => {
+                            this.ws!.send(data).then(() => {
                                 console.log('send pcA candidate');
                             }).catch(err => console.error(err));
                         });
                         this.cdQueueA = [];
                         resolve(true);
+                    } else {
+                        resolve(false);
                     }
                 } else {
                     resolve(false);
@@ -712,6 +349,7 @@ class MyStore {
             return new Promise<Boolean>((resolve) => {
                 const {id, to, pc, candidate} = payload;
                 if (id !== this.id && to === this.id && candidate && pc) {
+                    console.log('pc:', pc);
                     const cd = new RTCIceCandidate({
                         candidate: candidate.candidate,
                         sdpMLineIndex: candidate.sdpMLineIndex,
@@ -760,19 +398,24 @@ class MyStore {
                             pc: 'B',
                             answer: answer!.sdp
                         };
-                        this.wsSend(data).then(() => {
+                        this.ws!.send(data).then(() => {
                             console.log('send pcB answer');
                         }).catch((err) => console.error(err));
+                        this.cdQueueB.forEach(e => {
+                            const data = {
+                                id: this.id,
+                                to: id,
+                                pc: 'A',
+                                candidate: e
+                            };
+                            this.ws!.send(data).then(() => {
+                                console.log('send pcB candidate');
+                            }).catch(err => console.error(err));
+                        });
+                        this.cdQueueB = [];
+                        resolve(true);
                     }).catch((err) => console.error(err));
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            });
-        }, (payload: any) => {
-            return new Promise<Boolean>((resolve) => {
-                const {id, to, offer} = payload;
-                if (id !== this.id && to === this.id && offer && this.pcC && this.pcC.remoteDescription === null) {
+                } else if (id !== this.id && to === this.id && offer && this.pcC && this.pcC.remoteDescription === null) {
                     this.pcCtgtId = id;
                     let answer: RTCSessionDescriptionInit | null = null;
                     const offerDesc = new RTCSessionDescription({
@@ -793,11 +436,23 @@ class MyStore {
                             pc: 'C',
                             answer: answer!.sdp
                         };
-                        this.wsSend(data).then(() => {
+                        this.ws!.send(data).then(() => {
                             console.log('send pcC answer');
                         }).catch((err) => console.error(err));
+                        this.cdQueueC.forEach(e => {
+                            const data = {
+                                id: this.id,
+                                to: id,
+                                pc: 'A',
+                                candidate: e
+                            };
+                            this.ws!.send(data).then(() => {
+                                console.log('send pcC candidate');
+                            }).catch(err => console.error(err));
+                        });
+                        this.cdQueueC = [];
+                        resolve(true);
                     }).catch((err) => console.error(err));
-                    resolve(true);
                 } else {
                     resolve(false);
                 }
@@ -805,9 +460,105 @@ class MyStore {
         }).then((ws) => {
             console.log('websocket create success!');
             this.ws = ws;
-            this.createPCA();
-            this.createPCB();
-            this.createPCC();
+            // PC A
+            const pcAStateFn = (state: RTCIceConnectionState) => {
+                this.pcAState = state;
+                if (state === 'connected') {
+                    console.log('pcA', '@@@ connected:', this.pcAtgtId, '@@@');
+                    console.log('pcA', this.dcA);
+                    setTimeout(() => {
+                        if (state === 'connected' && this.dcA && this.dcA.readyState !== 'open') {
+                            pcACloseFn();
+                        }
+                    }, 10 * 1000);
+                } else if (state === 'disconnected' || state === 'failed') {
+                    this.pcAtgtId = null;
+                }
+            }; 
+            const pcACandidateFn = (candidate: RTCIceCandidate) => {
+                this.cdQueueA.push(candidate);
+            };
+            const pcADataChannelFn = (channel: RTCDataChannel) => {
+                console.log('call pcADataChannelFn');
+                this.dcA = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+                    console.log('pcA', 'dc', state);
+                    this.dcAState = state;
+                });
+                this.dcAState = this.dcA.readyState;
+            };
+            const pcACloseFn = () => {
+                console.log('call pcA close func');
+                if (this.dcA) {this.dcA.close();}
+                this.pcA!.close();
+                this.dcA = null;
+                this.pcA = null;
+                this.pcAtgtId = null;
+                this.pcA = makePCA(pcAStateFn, pcACloseFn, pcACandidateFn, pcADataChannelFn);
+                makePreOffer(this.id, this.pcA!, this.ws!).then((preOffer) => {
+                    console.log(preOffer);
+                    this.preOffer = preOffer;
+                }).catch((err) => console.error(err));
+            };
+            this.pcA = makePCA(pcAStateFn, pcACloseFn, pcACandidateFn, pcADataChannelFn);
+            makePreOffer(this.id, this.pcA!, this.ws).then((preOffer) => {
+                console.log(preOffer);
+                this.preOffer = preOffer;
+            }).catch((err) => console.error(err));
+            // PC B
+            const pcBStateFn = (state: RTCIceConnectionState) => {
+                this.pcBState = state;
+                if (state === 'disconnected' || state === 'failed') {
+                    this.pcBtgtId = null;
+                }
+            };
+            const pcBCandidateFn = (candidate: RTCIceCandidate) => {
+                this.cdQueueB.push(candidate);
+            };
+            const pcBDataChannelFn = (channel: RTCDataChannel) => {
+                this.dcB = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+                    console.log('pcB', 'dc', state);
+                    this.dcBState = state;
+                });
+                this.dcBState = this.dcB.readyState;
+            };
+            const pcBCloseFn = () => {
+                console.log('call pcB close func');
+                if (this.dcB) {this.dcB.close();}
+                this.pcB!.close();
+                this.dcB = null;
+                this.pcB = null;
+                this.pcBtgtId = null;
+                this.pcB = makePCBC('pcB', pcBStateFn, pcBCloseFn, pcBCandidateFn, pcBDataChannelFn);
+            };
+            this.pcB = makePCBC('pcB', pcBStateFn, pcBCloseFn, pcBCandidateFn, pcBDataChannelFn);
+            // PC C
+            const pcCStateFn = (state: RTCIceConnectionState) => {
+                this.pcCState = state;
+                if (state === 'disconnected' || state === 'failed') {
+                    this.pcCtgtId = null;
+                }
+            };
+            const pcCCandidateFn = (candidate: RTCIceCandidate) => {
+                this.cdQueueC.push(candidate);
+            };
+            const pcCDataChannelFn = (channel: RTCDataChannel) => {
+                this.dcC = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+                    console.log('pcC', 'dc', state);
+                    this.dcCState = state;
+                });
+                this.dcCState = this.dcC.readyState;
+            };
+            const pcCCloseFn = () => {
+                console.log('call pcC close func');
+                if (this.dcC) {this.dcC.close();}
+                this.pcC!.close();
+                this.dcC = null;
+                this.pcC = null;
+                this.pcCtgtId = null;
+                this.pcC = makePCBC('pcC', pcCStateFn, pcCCloseFn, pcCCandidateFn, pcCDataChannelFn);
+            };
+            this.pcC = makePCBC('pcC', pcCStateFn, pcCCloseFn, pcCCandidateFn, pcCDataChannelFn);
+
             let beforeCacheSend: number = -1;
             let beforeListSend: number = 0;
             setInterval(() => {

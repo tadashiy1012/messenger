@@ -30,7 +30,7 @@ class PCBuilder {
         }
         return this;
     }
-    setOnIcecandidate(handler: (ev: any) => void): PCBuilder {
+    setOnIcecandidate(handler: (ev: RTCPeerConnectionIceEvent) => void): PCBuilder {
         if (this.pc !== null) {
             this.pc.onicecandidate = handler;
         }
@@ -42,7 +42,7 @@ class PCBuilder {
         }
         return this;
     }
-    setOnDataChannel(handler: (ev: any) => void): PCBuilder {
+    setOnDataChannel(handler: (ev: RTCDataChannelEvent) => void): PCBuilder {
         if (this.pc !== null) {
             this.pc.ondatachannel = handler;
         }
