@@ -19,7 +19,7 @@ export default class LoggedContainer extends React.Component<LoggedContainerProp
             <span> </span>
             <button className="pure-button" onClick={(ev) => {
                 store!.setShowSetting(!store!.showSetting);
-            }}>settings</button>
+            }}>main/setting</button>
         </React.Fragment>
     }
 }

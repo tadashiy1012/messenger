@@ -40,11 +40,12 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const {store} = this.props;
         const child = store!.timeLine.reverse().map(e => {
             const dt = new Date(e.date);
+            const name = store!.findAuthorname(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                         borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                    <span css={{margin:'0px 4px'}}>{e.author}</span>
+                    <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
                     </span>
