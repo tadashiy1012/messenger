@@ -38,6 +38,7 @@ class MyStore {
                     const hash = bcrypt.hashSync(password, salt);
                     user.password = hash;
                 }
+                user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
                 if (found) {
@@ -560,7 +561,7 @@ class MyStore {
                 payload.userList.forEach((e: UserType) => {
                     const found = this.userList.find(ee => ee.serial === e.serial);
                     if (found) {
-                        if (!found.update || found.update < e.update) {
+                        if (found.update < e.update) {
                             const idx = this.userList.indexOf(found);
                             this.userList.splice(idx, 1, e);
                             console.log('(( user list update! ))');
