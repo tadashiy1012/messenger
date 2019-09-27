@@ -5,7 +5,7 @@ import { Provider } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
 import { MyStore, } from './store';
 import { 
-    AppTitle, Status, LoginContainer, Writer, TimeLine 
+    AppTitle, Status, LoginContainer, MainContainer
 } from './components';
 import 'purecss/build/pure.css';
 
@@ -15,9 +15,7 @@ const App = () => (
             <AppTitle />
             <Status />
             <LoginContainer />
-            <h2 css={{marginBottom:'2px'}}>main</h2>
-            <Writer />
-            <TimeLine />
+            <MainContainer />
         </div>
     </Provider>
 );
