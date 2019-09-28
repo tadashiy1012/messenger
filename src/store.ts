@@ -26,7 +26,6 @@ class MyStore {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
-                console.log(user);
                 user.name = name;
                 user.icon = icon || noImage;
                 if (password) {
@@ -72,6 +71,7 @@ class MyStore {
 
     addSay(say: SayType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
+            console.log('$say:', say);
             if (this.currentUser) {
                 const currentSerial = this.currentUser.serial;
                 const found = this.userList.find(e => e.serial === currentSerial);
@@ -133,6 +133,8 @@ class MyStore {
                     email: found.email,
                     password: found.password,
                     icon: found.icon,
+                    follow: found.follow,
+                    follower: found.follower,
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -182,6 +184,8 @@ class MyStore {
                     email: email,
                     password: hash,
                     icon: noImage,
+                    follow: [],
+                    follower: [],
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -262,7 +266,7 @@ class MyStore {
         this.dcA = null;
         this.pcA = null;
         this.pcAtgtId = null;
-        this.pcA = makePCA(this.pcACloseFn, (state: RTCIceConnectionState) => {
+        this.pcA = makePCA(this.pcACloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcAState = state;
             if (state === 'connected') {
                 console.log('pcA', '@@@ connected:', this.pcAtgtId, '@@@');
@@ -293,7 +297,7 @@ class MyStore {
         this.dcB = null;
         this.pcB = null;
         this.pcBtgtId = null;
-        this.pcB = makePCBC('pcB', this.pcBCloseFn, (state: RTCIceConnectionState) => {
+        this.pcB = makePCBC('pcB', this.pcBCloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcBState = state;
             if (state === 'connected') {
                 console.log('pcB', '@@@ connected:', this.pcBtgtId, '@@@');
@@ -316,7 +320,7 @@ class MyStore {
         this.dcC = null;
         this.pcC = null;
         this.pcCtgtId = null;
-        this.pcC = makePCBC('pcC', this.pcCCloseFn, (state: RTCIceConnectionState) => {
+        this.pcC = makePCBC('pcC', this.pcCCloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcCState = state;
             if (state === 'connected') {
                 console.log('pcB', '@@@ connected:', this.pcCtgtId, '@@@');
@@ -589,7 +593,7 @@ class MyStore {
                                     cache: e.says
                                 }
                             };
-                            [this.dcB, this.dcC].forEach(dc => {
+                            [this.dcA, this.dcB, this.dcC].forEach(dc => {
                                 if (dc && dc.readyState === 'open') {
                                     dc.send(JSON.stringify(json))
                                     count += 1;
@@ -612,7 +616,8 @@ class MyStore {
     private sayWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.say.length > 0) {
-                const tgt = this.cache.find(e => e.id === this.currentUser!.serial);
+                const user = this.getUser;
+                const tgt = this.cache.find(e => e.says[0].authorId === user!.serial);
                 if (tgt) {
                     if (tgt.says) {
                         tgt.timestamp = Date.now();
@@ -625,7 +630,7 @@ class MyStore {
                     }
                 } else {
                     this.cache.push({
-                        id: origin, timestamp: Date.now(), says: this.say
+                        id: uuid.v1(), timestamp: Date.now(), says: this.say
                     });
                 }
                 this.say = [];

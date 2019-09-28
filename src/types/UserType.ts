@@ -5,5 +5,7 @@ export type UserType = {
     password: string
     clientId: string
     icon: string
-    update: number
+    update: number,
+    follow: Array<string>
+    follower: Array<string>
 };
