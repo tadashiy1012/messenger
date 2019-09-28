@@ -133,6 +133,8 @@ class MyStore {
                     email: found.email,
                     password: found.password,
                     icon: found.icon,
+                    follow: found.follow,
+                    follower: found.follower,
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -182,6 +184,8 @@ class MyStore {
                     email: email,
                     password: hash,
                     icon: noImage,
+                    follow: [],
+                    follower: [],
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -612,7 +616,8 @@ class MyStore {
     private sayWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.say.length > 0) {
-                const tgt = this.cache.find(e => e.says[0].authorId === this.currentUser!.serial);
+                const user = this.getUser;
+                const tgt = this.cache.find(e => e.says[0].authorId === user!.serial);
                 if (tgt) {
                     if (tgt.says) {
                         tgt.timestamp = Date.now();
