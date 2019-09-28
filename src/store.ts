@@ -26,7 +26,6 @@ class MyStore {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
-                console.log(user);
                 user.name = name;
                 user.icon = icon || noImage;
                 if (password) {
@@ -72,6 +71,7 @@ class MyStore {
 
     addSay(say: SayType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
+            console.log('$say:', say);
             if (this.currentUser) {
                 const currentSerial = this.currentUser.serial;
                 const found = this.userList.find(e => e.serial === currentSerial);
@@ -262,7 +262,7 @@ class MyStore {
         this.dcA = null;
         this.pcA = null;
         this.pcAtgtId = null;
-        this.pcA = makePCA(this.pcACloseFn, (state: RTCIceConnectionState) => {
+        this.pcA = makePCA(this.pcACloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcAState = state;
             if (state === 'connected') {
                 console.log('pcA', '@@@ connected:', this.pcAtgtId, '@@@');
@@ -293,7 +293,7 @@ class MyStore {
         this.dcB = null;
         this.pcB = null;
         this.pcBtgtId = null;
-        this.pcB = makePCBC('pcB', this.pcBCloseFn, (state: RTCIceConnectionState) => {
+        this.pcB = makePCBC('pcB', this.pcBCloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcBState = state;
             if (state === 'connected') {
                 console.log('pcB', '@@@ connected:', this.pcBtgtId, '@@@');
@@ -316,7 +316,7 @@ class MyStore {
         this.dcC = null;
         this.pcC = null;
         this.pcCtgtId = null;
-        this.pcC = makePCBC('pcC', this.pcCCloseFn, (state: RTCIceConnectionState) => {
+        this.pcC = makePCBC('pcC', this.pcCCloseFn.bind(this), (state: RTCIceConnectionState) => {
             this.pcCState = state;
             if (state === 'connected') {
                 console.log('pcB', '@@@ connected:', this.pcCtgtId, '@@@');
