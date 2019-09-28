@@ -1,7 +1,8 @@
 import { WEB_SOCKET_USER, VERSION, APP_NAME, WEB_SOCKET_URL, WEB_SOCKET_PASSWORD } from "../const";
 import MyWebSocket from "./MyWebSocket";
+import { WsPayloadType } from "../types";
 
-export default function makeWs (...messageHandlers: Array<(payload: any) => Promise<Boolean>>): Promise<MyWebSocket> {
+export default function makeWs (...messageHandlers: Array<(payload: WsPayloadType) => Promise<Boolean>>): Promise<MyWebSocket> {
     return new Promise((resolve, reject) => {
         const ws = new MyWebSocket(WEB_SOCKET_URL);
         ws.setOnOpenHandler((ev) => {

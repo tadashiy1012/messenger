@@ -1,10 +1,10 @@
 import { PCBuilder } from "./makePC";
 
 export default function createPCA(
-    stateCb: (state: RTCIceConnectionState) => void,
     closeCb: () => void, 
-    candidateCb?: (candidate: RTCIceCandidate) => void, 
-    dataChannelCb?: (channel: RTCDataChannel) => void
+    stateCb: (state: RTCIceConnectionState) => void,
+    candidateCb: (candidate: RTCIceCandidate) => void, 
+    dataChannelCb: (channel: RTCDataChannel) => void
 ): RTCPeerConnection | null {
     const prefix = 'pcA';
     let timer: any | null = null;
@@ -48,16 +48,12 @@ export default function createPCA(
     .setOnIcecandidate((ev) => {
         console.log(prefix, ev);
         if (ev.candidate) {
-            if (candidateCb) {
-                candidateCb(ev.candidate)
-            }
+            candidateCb(ev.candidate)
         }
     })
     .setOnDataChannel((ev) => {
         console.log(prefix, ev);
-        if (dataChannelCb) {
-            dataChannelCb(ev.channel);
-        }
+        dataChannelCb(ev.channel);
     })
     .build();
     if (dataChannelCb) {

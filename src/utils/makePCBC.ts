@@ -2,10 +2,10 @@ import { PCBuilder } from "./makePC";
 
 export default function makePCBC(
     prefix: string,
-    stateCb: (state: RTCIceConnectionState) => void,
     closeCb: () => void, 
-    candidateCb?: (candidate: RTCIceCandidate) => void, 
-    dataChannelCb?: (channel: RTCDataChannel) => void
+    stateCb: (state: RTCIceConnectionState) => void,
+    candidateCb: (candidate: RTCIceCandidate) => void, 
+    dataChannelCb: (channel: RTCDataChannel) => void
 ): RTCPeerConnection | null {
     let timer: any | null = null;
     const pc = PCBuilder.builder()
@@ -38,14 +38,12 @@ export default function makePCBC(
     .setOnIcecandidate((ev: RTCPeerConnectionIceEvent) => {
         console.log(prefix, ev);
         if (ev.candidate) {
-            if (candidateCb) candidateCb(ev.candidate);
+            candidateCb(ev.candidate);
         }
     })
     .setOnDataChannel((ev: RTCDataChannelEvent) => {
         console.log('>>>>', prefix, ev);
-        if (dataChannelCb) {
-            dataChannelCb(ev.channel);
-        }
+        dataChannelCb(ev.channel);
     })
     .build();
     console.log(prefix, 'create complete!');
