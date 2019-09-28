@@ -38,7 +38,10 @@ interface TimeLineProps {
 export default class TimeLine extends React.Component<TimeLineProps> {
     render() {
         const {store} = this.props;
-        const child = store!.timeLine.reverse().map(e => {
+        const timeline = [...store!.timeLine].sort((a, b) => {
+            return b.date - a.date;
+        });
+        const child1 = timeline.map(e => {
             const dt = new Date(e.date);
             const name = store!.findAuthorname(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
@@ -59,9 +62,15 @@ export default class TimeLine extends React.Component<TimeLineProps> {
                 </div>
             </li>
         });
-        const followId: Array<String> = ['259bbce0-e1e3-11e9-a32c-a132a86c2c90'];
-        const child2 = store!.timeLine.reverse().filter(e => {
-            const found = followId.find(ee => ee === e.authorId);
+        const idSet = store!.logged ? 
+            new Set<string>([
+                store!.currentUser.serial, 
+                ...store!.currentUser.follow, 
+                ...store!.currentUser.follower
+            ]) : new Set<string>();
+        const ids: Array<String> = Array.from(idSet);
+        const child2 = timeline.filter(e => {
+            const found = ids.find(ee => ee === e.authorId);
             return found ? true:false;
         }).map(e => {
             const dt = new Date(e.date);
@@ -87,7 +96,7 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         return <div css={{display:'flex', flexDirection:'row', justifyContent:'space-around'}}>
             <div css={{width:store!.logged ? '46%':'88%'}}>
                 <h4>global timeline</h4>
-                <ul css={{listStyleType:'none', padding:'0px'}}>{child}</ul>
+                <ul css={{listStyleType:'none', padding:'0px'}}>{child1}</ul>
             </div>
             <div css={{width:'46%', display:store!.logged ? 'block':'none'}}>
                 <h4>local timeline</h4>
