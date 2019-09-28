@@ -589,7 +589,7 @@ class MyStore {
                                     cache: e.says
                                 }
                             };
-                            [this.dcB, this.dcC].forEach(dc => {
+                            [this.dcA, this.dcB, this.dcC].forEach(dc => {
                                 if (dc && dc.readyState === 'open') {
                                     dc.send(JSON.stringify(json))
                                     count += 1;
@@ -612,7 +612,7 @@ class MyStore {
     private sayWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.say.length > 0) {
-                const tgt = this.cache.find(e => e.id === this.currentUser!.serial);
+                const tgt = this.cache.find(e => e.says[0].authorId === this.currentUser!.serial);
                 if (tgt) {
                     if (tgt.says) {
                         tgt.timestamp = Date.now();
@@ -625,7 +625,7 @@ class MyStore {
                     }
                 } else {
                     this.cache.push({
-                        id: origin, timestamp: Date.now(), says: this.say
+                        id: uuid.v1(), timestamp: Date.now(), says: this.say
                     });
                 }
                 this.say = [];
