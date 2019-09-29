@@ -2,13 +2,13 @@ import {observable, computed, action} from 'mobx';
 import * as localForage from 'localforage';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import { SayType, UserType, CacheType, WsPayloadType } from './types';
-import { noImage } from './utils/noImageIcon';
-import makeWs from './utils/mekeWS';
-import MyWebSocket from './utils/MyWebSocket';
-import { setupDC, makePCA, makePreOffer, makePCBC } from './utils';
+import { SayType, UserType, CacheType, WsPayloadType } from '../types';
+import { noImage } from '../utils/noImageIcon';
+import makeWs from '../utils/mekeWS';
+import MyWebSocket from '../utils/MyWebSocket';
+import { setupDC, makePCA, makePreOffer, makePCBC } from '../utils';
 
-class MyStore {
+export default class MyStore {
    
     @observable
     id: string = uuid.v1();
@@ -717,37 +717,3 @@ class MyStore {
     }
 
 }
-
-type MyStoreType = {
-    id: string
-    currentUser: UserType
-    getUser: UserType | null
-    updateUser(name: string, icon?: string, password?: string): Promise<Boolean>
-    logged: Boolean
-    setLogged(logged: Boolean): void
-    addSay(say: SayType): Promise<Boolean>
-    timeLine: Array<SayType>
-    findAuthorIcon(authorId: string): string
-    findAuthorname(authorId: string): string
-    login(email: string, password: string): Promise<Boolean>
-    logout(): Promise<Boolean>
-    registration(name: string, email: string, password: string): Promise<Boolean>
-    showDetail: Boolean
-    setShowDetail(show: Boolean): void
-    showSetting: Boolean
-    setShowSetting(show: Boolean): void
-    allClear(): Promise<Boolean>
-    pcAtgtId: string
-    pcBtgtId: string
-    pcCtgtId: string
-    pcAState: string
-    pcBState: string
-    pcCState: string
-    dcAState: string 
-    dcBState: string 
-    dcCState: string 
-}
-
-export {
-    MyStore, MyStoreType
-};

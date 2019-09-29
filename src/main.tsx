@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { MyStore, } from './store';
+import { MyStore } from './stores';
 import { 
     AppTitle, Status, LoginContainer, MainContainer
 } from './components';

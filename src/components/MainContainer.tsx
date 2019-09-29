@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { MyStoreType, } from '../store';
+import { MyStoreType } from '../types';
 import Setting from './Setting';
 import Writer from './Writer';
 import TimeLine from './Timeline';
