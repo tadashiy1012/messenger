@@ -8,52 +8,34 @@ export default function setupDC(
     dc.onopen = (ev) => {
         console.log(ev, dc.readyState);
         stateCb(dc.readyState);
-        cache.forEach(e => {
-            const json = {
-                from: clientId,
-                origin: e.says[0].authorId,
-                payload: {
-                    cache: e.says
-                }
-            };
-            dc.send(JSON.stringify(json))
-        });
         const json = {
             from: clientId,
+            sendTime: Date.now(),
             payload: {
-                userList: userList
+                cache: cache
             }
         };
-        dc.send(JSON.stringify(json));
+        dc.send(JSON.stringify(json))
     };
     dc.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
         console.log(ev, data);
-        const {from, origin, sendTime, payload} = data;
-        if (from && origin && payload && payload.cache) {
+        const {from, sendTime, payload} = data;
+        if (from && payload && payload.cache) {
             console.log('<<received cache>>', from);
-            const tgt = cache.find(e => e.id === origin);
-            if (tgt) {
-                if (tgt.says && payload.cache) {
-                    console.log('>>tgt found!<<', tgt);
-                    let update = false;
-                    payload.cache.forEach((say: SayType) => {
-                        const foundId = tgt.says.find(e => e.id === say.id);
-                        if (!foundId) {
-                            console.log ('>>>push say<<<')
-                            tgt.says.push(say);
-                            update = true;
-                        }
-                    });
-                    if (update) {
-                        tgt.timestamp = Date.now();
+            payload.cache.forEach((e: CacheType) => {
+                const found = cache.find(ee => ee.id == e.id);
+                if (found) {
+                    if (found.timestamp < e.timestamp) {
+                        const idx = cache.indexOf(found);
+                        cache.splice(idx, 1, e);
+                        console.log('(( cache update! ))');
                     }
+                } else {
+                    cache.push(e);
+                    console.log('(( new cache added! ))')
                 }
-            } else {
-                cache.push({
-                    id: origin, timestamp: Date.now(), says: payload.cache
-                });
-            }
+            });
         } else if (from && payload && payload.userList) {
             console.log('<<received userList>>', from);
             payload.userList.forEach((e: UserType) => {

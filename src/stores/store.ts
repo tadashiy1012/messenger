@@ -7,6 +7,7 @@ import { noImage } from '../utils/noImageIcon';
 import makeWs from '../utils/mekeWS';
 import MyWebSocket from '../utils/MyWebSocket';
 import { setupDC, makePCA, makePreOffer, makePCBC } from '../utils';
+import Watchers from './watchers';
 
 export default class MyStore {
    
@@ -120,7 +121,6 @@ export default class MyStore {
     private prevCache: Array<CacheType> = [];
 
     private userList: Array<UserType> = [];
-    private prevList: Array<UserType> = [];
 
     @action
     login(email: string, password: string): Promise<Boolean> {
@@ -540,144 +540,6 @@ export default class MyStore {
             }
         });
     }
-
-    // watcher
-
-    private cacheWatcher(): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            if (JSON.stringify(this.cache) !== JSON.stringify(this.prevCache)) {
-                this.prevCache = JSON.parse(JSON.stringify(this.cache));
-                localForage.setItem('user_message_cache', this.cache).catch((err) => console.error(err));
-                console.log('!cache changed!', this.cache);
-                let ids: Set<string> = new Set();
-                this.cache.forEach(e => ids.add(e.id));
-                let newHear: Array<SayType> = [];
-                ids.forEach(e => {
-                    let filtered = this.cache.filter(ee => ee.id === e);
-                    if (filtered && filtered.length > 0) {
-                        if (filtered.length >= 2) {
-                            filtered = filtered.sort((a, b) => {
-                                return b.timestamp - a.timestamp;
-                            });
-                        }
-                        if (filtered[0].says) {
-                            newHear = [...filtered[0].says, ...newHear];
-                        }
-                    }
-                });
-                this.hear = newHear;
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    }
-
-    private beforeCacheSend: number = -1;
-
-    private cacheSender(): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            if (this.cache.length > 0) {
-                const filtered = this.cache.filter(e => {
-                    return e.timestamp > this.beforeCacheSend;
-                });
-                if (filtered.length > 0) {
-                    let count = 0;
-                    this.cache.forEach(e => {
-                        if (e.says) {
-                            const json = {
-                                from: this.id,
-                                origin: e.says[0].authorId,
-                                sendTime: Date.now(),
-                                payload: {
-                                    cache: e.says
-                                }
-                            };
-                            [this.dcA, this.dcB, this.dcC].forEach(dc => {
-                                if (dc && dc.readyState === 'open') {
-                                    dc.send(JSON.stringify(json))
-                                    count += 1;
-                                }
-                            });
-                        }
-                    });
-                    if (count > 0) {
-                        this.beforeCacheSend = Date.now();
-                        console.log('[[send cache]]');
-                    }
-                }
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    }
-
-    private sayWatcher(): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            if (this.say.length > 0) {
-                const user = this.getUser;
-                const tgt = this.cache.find(e => e.says[0].authorId === user!.serial);
-                if (tgt) {
-                    if (tgt.says) {
-                        tgt.timestamp = Date.now();
-                        this.say.forEach((say: SayType) => {
-                            const foundId = tgt.says.find(e => e.id === say.id);
-                            if (!foundId) {
-                                tgt.says.push(say);
-                            }
-                        });
-                    }
-                } else {
-                    this.cache.push({
-                        id: uuid.v1(), timestamp: Date.now(), says: this.say
-                    });
-                }
-                this.say = [];
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    }
-
-    private beforeListSend: number = -1;
-
-    private userListWatcher(): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            if ((this.userList.length > 0 && this.userList.length > this.beforeListSend) ||
-                    (JSON.stringify(this.userList) !== JSON.stringify(this.prevList))) {
-                let count = 0;
-                const json = {
-                    from: this.id,
-                    sendTime: Date.now(),
-                    payload: {
-                        userList: this.userList
-                    }
-                };
-                [this.dcA, this.dcB, this.dcC].forEach(dc => {
-                    if (dc && dc.readyState === 'open') {
-                        dc.send(JSON.stringify(json));
-                        count += 1;
-                    }
-                });
-                if (count > 0) {
-                    this.beforeListSend = this.userList.length;
-                    console.log('[[send userList]]');
-                }
-                (async () => {
-                    try {
-                        await localForage.setItem('user_list', this.userList);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                })();
-                this.prevList = JSON.parse(JSON.stringify(this.userList));
-            } else {
-                resolve(false);
-            }
-        });
-    }
     
     constructor() {
         (async () => {
@@ -688,9 +550,8 @@ export default class MyStore {
                 console.error(error);
             }
             console.log(this.id);
-            console.log(this.cache);
-            console.log(this.userList);
         })();
+        const watchers = new Watchers(this.id);
         makeWs(
             this.preOfferTransceiver.bind(this),
             this.offerTansceiver.bind(this), 
@@ -705,14 +566,18 @@ export default class MyStore {
             this.pcCCloseFn();
             setInterval(() => {
                 const tasks = [
-                    this.cacheWatcher(),
-                    this.cacheSender(),
-                    this.sayWatcher(),
-                    this.userListWatcher()
+                    watchers.sayWatcher(this.cache, this.say, this.getUser, (result) => {
+                        this.say = result;
+                    }),
+                    watchers.cacheWatcher(this.cache, (result) => {
+                        this.hear = result;
+                    }),
+                    watchers.cacheSender(this.cache, [this.dcA, this.dcB, this.dcC]),
+                    watchers.userListWatcher(this.userList, [this.dcA, this.dcB, this.dcC])
                 ];
                 Promise.all(tasks).then((results) => {
                 }).catch((err) => console.error(err));
-            }, 1500);
+            }, 2000);
         }).catch(err => console.error(err));
     }
 
