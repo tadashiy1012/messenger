@@ -56,7 +56,67 @@ export default class MyStore {
                 reject(new Error('login state error!'));
             }
         });
-    } 
+    }
+
+    @action
+    updateUserFollow(tgtSerial: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.getUser);
+                user.follow = [...user.follow, tgtSerial];
+                this.currentUser = user;
+                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                if (found) {
+                    const idx = this.userList.indexOf(found);
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                if (found2) {
+                    const idx = this.userList.indexOf(found2);
+                    const user = Object.assign({}, found2);
+                    user.follower = [...user.follower, this.currentUser!.serial];
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('follow target user not found'));
+                }
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
+
+    @action
+    updateUserUnFollow(tgtSerial: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.getUser);
+                user.follow = [...user.follow.filter(e => e !== tgtSerial)];
+                this.currentUser = user;
+                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                if (found) {
+                    const idx = this.userList.indexOf(found);
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                if (found2) {
+                    const idx = this.userList.indexOf(found2);
+                    const user = Object.assign({}, found2);
+                    user.follower = [...user.follower.filter(e => e !== this.currentUser!.serial)];
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('follow target user not found'));
+                }
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
 
     @observable
     logged: Boolean = false;

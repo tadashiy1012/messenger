@@ -38,21 +38,16 @@ interface UserProps {
 export default class User extends React.Component<UserProps> {
     render() {
         const {store} = this.props;
-        const user = store!.findUser(store!.showUserTarget);
-        const name = user!.name;
+        const currentUser = store!.getUser;
+        const tgtUser = store!.findUser(store!.showUserTarget);
+        const name = tgtUser!.name;
         const say = store!.findUserSay(store!.showUserTarget);
         const says = say.map(e => {
             const dt = new Date(e.date);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <a href="#" onClick={(ev) => {
-                        ev.preventDefault();
-                        store!.setShowUserTarget(e.authorId);
-                        store!.setShowMode(ShowMode.USER);
-                    }}>
-                        <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
-                            borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                    </a>
+                    <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                        borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
@@ -67,6 +62,10 @@ export default class User extends React.Component<UserProps> {
                 </div>
             </li>
         });
+        let show = false;
+        if (store!.logged && currentUser!.serial !== tgtUser!.serial && !currentUser!.follow.find(e => e === tgtUser!.serial)) {
+            show = true;
+        }
         return <React.Fragment>
             <div css={{margin:'12px 0px'}}>
                 <h2 css={{marginBottom:'4px'}}>user</h2>
@@ -75,14 +74,14 @@ export default class User extends React.Component<UserProps> {
                     store!.setShowMode(ShowMode.MAIN);
                 }}>back to main</button>
                 <div css={{display:'flex', alignItems:'center', margin:'8px 0px'}}>
-                    <img src={user!.icon} css={{borderRadius:'32px', border:'solid 1px gray', margin: '4px'}} />
-                    <h3>{user!.name}</h3>
+                    <img src={tgtUser!.icon} css={{borderRadius:'32px', border:'solid 1px gray', margin: '4px'}} />
+                    <h3>{tgtUser!.name}</h3>
                     <p css={{margin:'0px 16px'}}>
-                        follow:{user!.follow.length}
+                        follow:{tgtUser!.follow.length}
                         <span> </span>
-                        follower:{user!.follower.length}
+                        follower:{tgtUser!.follower.length}
                     </p>
-                    <span css={{display:store!.logged ? 'block':'none'}}>
+                    <span css={{display: show ? 'block':'none'}}>
                         <button className="pure-button" onClick={() => {
                         }}>to follow</button>
                     </span>
