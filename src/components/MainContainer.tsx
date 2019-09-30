@@ -7,6 +7,8 @@ import { MyStoreType } from '../types';
 import Setting from './Setting';
 import Writer from './Writer';
 import TimeLine from './Timeline';
+import { ShowMode } from '../enums';
+import User from './User';
 
 const Main = (props: {logged: Boolean}) => {
     const writer = props.logged ? <Writer /> : null;
@@ -35,7 +37,14 @@ interface MainContainerProps {
 export default class MainContainer extends React.Component<MainContainerProps> {
     render() {
         const {store} = this.props;
-        const child = store!.showSetting ? <Set /> : <Main logged={store!.logged} />
+        let child = null;
+        if (store!.showMode === ShowMode.MAIN) {
+            child = <Main logged={store!.logged} />;
+        } else if (store!.showMode === ShowMode.USER) {
+            child = <User />
+        } else if (store!.showMode === ShowMode.SETTING) {
+            child = <Set />
+        }
         return <React.Fragment>
             {child}
         </React.Fragment>

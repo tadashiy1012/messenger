@@ -35,7 +35,7 @@ export default class Login extends React.Component<LoginProps> {
     }
     render() {
         return <React.Fragment>
-            <div className="pure-form pure-form-stacked">
+            <div className="pure-form pure-form-stacked" css={{margin:'12px 0px'}}>
                 <h2 css={{marginBottom:'2px'}}>login</h2>
                 <span>email</span>
                 <input type="email" className="pure-input-1-3" ref={this.emailRef} />

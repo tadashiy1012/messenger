@@ -24,14 +24,14 @@ export default class LoginContainer extends React.Component<LoginContainerProps,
         const {store} = this.props;
         return <React.Fragment>
             {store!.logged ? <LoggedContainer /> : <React.Fragment>
-                <div css={{display:this.state.login ? 'block':'none'}}>
+                <div css={{display:this.state.login ? 'block':'none', margin:'12px 0px'}}>
                     <Login />
                     <a href="#" onClick={(ev) => {
                         ev.preventDefault();
                         this.setState({login: false});
                     }}>registration</a>
                 </div>
-                <div css={{display:this.state.login ? 'none':'block'}}>
+                <div css={{display:this.state.login ? 'none':'block', margin:'12px 0px'}}>
                     <Registration />
                     <a href="#" onClick={(ev) => {
                         ev.preventDefault();

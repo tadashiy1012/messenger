@@ -8,6 +8,7 @@ import makeWs from '../utils/mekeWS';
 import MyWebSocket from '../utils/MyWebSocket';
 import { setupDC, makePCA, makePreOffer, makePCBC } from '../utils';
 import Watchers from './watchers';
+import { ShowMode } from '../enums';
 
 export default class MyStore {
    
@@ -117,9 +118,21 @@ export default class MyStore {
         }
     }
 
-    private cache: Array<CacheType> = [];
-    private prevCache: Array<CacheType> = [];
+    findUser(userSerial: string): UserType | null {
+        const found = this.userList.find(e => e.serial === userSerial);
+        return found || null
+    }
 
+    findUserSay(userSerial: string): Array<SayType> {
+        const found = this.cache.find(e => e.says[0].authorId === userSerial);
+        if (found) {
+            return found.says;
+        } else {
+            return [];
+        }
+    }
+
+    private cache: Array<CacheType> = [];
     private userList: Array<UserType> = [];
 
     @action
@@ -158,6 +171,8 @@ export default class MyStore {
                     found.clientId = 'no id';
                     found.update = Date.now();
                     this.currentUser = null;
+                    this.showMode = ShowMode.MAIN;
+                    this.logged = false;
                     resolve(true);
                 } else {
                     reject(new Error('user not found'));
@@ -209,6 +224,22 @@ export default class MyStore {
     @action
     setShowSetting(show: Boolean) {
         this.showSetting = show;
+    }
+
+    @observable
+    showMode: ShowMode = ShowMode.MAIN;
+
+    @action
+    setShowMode(mode: ShowMode) {
+        this.showMode = mode;
+    }
+
+    @observable
+    showUserTarget: string | null = null;
+
+    @action
+    setShowUserTarget(targetSerial: string | null) {
+        this.showUserTarget = targetSerial;
     }
 
     @action

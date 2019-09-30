@@ -5,6 +5,7 @@ import {css, jsx} from '@emotion/core';
 import * as uuid from 'uuid';
 import { SayType, MyStoreType } from '../types';
 import { noImage } from '../utils/noImageIcon';
+import { ShowMode } from '../enums';
 
 interface WriterProps {
     store?: MyStoreType
@@ -41,8 +42,15 @@ export default class Writer extends React.Component<WriterProps> {
     render() {
         const {store} = this.props;
         return <div className="pure-form" css={{display:'flex', alignItems:'center'}}>
-            <img src={store!.currentUser ? store!.currentUser.icon : noImage} width="32" height="32" css={{
-                borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
+            <a href="#" onClick={(ev) => {
+                ev.preventDefault();
+                const user = store!.getUser;
+                store!.setShowUserTarget(user!.serial);
+                store!.setShowMode(ShowMode.USER);
+            }}>
+                <img src={store!.currentUser ? store!.currentUser.icon : noImage} width="32" height="32" css={{
+                    borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
+            </a>
             <span>{store!.currentUser ? store!.currentUser.name : 'no_name'}'s say: </span>
             <textarea className="pure-input pure-input-1-3"
                 css={{margin:'0px 4px'}}

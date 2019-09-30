@@ -4,6 +4,7 @@ import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
 import Logout from './Logout';
+import { ShowMode } from '../enums';
 
 interface LoggedContainerProps {
     store?: MyStoreType
@@ -15,11 +16,15 @@ export default class LoggedContainer extends React.Component<LoggedContainerProp
     render() {
         const {store} = this.props;
         return <React.Fragment>
-            <Logout />
+            <button className="pure-button" onClick={(ev) => {
+                store!.setShowMode(ShowMode.MAIN);
+            }}>main</button>
             <span> </span>
             <button className="pure-button" onClick={(ev) => {
-                store!.setShowSetting(!store!.showSetting);
-            }}>main/setting</button>
+                store!.setShowMode(ShowMode.SETTING);
+            }}>setting</button>
+            <span> </span>
+            <Logout />
         </React.Fragment>
     }
 }
