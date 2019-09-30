@@ -3,6 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
+import { ShowMode } from '../enums';
 
 
 function escape_html (string: string): string {
@@ -46,8 +47,14 @@ export default class TimeLine extends React.Component<TimeLineProps> {
             const name = store!.findAuthorname(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
-                        borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
+                    <a href="#" onClick={(ev) => {
+                        ev.preventDefault();
+                        store!.setShowUserTarget(e.authorId);
+                        store!.setShowMode(ShowMode.USER);
+                    }}>
+                        <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                            borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
+                    </a>
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
@@ -65,8 +72,7 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const idSet = store!.logged ? 
             new Set<string>([
                 store!.currentUser.serial, 
-                ...store!.currentUser.follow, 
-                ...store!.currentUser.follower
+                ...store!.currentUser.follow
             ]) : new Set<string>();
         const ids: Array<String> = Array.from(idSet);
         const child2 = timeline.filter(e => {
@@ -77,8 +83,14 @@ export default class TimeLine extends React.Component<TimeLineProps> {
             const name = store!.findAuthorname(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
-                        borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
+                    <a href="#" onClick={(ev) => {
+                        ev.preventDefault();
+                        store!.setShowUserTarget(e.authorId);
+                        store!.setShowMode(ShowMode.USER);
+                    }}>
+                        <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                            borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
+                    </a>
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}

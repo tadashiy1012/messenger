@@ -8,6 +8,7 @@ import makeWs from '../utils/mekeWS';
 import MyWebSocket from '../utils/MyWebSocket';
 import { setupDC, makePCA, makePreOffer, makePCBC } from '../utils';
 import Watchers from './watchers';
+import { ShowMode } from '../enums';
 
 export default class MyStore {
    
@@ -55,7 +56,73 @@ export default class MyStore {
                 reject(new Error('login state error!'));
             }
         });
-    } 
+    }
+
+    @action
+    updateUserFollow(tgtSerial: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.currentUser);
+                user.follow = [...user.follow, tgtSerial];
+                user.follower = [...user.follower];
+                user.update = Date.now();
+                this.currentUser = user;
+                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                if (found) {
+                    const idx = this.userList.indexOf(found);
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                if (found2) {
+                    const idx2 = this.userList.indexOf(found2);
+                    const user2 = Object.assign({}, found2);
+                    user2.follower = [...user2.follower, user.serial];
+                    user2.update = Date.now();
+                    this.userList.splice(idx2, 1, user2);
+                } else {
+                    reject(new Error('follow target user not found'));
+                }
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
+
+    @action
+    updateUserUnFollow(tgtSerial: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.getUser);
+                user.follow = [...user.follow.filter(e => e !== tgtSerial)];
+                user.follower = [...user.follower];
+                user.update = Date.now();
+                this.currentUser = user;
+                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                if (found) {
+                    const idx = this.userList.indexOf(found);
+                    this.userList.splice(idx, 1, user);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                if (found2) {
+                    const idx2 = this.userList.indexOf(found2);
+                    const user2 = Object.assign({}, found2);
+                    user2.follower = [...user2.follower.filter(e => e !== user.serial)];
+                    user2.update = Date.now();
+                    this.userList.splice(idx2, 1, user2);
+                } else {
+                    reject(new Error('follow target user not found'));
+                }
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
 
     @observable
     logged: Boolean = false;
@@ -117,9 +184,21 @@ export default class MyStore {
         }
     }
 
-    private cache: Array<CacheType> = [];
-    private prevCache: Array<CacheType> = [];
+    findUser(userSerial: string): UserType | null {
+        const found = this.userList.find(e => e.serial === userSerial);
+        return found || null
+    }
 
+    findUserSay(userSerial: string): Array<SayType> {
+        const found = this.cache.find(e => e.says[0].authorId === userSerial);
+        if (found) {
+            return found.says;
+        } else {
+            return [];
+        }
+    }
+
+    private cache: Array<CacheType> = [];
     private userList: Array<UserType> = [];
 
     @action
@@ -158,6 +237,8 @@ export default class MyStore {
                     found.clientId = 'no id';
                     found.update = Date.now();
                     this.currentUser = null;
+                    this.showMode = ShowMode.MAIN;
+                    this.logged = false;
                     resolve(true);
                 } else {
                     reject(new Error('user not found'));
@@ -209,6 +290,22 @@ export default class MyStore {
     @action
     setShowSetting(show: Boolean) {
         this.showSetting = show;
+    }
+
+    @observable
+    showMode: ShowMode = ShowMode.MAIN;
+
+    @action
+    setShowMode(mode: ShowMode) {
+        this.showMode = mode;
+    }
+
+    @observable
+    showUserTarget: string | null = null;
+
+    @action
+    setShowUserTarget(targetSerial: string | null) {
+        this.showUserTarget = targetSerial;
     }
 
     @action
