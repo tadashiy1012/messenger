@@ -6,6 +6,8 @@ export default interface MyStoreType {
     currentUser: UserType
     getUser: UserType | null
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean>
+    updateUserFollow(tgtSerial: string): Promise<Boolean>
+    updateUserUnFollow(tgtSerial: string): Promise<Boolean>
     logged: Boolean
     setLogged(logged: Boolean): void
     addSay(say: SayType): Promise<Boolean>

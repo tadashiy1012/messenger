@@ -130,6 +130,7 @@ export default class Watchers {
                 }
                 (async () => {
                     try {
+                        console.log(userList);
                         await localForage.setItem('user_list', userList);
                     } catch (err) {
                         console.error(err);

@@ -62,9 +62,13 @@ export default class User extends React.Component<UserProps> {
                 </div>
             </li>
         });
-        let show = false;
+        let toFollowShow = false;
         if (store!.logged && currentUser!.serial !== tgtUser!.serial && !currentUser!.follow.find(e => e === tgtUser!.serial)) {
-            show = true;
+            toFollowShow = true;
+        }
+        let toUnFollowShow = false;
+        if (store!.logged && currentUser!.serial !== tgtUser!.serial && currentUser!.follow.find(e => e === tgtUser!.serial)) {
+            toUnFollowShow = true;
         }
         return <React.Fragment>
             <div css={{margin:'12px 0px'}}>
@@ -81,9 +85,19 @@ export default class User extends React.Component<UserProps> {
                         <span> </span>
                         follower:{tgtUser!.follower.length}
                     </p>
-                    <span css={{display: show ? 'block':'none'}}>
+                    <span css={{display: toFollowShow ? 'block':'none'}}>
                         <button className="pure-button" onClick={() => {
+                            store!.updateUserFollow(tgtUser!.serial).then(() => {
+                                alert('followed!');
+                            }).catch(e => console.error(e));
                         }}>to follow</button>
+                    </span>
+                    <span css={{display: toUnFollowShow ? 'block':'none'}}>
+                        <button className="pure-button" onClick={() => {
+                            store!.updateUserUnFollow(tgtUser!.serial).then(() => {
+                                alert('unfollowed!');
+                            }).catch(e => console.error(e));
+                        }}>to unfollow</button>
                     </span>
                 </div>
                 <ul css={{listStyleType:'none', padding:'0px'}}>

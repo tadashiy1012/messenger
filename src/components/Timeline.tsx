@@ -72,8 +72,7 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const idSet = store!.logged ? 
             new Set<string>([
                 store!.currentUser.serial, 
-                ...store!.currentUser.follow, 
-                ...store!.currentUser.follower
+                ...store!.currentUser.follow
             ]) : new Set<string>();
         const ids: Array<String> = Array.from(idSet);
         const child2 = timeline.filter(e => {

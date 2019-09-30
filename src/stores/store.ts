@@ -62,8 +62,10 @@ export default class MyStore {
     updateUserFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
-                const user = Object.assign({}, this.getUser);
+                const user = Object.assign({}, this.currentUser);
                 user.follow = [...user.follow, tgtSerial];
+                user.follower = [...user.follower];
+                user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
                 if (found) {
@@ -74,10 +76,11 @@ export default class MyStore {
                 }
                 const found2 = this.userList.find(e => e.serial === tgtSerial);
                 if (found2) {
-                    const idx = this.userList.indexOf(found2);
-                    const user = Object.assign({}, found2);
-                    user.follower = [...user.follower, this.currentUser!.serial];
-                    this.userList.splice(idx, 1, user);
+                    const idx2 = this.userList.indexOf(found2);
+                    const user2 = Object.assign({}, found2);
+                    user2.follower = [...user2.follower, user.serial];
+                    user2.update = Date.now();
+                    this.userList.splice(idx2, 1, user2);
                 } else {
                     reject(new Error('follow target user not found'));
                 }
@@ -94,6 +97,8 @@ export default class MyStore {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
                 user.follow = [...user.follow.filter(e => e !== tgtSerial)];
+                user.follower = [...user.follower];
+                user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
                 if (found) {
@@ -104,10 +109,11 @@ export default class MyStore {
                 }
                 const found2 = this.userList.find(e => e.serial === tgtSerial);
                 if (found2) {
-                    const idx = this.userList.indexOf(found2);
-                    const user = Object.assign({}, found2);
-                    user.follower = [...user.follower.filter(e => e !== this.currentUser!.serial)];
-                    this.userList.splice(idx, 1, user);
+                    const idx2 = this.userList.indexOf(found2);
+                    const user2 = Object.assign({}, found2);
+                    user2.follower = [...user2.follower.filter(e => e !== user.serial)];
+                    user2.update = Date.now();
+                    this.userList.splice(idx2, 1, user2);
                 } else {
                     reject(new Error('follow target user not found'));
                 }
