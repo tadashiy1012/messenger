@@ -673,6 +673,11 @@ export default class MyStore {
                     watchers.userListWatcher(this.userList, [this.dcA, this.dcB, this.dcC])
                 ];
                 Promise.all(tasks).then((results) => {
+                    results.forEach(e => {
+                        if (e[0] && e[1].resultCb && e[1].resultValue) {
+                            e[1].resultCb(e[1].resultValue);
+                        }
+                    });
                 }).catch((err) => console.error(err));
             }, 2000);
         }).catch(err => console.error(err));

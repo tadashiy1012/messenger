@@ -12,7 +12,10 @@ export default class Watchers {
     constructor(private id: string) {
     }
 
-    cacheWatcher(cache: Array<CacheType>, hearCb: (newHear: Array<SayType>) => void): Promise<Boolean> {
+    cacheWatcher(
+        cache: Array<CacheType>, 
+        hearCb: (newHear: Array<SayType>) => void
+    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if (JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
                 this.prevCache = JSON.parse(JSON.stringify(cache));
@@ -34,15 +37,16 @@ export default class Watchers {
                         }
                     }
                 });
-                hearCb(newHear);
-                resolve(true);
+                resolve([true, {resultCb: hearCb, resultValue: newHear}]);
             } else {
-                resolve(false);
+                resolve([false, {}]);
             }
         });
     }
 
-    cacheSender(cache: Array<CacheType>, dcs: Array<RTCDataChannel | null>): Promise<Boolean> {
+    cacheSender(
+        cache: Array<CacheType>, dcs: Array<RTCDataChannel | null>
+    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if (cache.length > 0) {
                 const filtered = cache.filter(e => {
@@ -68,15 +72,19 @@ export default class Watchers {
                         console.log('[[send cache]]');
                     }
                 }
-                resolve(true);
+                resolve([true, {}]);
             } else {
-                resolve(false);
+                resolve([false, {}]);
             }
         });
     }
 
-    sayWatcher(cache: Array<CacheType>, say: Array<SayType>, currentUser: UserType | null, 
-            sayCb: (result: Array<SayType>) => void): Promise<Boolean> {
+    sayWatcher(
+        cache: Array<CacheType>, 
+        say: Array<SayType>, 
+        currentUser: UserType | null, 
+        sayCb: (result: Array<SayType>) => void
+    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if (say.length > 0 && currentUser) {
                 const tgt = cache.find(e => e.says[0].authorId === currentUser.serial);
@@ -95,18 +103,17 @@ export default class Watchers {
                         id: uuid.v1(), timestamp: Date.now(), says: say
                     });
                 }
-                sayCb([]);
-                resolve(true);
+                resolve([true, {resultCb: sayCb, resultValue: []}]);
             } else {
-                resolve(false);
+                resolve([false, {}]);
             }
         });
     }
 
     userListWatcher(
-            userList: Array<UserType>, 
-            dcs: Array<RTCDataChannel | null>
-        ): Promise<Boolean> {
+        userList: Array<UserType>, 
+        dcs: Array<RTCDataChannel | null>
+    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if ((userList.length > 0 && userList.length > this.beforeListSend) ||
                     (JSON.stringify(userList) !== JSON.stringify(this.prevList))) {
@@ -137,9 +144,9 @@ export default class Watchers {
                     }
                 })();
                 this.prevList = JSON.parse(JSON.stringify(userList));
-                resolve(true);
+                resolve([true, {}]);
             } else {
-                resolve(false);
+                resolve([false, {}]);
             }
         });
     }
