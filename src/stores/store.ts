@@ -9,6 +9,8 @@ import MyWebSocket from '../utils/MyWebSocket';
 import { setupDC, makePCA, makePreOffer, makePCBC } from '../utils';
 import Watchers from './watchers';
 import { ShowMode } from '../enums';
+import Senders from './senders';
+import Receivers from './receivers';
 
 export default class MyStore {
    
@@ -357,6 +359,9 @@ export default class MyStore {
 
     // pc
 
+    private senders = new Senders(this.id, this.cache)
+    private receivers = new Receivers(this.cache, this.userList);
+
     private pcACloseFn() {
         if (this.dcA) {this.dcA.close();}
         if(this.pcA) {this.pcA.close();}
@@ -378,9 +383,20 @@ export default class MyStore {
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueA.push(candidate);
         }, (channel: RTCDataChannel) => {
-            this.dcA = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+            this.dcA = setupDC(channel, (state) => {
                 this.dcAState = state;
-            });
+            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
+                if (result[0] !== null && result[1] === null) {
+                    this.cache = result[0];
+                } else if (result[0] === null && result[1] !== null) {
+                    this.userList = result[1];
+                }
+            }, [
+                this.senders.cacheSender.bind(this.senders)
+            ], [
+                this.receivers.cacheReceiver.bind(this.receivers),
+                this.receivers.usersReceiver.bind(this.receivers)
+            ]);
             this.dcAState = this.dcA.readyState;
         });
         makePreOffer(this.id, this.pcA!, this.ws!).then((preOffer) => {
@@ -404,9 +420,20 @@ export default class MyStore {
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueB.push(candidate);
         }, (channel: RTCDataChannel) => {
-            this.dcB = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+            this.dcB = setupDC(channel, (state) => {
                 this.dcBState = state;
-            });
+            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
+                if (result[0] !== null && result[1] === null) {
+                    this.cache = result[0];
+                } else if (result[0] === null && result[1] !== null) {
+                    this.userList = result[1];
+                }
+            }, [
+                this.senders.cacheSender.bind(this.senders)
+            ], [
+                this.receivers.cacheReceiver.bind(this.receivers),
+                this.receivers.usersReceiver.bind(this.receivers)
+            ]);
             this.dcBState = this.dcB.readyState;
         });
     };
@@ -427,9 +454,20 @@ export default class MyStore {
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueC.push(candidate);
         }, (channel: RTCDataChannel) => {
-            this.dcC = setupDC(this.id, this.cache, this.userList, channel, (state) => {
+            this.dcC = setupDC(channel, (state) => {
                 this.dcCState = state;
-            });
+            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
+                if (result[0] !== null && result[1] === null) {
+                    this.cache = result[0];
+                } else if (result[0] === null && result[1] !== null) {
+                    this.userList = result[1];
+                }
+            }, [
+                this.senders.cacheSender.bind(this.senders)
+            ], [
+                this.receivers.cacheReceiver.bind(this.receivers),
+                this.receivers.usersReceiver.bind(this.receivers)
+            ]);
             this.dcCState = this.dcC.readyState;
         });
     };
