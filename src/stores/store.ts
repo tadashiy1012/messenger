@@ -359,8 +359,8 @@ export default class MyStore {
 
     // pc
 
-    private senders = new Senders(this.id, this.cache)
-    private receivers = new Receivers(this.cache, this.userList);
+    private senders: Senders | null = null;
+    private receivers: Receivers | null = null;
 
     private pcACloseFn() {
         if (this.dcA) {this.dcA.close();}
@@ -392,10 +392,10 @@ export default class MyStore {
                     this.userList = result[1];
                 }
             }, [
-                this.senders.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders)
             ], [
-                this.receivers.cacheReceiver.bind(this.receivers),
-                this.receivers.usersReceiver.bind(this.receivers)
+                this.receivers!.cacheReceiver.bind(this.receivers),
+                this.receivers!.usersReceiver.bind(this.receivers)
             ]);
             this.dcAState = this.dcA.readyState;
         });
@@ -429,10 +429,10 @@ export default class MyStore {
                     this.userList = result[1];
                 }
             }, [
-                this.senders.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders)
             ], [
-                this.receivers.cacheReceiver.bind(this.receivers),
-                this.receivers.usersReceiver.bind(this.receivers)
+                this.receivers!.cacheReceiver.bind(this.receivers),
+                this.receivers!.usersReceiver.bind(this.receivers)
             ]);
             this.dcBState = this.dcB.readyState;
         });
@@ -463,10 +463,10 @@ export default class MyStore {
                     this.userList = result[1];
                 }
             }, [
-                this.senders.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders)
             ], [
-                this.receivers.cacheReceiver.bind(this.receivers),
-                this.receivers.usersReceiver.bind(this.receivers)
+                this.receivers!.cacheReceiver.bind(this.receivers),
+                this.receivers!.usersReceiver.bind(this.receivers)
             ]);
             this.dcCState = this.dcC.readyState;
         });
@@ -680,45 +680,54 @@ export default class MyStore {
         (async () => {
             try {
                 this.userList = await localForage.getItem<Array<UserType>>('user_list') || [];
-                this.cache = await localForage.getItem('user_message_cache') || [];   
+                this.cache = await localForage.getItem('user_message_cache') || [];  
+                console.log(this.cache); 
             } catch (error) {
                 console.error(error);
             }
             console.log(this.id);
+            this.senders = new Senders(this.id, () => {
+                return this.cache;
+            });
+            this.receivers = new Receivers(() => {
+                return this.cache;
+            }, () => {
+                return this.userList;
+            });
+            const watchers = new Watchers(this.id);
+            makeWs(
+                this.preOfferTransceiver.bind(this),
+                this.offerTansceiver.bind(this), 
+                this.answerTransceiver.bind(this), 
+                this.candidateTransceiver.bind(this), 
+                this.pcBCTransceiver.bind(this)
+            ).then((ws) => {
+                console.log('websocket create success!');
+                this.ws = ws;
+                this.pcACloseFn();
+                this.pcBCloseFn();
+                this.pcCCloseFn();
+                setInterval(() => {
+                    const tasks = [
+                        watchers.sayWatcher(this.cache, this.say, this.getUser, (result) => {
+                            this.say = result;
+                        }),
+                        watchers.cacheWatcher(this.cache, (result) => {
+                            this.hear = result;
+                        }),
+                        watchers.cacheSender(this.cache, [this.dcA, this.dcB, this.dcC]),
+                        watchers.userListWatcher(this.userList, [this.dcA, this.dcB, this.dcC])
+                    ];
+                    Promise.all(tasks).then((results) => {
+                        results.forEach(e => {
+                            if (e[0] && e[1].resultCb && e[1].resultValue) {
+                                e[1].resultCb(e[1].resultValue);
+                            }
+                        });
+                    }).catch((err) => console.error(err));
+                }, 2000);
+            }).catch(err => console.error(err));
         })();
-        const watchers = new Watchers(this.id);
-        makeWs(
-            this.preOfferTransceiver.bind(this),
-            this.offerTansceiver.bind(this), 
-            this.answerTransceiver.bind(this), 
-            this.candidateTransceiver.bind(this), 
-            this.pcBCTransceiver.bind(this)
-        ).then((ws) => {
-            console.log('websocket create success!');
-            this.ws = ws;
-            this.pcACloseFn();
-            this.pcBCloseFn();
-            this.pcCCloseFn();
-            setInterval(() => {
-                const tasks = [
-                    watchers.sayWatcher(this.cache, this.say, this.getUser, (result) => {
-                        this.say = result;
-                    }),
-                    watchers.cacheWatcher(this.cache, (result) => {
-                        this.hear = result;
-                    }),
-                    watchers.cacheSender(this.cache, [this.dcA, this.dcB, this.dcC]),
-                    watchers.userListWatcher(this.userList, [this.dcA, this.dcB, this.dcC])
-                ];
-                Promise.all(tasks).then((results) => {
-                    results.forEach(e => {
-                        if (e[0] && e[1].resultCb && e[1].resultValue) {
-                            e[1].resultCb(e[1].resultValue);
-                        }
-                    });
-                }).catch((err) => console.error(err));
-            }, 2000);
-        }).catch(err => console.error(err));
     }
 
 }

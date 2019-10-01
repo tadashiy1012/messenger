@@ -4,28 +4,29 @@ import { CacheType, UserType } from "../types";
 export default class Receivers {
 
     constructor(
-        private cache: Array<CacheType>,
-        private users: Array<UserType>
+        private getCache:() => Array<CacheType>,
+        private getUsers:() => Array<UserType>
     ) {}
 
     cacheReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
         return new Promise((resolve, reject) => {
             if (payload && payload.cache) {
-                console.log('<<received cache>>');
+                console.log('<<received cache>>', this.getCache(), payload.cache);
+                const cache = this.getCache();
                 payload.cache.forEach((e: CacheType) => {
-                    const found = this.cache.find(ee => ee.id == e.id);
+                    const found = cache.find(ee => ee.id == e.id);
                     if (found) {
                         if (found.timestamp < e.timestamp) {
-                            const idx = this.cache.indexOf(found);
-                            this.cache.splice(idx, 1, e);
+                            const idx = cache.indexOf(found);
+                            cache.splice(idx, 1, e);
                             console.log('(( cache update! ))');
                         }
                     } else {
-                        this.cache.push(e);
+                        cache.push(e);
                         console.log('(( new cache added! ))')
                     }
                 });
-                resolve([true, [this.cache, null]]);
+                resolve([true, [cache, null]]);
             } else {
                 resolve([false, [null, null]]);
             }
@@ -36,22 +37,23 @@ export default class Receivers {
         return new Promise((resolve, reject) => {
             if (payload && payload.userList) {
                 console.log('<<received userList>>');
+                const users = this.getUsers();
                 payload.userList.forEach((e: UserType) => {
-                    const found = this.users.find(ee => ee.serial === e.serial);
+                    const found = users.find(ee => ee.serial === e.serial);
                     if (found) {
                         if (found.update < e.update) {
-                            const idx = this.users.indexOf(found);
-                            this.users.splice(idx, 1, e);
+                            const idx = users.indexOf(found);
+                            users.splice(idx, 1, e);
                             console.log('(( user list update! ))');
                         }
                     } else {
-                        this.users.push(e);
+                        users.push(e);
                         console.log('(( new user added! ))');
                     }
                 });
-                localForage.setItem('user_list', this.users)
+                localForage.setItem('user_list', users)
                     .catch(err => console.error(err));
-                resolve([true, [null, this.users]]);
+                resolve([true, [null, users]]);
             } else {
                 resolve([false, [null, null]]);
             }
