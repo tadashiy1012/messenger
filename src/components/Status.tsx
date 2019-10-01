@@ -14,9 +14,9 @@ class PcStatus extends React.Component<PcStatusProps> {
     render() {
         const {store} = this.props;
         return <ul css={{fontSize:'13px', marginTop:'2px'}}>
-            <li>pcA:{store!.pcAtgtId} [{store!.pcAState}] [{store!.dcAState}]</li>
-            <li>pcB:{store!.pcBtgtId} [{store!.pcBState}] [{store!.dcBState}]</li>
-            <li>pcC:{store!.pcCtgtId} [{store!.pcCState}] [{store!.dcCState}]</li>
+            <li>pcA:{store!.pcAState.target} [{store!.pcAState.connection}] [{store!.pcAState.dataChannel}]</li>
+            <li>pcB:{store!.pcBState.target} [{store!.pcBState.connection}] [{store!.pcBState.dataChannel}]</li>
+            <li>pcC:{store!.pcCState.target} [{store!.pcCState.connection}] [{store!.pcCState.dataChannel}]</li>
         </ul>
     }
 }

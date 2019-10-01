@@ -13,9 +13,9 @@ interface AppTitleProps {
 export default class AppTitle extends React.Component<AppTitleProps> {
     render() {
         const {store} = this.props;
-        const status = (store!.pcAState === 'connected' && store!.dcAState === 'open') 
-            || (store!.pcBState === 'connected' && store!.dcBState === 'open') 
-            || (store!.pcCState === 'connected' && store!.dcCState === 'open');
+        const status = (store!.pcAState.connection === 'connected' && store!.pcAState.dataChannel === 'open') 
+            || (store!.pcBState.connection === 'connected' && store!.pcBState.dataChannel === 'open') 
+            || (store!.pcCState.connection === 'connected' && store!.pcCState.dataChannel === 'open');
         return <div css={{margin:'8px 0px'}}>
             <h1 css={{display:'inline'}}>messenger</h1>
             <span css={{paddingLeft:'22px'}}></span>

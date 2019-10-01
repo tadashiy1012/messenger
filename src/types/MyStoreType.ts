@@ -1,4 +1,4 @@
-import { UserType, SayType } from ".";
+import { UserType, SayType, PcStateType } from ".";
 import { ShowMode } from "../enums";
 
 export default interface MyStoreType {
@@ -28,13 +28,7 @@ export default interface MyStoreType {
     showUserTarget: string
     setShowUserTarget(targetSerial: string | null): void
     allClear(): Promise<Boolean>
-    pcAtgtId: string
-    pcBtgtId: string
-    pcCtgtId: string
-    pcAState: string
-    pcBState: string
-    pcCState: string
-    dcAState: string 
-    dcBState: string 
-    dcCState: string 
+    pcAState: PcStateType
+    pcBState: PcStateType
+    pcCState: PcStateType
 }

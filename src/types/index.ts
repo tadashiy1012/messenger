@@ -3,6 +3,7 @@ import {UserType} from './UserType';
 import CacheType from './CacheType';
 import WsPayloadType from './WsPayloadType';
 import MyStoreType from './MyStoreType';
+import PcStateType from './PcStateType';
 
 export {
     SayType,
@@ -10,4 +11,5 @@ export {
     CacheType,
     WsPayloadType,
     MyStoreType,
+    PcStateType,
 };
