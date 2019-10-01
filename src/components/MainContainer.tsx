@@ -9,6 +9,7 @@ import Writer from './Writer';
 import TimeLine from './Timeline';
 import { ShowMode } from '../enums';
 import User from './User';
+import FollowListContainer from './FollowList';
 
 const Main = (props: {logged: Boolean}) => {
     const writer = props.logged ? <Writer /> : null;
@@ -41,9 +42,13 @@ export default class MainContainer extends React.Component<MainContainerProps> {
         if (store!.showMode === ShowMode.MAIN) {
             child = <Main logged={store!.logged} />;
         } else if (store!.showMode === ShowMode.USER) {
-            child = <User />
+            child = <User />;
         } else if (store!.showMode === ShowMode.SETTING) {
-            child = <Set />
+            child = <Set />;
+        } else if (store!.showMode === ShowMode.FOLLOW) {
+            child = <FollowListContainer />;
+        } else {
+            child = <Main logged={store!.logged} />;
         }
         return <React.Fragment>
             {child}

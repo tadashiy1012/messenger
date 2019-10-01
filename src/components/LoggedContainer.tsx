@@ -24,6 +24,10 @@ export default class LoggedContainer extends React.Component<LoggedContainerProp
                 store!.setShowMode(ShowMode.SETTING);
             }}>setting</button>
             <span> </span>
+            <button className="pure-button" onClick={(ev) => {
+                store!.setShowMode(ShowMode.FOLLOW);
+            }}>follow/follower</button>
+            <span> </span>
             <Logout />
         </React.Fragment>
     }
