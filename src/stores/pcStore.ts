@@ -405,7 +405,6 @@ export default class PcStore {
                             const hear = this.getHear();
                             hear.splice(0, hear.length, ...result);
                         }),
-                        watchers.cacheSender(this.cache!, [this.dcA, this.dcB, this.dcC]),
                         watchers.userListWatcher(this.getUsers())
                     ];
                     Promise.all(tasks).then((results) => {

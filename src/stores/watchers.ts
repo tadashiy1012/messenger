@@ -4,7 +4,6 @@ import uuid = require('uuid');
 
 export default class Watchers {
 
-    private beforeCacheSend: number = -1;
     private prevList: Array<UserType> = [];
     private prevCache: Array<CacheType> = [];
 
@@ -38,41 +37,6 @@ export default class Watchers {
                     }
                 });
                 resolve([true, {resultCb: hearCb, resultValue: newHear}]);
-            } else {
-                resolve([false, {}]);
-            }
-        });
-    }
-
-    cacheSender(
-        cache: Array<CacheType>, dcs: Array<RTCDataChannel | null>
-    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
-        return new Promise((resolve, reject) => {
-            if (cache.length > 0) {
-                const filtered = cache.filter(e => {
-                    return e.timestamp > this.beforeCacheSend;
-                });
-                if (filtered.length > 0) {
-                    let count = 0;
-                    const json = {
-                        from: this.id,
-                        sendTime: Date.now(),
-                        payload: {
-                            cache: cache
-                        }
-                    };
-                    dcs.forEach(dc => {
-                        if (dc && dc.readyState === 'open') {
-                            dc.send(JSON.stringify(json))
-                            count += 1;
-                        }
-                    });
-                    if (count > 0) {
-                        this.beforeCacheSend = Date.now();
-                        console.log('[[send cache]]');
-                    }
-                }
-                resolve([true, {}]);
             } else {
                 resolve([false, {}]);
             }
