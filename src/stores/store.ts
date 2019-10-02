@@ -123,17 +123,80 @@ export default class MyStore {
         });
     }
 
-    @observable
-    logged: Boolean = false;
+    @action
+    updateUserLike(tgtSay: SayType): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const user = this.getUser;
+            if (user) {
+                const copy = Object.assign({}, user);
+                const foundLike = copy.like.find(e => e === tgtSay.id);
+                const foundLiker = tgtSay.like.find(e => e === copy.serial);
+                if (foundLike || foundLiker) {
+                    resolve(false);
+                }
+                copy.like.push(tgtSay.id);
+                tgtSay.like.push(copy.serial);
+                const foundUser = this.userList.find(e => e.serial === copy.serial);
+                if (foundUser) {
+                    const idx = this.userList.indexOf(foundUser);
+                    this.userList.splice(idx, 1, copy);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const cache = this.pcStore!.getCache;
+                cache.forEach((e) => {
+                    const found = e.says.find((ee) => ee.id === tgtSay.id);
+                    if (found) {
+                        const idx = e.says.indexOf(found);
+                        e.says.splice(idx, 1, Object.assign({}, tgtSay));
+                        resolve(true);
+                    }
+                });
+                resolve(false);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
 
     @action
-    setLogged(logged: Boolean) {
-        this.logged = logged;
+    updateUserUnLike(tgtSay: SayType): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const user = this.getUser;
+            if (user) {
+                const copy = Object.assign({}, user);
+                const foundLike = copy.like.find(e => e === tgtSay.id);
+                const foundLiker = tgtSay.like.find(e => e === copy.serial);
+                if (!foundLike && !foundLiker) {
+                    resolve(false);
+                }
+                copy.like.splice(copy.like.indexOf(foundLike!), 1);
+                tgtSay.like.splice(tgtSay.like.indexOf(foundLiker!), 1);
+                const foundUser = this.userList.find(e => e.serial === copy.serial);
+                if (foundUser) {
+                    const idx = this.userList.indexOf(foundUser);
+                    this.userList.splice(idx, 1, copy);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const cache = this.pcStore!.getCache;
+                cache.forEach((e) => {
+                    const found = e.says.find((ee) => ee.id === tgtSay.id);
+                    if (found) {
+                        const idx = e.says.indexOf(found);
+                        e.says.splice(idx, 1, Object.assign({}, tgtSay));
+                        resolve(true);
+                    }
+                });
+                resolve(false);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
     }
 
     private say: Array<SayType> = [];
     @observable private hear: Array<SayType> = [];
-    private userList: Array<UserType> = [];
 
     addSay(say: SayType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
@@ -163,6 +226,8 @@ export default class MyStore {
             return a.date - b.date
         });
     }
+    
+    private userList: Array<UserType> = [];
 
     findAuthorIcon(authorId: string): string {
         const found = this.userList.find(e => e.serial === authorId);
@@ -196,6 +261,14 @@ export default class MyStore {
         }
     }
 
+    @observable
+    logged: Boolean = false;
+
+    @action
+    setLogged(logged: Boolean) {
+        this.logged = logged;
+    }
+
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
@@ -209,6 +282,7 @@ export default class MyStore {
                     icon: found.icon,
                     follow: found.follow,
                     follower: found.follower,
+                    like: found.like,
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -262,6 +336,7 @@ export default class MyStore {
                     icon: noImage,
                     follow: [],
                     follower: [],
+                    like: [],
                     clientId: this.id,
                     update: Date.now()
                 };

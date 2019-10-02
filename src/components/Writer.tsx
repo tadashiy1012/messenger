@@ -29,6 +29,8 @@ export default class Writer extends React.Component<WriterProps> {
                 date: Date.now(),
                 author: name,
                 authorId: serial,
+                like: [],
+                reply: [],
                 say: this._inSayRef.current!.value
             };
             store!.addSay(say).catch((err) => {

@@ -1,4 +1,4 @@
-import { SayType } from "./SayType";
+import SayType from "./SayType";
 
 export default interface CacheType {
     id: string
