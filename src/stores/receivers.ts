@@ -11,15 +11,17 @@ export default class Receivers {
     cacheReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
         return new Promise((resolve, reject) => {
             if (payload && payload.cache) {
-                console.log('<<received cache>>', this.getCache(), payload.cache);
-                const cache = this.getCache();
+                const cache: Array<CacheType> = JSON.parse(JSON.stringify(this.getCache()));
+                console.log('<<received cache>>', cache, payload.cache);
                 payload.cache.forEach((e: CacheType) => {
                     const found = cache.find(ee => ee.id == e.id);
                     if (found) {
-                        if (found.timestamp < e.timestamp) {
+                        if (found.timestamp <= e.timestamp) {
                             const idx = cache.indexOf(found);
-                            cache.splice(idx, 1, e);
+                            cache.splice(idx, 1, Object.assign({}, cache[idx], e));
                             console.log('(( cache update! ))');
+                        } else {
+                            console.log('(( cache not update! ))')
                         }
                     } else {
                         cache.push(e);
@@ -37,7 +39,7 @@ export default class Receivers {
         return new Promise((resolve, reject) => {
             if (payload && payload.userList) {
                 console.log('<<received userList>>');
-                const users = this.getUsers();
+                const users: Array<UserType> = JSON.parse(JSON.stringify(this.getUsers()));
                 payload.userList.forEach((e: UserType) => {
                     const found = users.find(ee => ee.serial === e.serial);
                     if (found) {

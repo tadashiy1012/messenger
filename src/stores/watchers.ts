@@ -87,7 +87,13 @@ export default class Watchers {
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if (say.length > 0 && currentUser) {
-                const tgt = cache.find(e => e.says[0].authorId === currentUser.serial);
+                const tgt = cache.find(e => {
+                    if (e.says && e.says.length > 0) {
+                        return e.says[0].authorId === currentUser.serial
+                    } else {
+                        return false;
+                    }
+                });
                 if (tgt) {
                     if (tgt.says) {
                         tgt.timestamp = Date.now();
