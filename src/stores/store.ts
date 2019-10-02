@@ -22,6 +22,13 @@ export default class MyStore {
         return this.currentUser;
     }
 
+    private userNormalize(user: UserType): UserType {
+        user.follow = [...user.follow];
+        user.follower = [...user.follow];
+        user.like = [...user.like];
+        return user;
+    }
+
     @action
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
@@ -34,6 +41,7 @@ export default class MyStore {
                     const hash = bcrypt.hashSync(password, salt);
                     user.password = hash;
                 }
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -61,9 +69,9 @@ export default class MyStore {
     updateUserFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
-                const user = Object.assign({}, this.currentUser);
+                const user = Object.assign({}, this.getUser);
                 user.follow = [...user.follow, tgtSerial];
-                user.follower = [...user.follower];
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -96,7 +104,7 @@ export default class MyStore {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
                 user.follow = [...user.follow.filter(e => e !== tgtSerial)];
-                user.follower = [...user.follower];
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -125,30 +133,35 @@ export default class MyStore {
 
     @action
     updateUserLike(tgtSay: SayType): Promise<Boolean> {
+        console.log(tgtSay);
         return new Promise((resolve, reject) => {
-            const user = this.getUser;
-            if (user) {
-                const copy = Object.assign({}, user);
-                const foundLike = copy.like.find(e => e === tgtSay.id);
-                const foundLiker = tgtSay.like.find(e => e === copy.serial);
+            if (this.currentUser) {
+                const copySay = Object.assign({}, tgtSay);
+                const copyUser = Object.assign({}, this.getUser);
+                const foundLike = copyUser.like.find(e => e === copySay.id);
+                const foundLiker = copySay.like.find(e => e === copyUser.serial);
                 if (foundLike || foundLiker) {
                     resolve(false);
                 }
-                copy.like.push(tgtSay.id);
-                tgtSay.like.push(copy.serial);
-                const foundUser = this.userList.find(e => e.serial === copy.serial);
+                copyUser.like = [...copyUser.like, copySay.id];
+                this.userNormalize(copyUser);
+                copyUser.update = Date.now();
+                copySay.like = [...copySay.like, copyUser.serial];
+                copySay.reply = [...copySay.reply];
+                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
                 if (foundUser) {
                     const idx = this.userList.indexOf(foundUser);
-                    this.userList.splice(idx, 1, copy);
+                    this.userList.splice(idx, 1, copyUser);
                 } else {
                     reject(new Error('user not found'));
                 }
                 const cache = this.pcStore!.getCache;
                 cache.forEach((e) => {
-                    const found = e.says.find((ee) => ee.id === tgtSay.id);
+                    const found = e.says.find((ee) => ee.id === copySay.id);
                     if (found) {
                         const idx = e.says.indexOf(found);
-                        e.says.splice(idx, 1, Object.assign({}, tgtSay));
+                        e.says.splice(idx, 1, copySay);
+                        e.timestamp = Date.now();
                         resolve(true);
                     }
                 });
@@ -162,29 +175,35 @@ export default class MyStore {
     @action
     updateUserUnLike(tgtSay: SayType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
-            const user = this.getUser;
-            if (user) {
-                const copy = Object.assign({}, user);
-                const foundLike = copy.like.find(e => e === tgtSay.id);
-                const foundLiker = tgtSay.like.find(e => e === copy.serial);
+            if (this.currentUser) {
+                const copySay = Object.assign({}, tgtSay);
+                const copyUser = Object.assign({}, this.getUser);
+                const foundLike = copyUser.like.find(e => e === copySay.id);
+                const foundLiker = copySay.like.find(e => e === copyUser.serial);
                 if (!foundLike && !foundLiker) {
                     resolve(false);
                 }
-                copy.like.splice(copy.like.indexOf(foundLike!), 1);
-                tgtSay.like.splice(tgtSay.like.indexOf(foundLiker!), 1);
-                const foundUser = this.userList.find(e => e.serial === copy.serial);
+                copyUser.like.splice(copyUser.like.indexOf(foundLike!), 1);
+                copyUser.like = [...copyUser.like];
+                this.userNormalize(copyUser);
+                copyUser.update = Date.now();
+                copySay.like.splice(copySay.like.indexOf(foundLiker!), 1);
+                copySay.like = [...copySay.like];
+                copySay.reply = [...copySay.reply];
+                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
                 if (foundUser) {
                     const idx = this.userList.indexOf(foundUser);
-                    this.userList.splice(idx, 1, copy);
+                    this.userList.splice(idx, 1, copyUser);
                 } else {
                     reject(new Error('user not found'));
                 }
                 const cache = this.pcStore!.getCache;
                 cache.forEach((e) => {
-                    const found = e.says.find((ee) => ee.id === tgtSay.id);
+                    const found = e.says.find((ee) => ee.id === copySay.id);
                     if (found) {
                         const idx = e.says.indexOf(found);
-                        e.says.splice(idx, 1, Object.assign({}, tgtSay));
+                        e.says.splice(idx, 1, copySay);
+                        e.timestamp = Date.now();
                         resolve(true);
                     }
                 });

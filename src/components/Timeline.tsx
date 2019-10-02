@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType } from '../types';
+import { MyStoreType, SayType } from '../types';
 import { ShowMode } from '../enums';
 
 
@@ -37,14 +37,29 @@ interface TimeLineProps {
 @inject('store')
 @observer
 export default class TimeLine extends React.Component<TimeLineProps> {
+    likeClickHandler(tgt: SayType) {
+        const {store} = this.props;
+        store!.updateUserLike(tgt).catch(err => console.error(err));
+    }
+    unLikeClickHandler(tgt: SayType) {
+        const {store} = this.props;
+        store!.updateUserUnLike(tgt).catch(err => console.error(err));
+    }
     render() {
         const {store} = this.props;
+        const user = store!.getUser;
         const timeline = [...store!.timeLine].sort((a, b) => {
             return b.date - a.date;
         });
         const child1 = timeline.map(e => {
             const dt = new Date(e.date);
             const name = store!.findAuthorname(e.authorId);
+            const alike = user && e.like.find(ee => ee === user!.serial) ? 
+                <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {this.unLikeClickHandler(e)}}>favorite</i> :
+                <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {this.likeClickHandler(e)}}>favorite_border</i>;
+            const naLike = user && e.like.find(ee => ee === user!.serial) ? 
+                <i className="material-icons">favorite</i> :
+                <i className="material-icons">favorite_border</i>;
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <a href="#" onClick={(ev) => {
@@ -64,8 +79,14 @@ export default class TimeLine extends React.Component<TimeLineProps> {
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
-                    <span>reply:</span>
-                    <span>favorite:</span>
+                    <div css={{display:'flex', alignItems:'center'}}>
+                        <i className="material-icons">message</i>
+                        <span>reply:{e.reply.length}</span>
+                    </div>
+                    <div css={{display:'flex', alignItems:'center'}}>
+                        {store!.logged && user && user.serial !== e.authorId ? alike : naLike}
+                        <span>like:{e.like.length}</span>
+                    </div>
                 </div>
             </li>
         });
@@ -81,6 +102,12 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         }).map(e => {
             const dt = new Date(e.date);
             const name = store!.findAuthorname(e.authorId);
+            const alike = user && e.like.find(ee => ee === user!.serial) ? 
+                <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {this.unLikeClickHandler(e)}}>favorite</i> :
+                <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {this.likeClickHandler(e)}}>favorite_border</i>;
+            const naLike = user && e.like.find(ee => ee === user!.serial) ? 
+                <i className="material-icons">favorite</i> :
+                <i className="material-icons">favorite_border</i>;
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <a href="#" onClick={(ev) => {
@@ -100,8 +127,14 @@ export default class TimeLine extends React.Component<TimeLineProps> {
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
-                    <span>reply:</span>
-                    <span>favorite:</span>
+                    <div css={{display:'flex', alignItems:'center'}}>
+                        <i className="material-icons">message</i>
+                        <span>reply:{e.reply.length}</span>
+                    </div>
+                    <div css={{display:'flex', alignItems:'center'}}>
+                        {store!.logged && user && user.serial !== e.authorId ? alike : naLike}
+                        <span>like:{e.like.length}</span>
+                    </div>
                 </div>
             </li>
         });
