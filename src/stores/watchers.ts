@@ -19,6 +19,7 @@ export default class Watchers {
         return new Promise((resolve, reject) => {
             if (JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
                 this.prevCache = JSON.parse(JSON.stringify(cache));
+                console.log(cache);
                 localForage.setItem('user_message_cache', cache).catch((err) => console.error(err));
                 console.log('!cache changed!', cache);
                 let ids: Set<string> = new Set();
@@ -87,7 +88,13 @@ export default class Watchers {
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             if (say.length > 0 && currentUser) {
-                const tgt = cache.find(e => e.says[0].authorId === currentUser.serial);
+                const tgt = cache.find(e => {
+                    if (e.says && e.says.length > 0) {
+                        return e.says[0].authorId === currentUser.serial
+                    } else {
+                        return false;
+                    }
+                });
                 if (tgt) {
                     if (tgt.says) {
                         tgt.timestamp = Date.now();

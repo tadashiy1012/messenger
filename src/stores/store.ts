@@ -22,6 +22,13 @@ export default class MyStore {
         return this.currentUser;
     }
 
+    private userNormalize(user: UserType): UserType {
+        user.follow = [...user.follow];
+        user.follower = [...user.follow];
+        user.like = [...user.like];
+        return user;
+    }
+
     @action
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
@@ -34,6 +41,7 @@ export default class MyStore {
                     const hash = bcrypt.hashSync(password, salt);
                     user.password = hash;
                 }
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -61,9 +69,9 @@ export default class MyStore {
     updateUserFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
-                const user = Object.assign({}, this.currentUser);
+                const user = Object.assign({}, this.getUser);
                 user.follow = [...user.follow, tgtSerial];
-                user.follower = [...user.follower];
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -96,7 +104,7 @@ export default class MyStore {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
                 user.follow = [...user.follow.filter(e => e !== tgtSerial)];
-                user.follower = [...user.follower];
+                this.userNormalize(user);
                 user.update = Date.now();
                 this.currentUser = user;
                 const found = this.userList.find(e => e.serial === this.currentUser!.serial);
@@ -123,17 +131,91 @@ export default class MyStore {
         });
     }
 
-    @observable
-    logged: Boolean = false;
+    @action
+    updateUserLike(tgtSay: SayType): Promise<Boolean> {
+        console.log(tgtSay);
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const copySay = Object.assign({}, tgtSay);
+                const copyUser = Object.assign({}, this.getUser);
+                const foundLike = copyUser.like.find(e => e === copySay.id);
+                const foundLiker = copySay.like.find(e => e === copyUser.serial);
+                if (foundLike || foundLiker) {
+                    resolve(false);
+                }
+                copyUser.like = [...copyUser.like, copySay.id];
+                this.userNormalize(copyUser);
+                copyUser.update = Date.now();
+                copySay.like = [...copySay.like, copyUser.serial];
+                copySay.reply = [...copySay.reply];
+                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
+                if (foundUser) {
+                    const idx = this.userList.indexOf(foundUser);
+                    this.userList.splice(idx, 1, copyUser);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const cache = this.pcStore!.getCache;
+                cache.forEach((e) => {
+                    const found = e.says.find((ee) => ee.id === copySay.id);
+                    if (found) {
+                        const idx = e.says.indexOf(found);
+                        e.says.splice(idx, 1, copySay);
+                        e.timestamp = Date.now();
+                        resolve(true);
+                    }
+                });
+                resolve(false);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
 
     @action
-    setLogged(logged: Boolean) {
-        this.logged = logged;
+    updateUserUnLike(tgtSay: SayType): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const copySay = Object.assign({}, tgtSay);
+                const copyUser = Object.assign({}, this.getUser);
+                const foundLike = copyUser.like.find(e => e === copySay.id);
+                const foundLiker = copySay.like.find(e => e === copyUser.serial);
+                if (!foundLike && !foundLiker) {
+                    resolve(false);
+                }
+                copyUser.like.splice(copyUser.like.indexOf(foundLike!), 1);
+                copyUser.like = [...copyUser.like];
+                this.userNormalize(copyUser);
+                copyUser.update = Date.now();
+                copySay.like.splice(copySay.like.indexOf(foundLiker!), 1);
+                copySay.like = [...copySay.like];
+                copySay.reply = [...copySay.reply];
+                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
+                if (foundUser) {
+                    const idx = this.userList.indexOf(foundUser);
+                    this.userList.splice(idx, 1, copyUser);
+                } else {
+                    reject(new Error('user not found'));
+                }
+                const cache = this.pcStore!.getCache;
+                cache.forEach((e) => {
+                    const found = e.says.find((ee) => ee.id === copySay.id);
+                    if (found) {
+                        const idx = e.says.indexOf(found);
+                        e.says.splice(idx, 1, copySay);
+                        e.timestamp = Date.now();
+                        resolve(true);
+                    }
+                });
+                resolve(false);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
     }
 
     private say: Array<SayType> = [];
     @observable private hear: Array<SayType> = [];
-    private userList: Array<UserType> = [];
 
     addSay(say: SayType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
@@ -163,6 +245,8 @@ export default class MyStore {
             return a.date - b.date
         });
     }
+    
+    private userList: Array<UserType> = [];
 
     findAuthorIcon(authorId: string): string {
         const found = this.userList.find(e => e.serial === authorId);
@@ -196,6 +280,14 @@ export default class MyStore {
         }
     }
 
+    @observable
+    logged: Boolean = false;
+
+    @action
+    setLogged(logged: Boolean) {
+        this.logged = logged;
+    }
+
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
@@ -209,6 +301,7 @@ export default class MyStore {
                     icon: found.icon,
                     follow: found.follow,
                     follower: found.follower,
+                    like: found.like,
                     clientId: this.id,
                     update: Date.now()
                 };
@@ -262,6 +355,7 @@ export default class MyStore {
                     icon: noImage,
                     follow: [],
                     follower: [],
+                    like: [],
                     clientId: this.id,
                     update: Date.now()
                 };

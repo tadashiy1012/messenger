@@ -8,6 +8,7 @@ import {
     AppTitle, Status, LoginContainer, MainContainer
 } from './components';
 import 'purecss/build/pure.css';
+import 'material-design-icons/iconfont/material-icons.css';
 
 const App = () => (
     <Provider store={new MyStore()}>
