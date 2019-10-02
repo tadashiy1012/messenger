@@ -5,7 +5,6 @@ import uuid = require('uuid');
 export default class Watchers {
 
     private beforeCacheSend: number = -1;
-    private beforeListSend: number = -1;
     private prevList: Array<UserType> = [];
     private prevCache: Array<CacheType> = [];
 
@@ -118,30 +117,10 @@ export default class Watchers {
     }
 
     userListWatcher(
-        userList: Array<UserType>, 
-        dcs: Array<RTCDataChannel | null>
+        userList: Array<UserType>
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
-            if ((userList.length > 0 && userList.length > this.beforeListSend) ||
-                    (JSON.stringify(userList) !== JSON.stringify(this.prevList))) {
-                let count = 0;
-                const json = {
-                    from: this.id,
-                    sendTime: Date.now(),
-                    payload: {
-                        userList: userList
-                    }
-                };
-                dcs.forEach(dc => {
-                    if (dc && dc.readyState === 'open') {
-                        dc.send(JSON.stringify(json));
-                        count += 1;
-                    }
-                });
-                if (count > 0) {
-                    this.beforeListSend = userList.length;
-                    console.log('[[send userList]]');
-                }
+            if (JSON.stringify(userList) !== JSON.stringify(this.prevList)) {
                 (async () => {
                     try {
                         console.log(userList);

@@ -58,7 +58,8 @@ export default class PcStore {
                     users.splice(0, users.length, ...result[1]);
                 }
             }, [
-                this.senders!.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders),
+                this.senders!.userListSender.bind(this.senders)
             ], [
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
@@ -97,7 +98,8 @@ export default class PcStore {
                     users.splice(0, users.length, ...result[1]);
                 }
             }, [
-                this.senders!.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders),
+                this.senders!.userListSender.bind(this.senders)
             ], [
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
@@ -133,7 +135,8 @@ export default class PcStore {
                     users.splice(0, users.length, ...result[1]);
                 }
             }, [
-                this.senders!.cacheSender.bind(this.senders)
+                this.senders!.cacheSender.bind(this.senders),
+                this.senders!.userListSender.bind(this.senders)
             ], [
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
@@ -371,6 +374,8 @@ export default class PcStore {
             console.log(this.cache);
             this.senders = new Senders(this.id, () => {
                 return this.cache;
+            }, () => {
+                return this.getUsers();
             });
             this.receivers = new Receivers(() => {
                 return this.cache;
@@ -401,7 +406,7 @@ export default class PcStore {
                             hear.splice(0, hear.length, ...result);
                         }),
                         watchers.cacheSender(this.cache!, [this.dcA, this.dcB, this.dcC]),
-                        watchers.userListWatcher(this.getUsers(), [this.dcA, this.dcB, this.dcC])
+                        watchers.userListWatcher(this.getUsers())
                     ];
                     Promise.all(tasks).then((results) => {
                         results.forEach(e => {

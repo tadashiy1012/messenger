@@ -10,9 +10,11 @@ export default function setupDC(
     dc.onopen = (ev) => {
         console.log(ev, dc.readyState);
         stateCb(dc.readyState);
-        const tasks = senders.map(e => e(dc));
-        Promise.all(tasks).then((results) => {
-        }).catch((err) => console.error(err));
+        setInterval(() => {
+            const tasks = senders.map(e => e(dc));
+            Promise.all(tasks).then((results) => {
+            }).catch((err) => console.error(err));
+        }, 2000);
     };
     dc.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
