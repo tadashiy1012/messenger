@@ -32,7 +32,7 @@ export default class Status extends React.Component<StatusProps> {
         const {store} = this.props;
         return <React.Fragment>
             <div css={{display:store!.showDetail ? 'block':'none'}}>
-                <h2 css={{marginBottom:'2px'}}>status</h2>
+                <h2 css={{margin:'2px 0px'}}>status</h2>
                 <h4 css={{margin:'4px 0px'}}>id:{store!.id || 'no id'}</h4>
                 <PcStatus />
             </div>

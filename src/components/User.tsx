@@ -16,6 +16,9 @@ export default class User extends React.Component<UserProps> {
     render() {
         const {store} = this.props;
         const currentUser = store!.getUser;
+        if (!currentUser && !store!.showUserTarget) {
+            
+        }
         const tgtUser = store!.findUser(store!.showUserTarget);
         const name = tgtUser!.name;
         const say = store!.findUserSay(store!.showUserTarget);
@@ -49,11 +52,6 @@ export default class User extends React.Component<UserProps> {
         }
         return <React.Fragment>
             <div css={{margin:'12px 0px'}}>
-                <h2 css={{marginBottom:'4px'}}>user</h2>
-                <button className="pure-button" onClick={() => {
-                    store!.setShowUserTarget(null);
-                    store!.setShowMode(ShowMode.MAIN);
-                }}>back to main</button>
                 <div css={{display:'flex', alignItems:'center', margin:'8px 0px'}}>
                     <img src={tgtUser!.icon} css={{borderRadius:'32px', border:'solid 1px gray', margin: '4px'}} />
                     <h3>{tgtUser!.name}</h3>

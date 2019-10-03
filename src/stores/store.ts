@@ -6,11 +6,22 @@ import { SayType, UserType, CacheType, PcStateType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import { ShowMode } from '../enums';
 import PcStore from './pcStore';
+import { History } from 'history';
 
 export default class MyStore {
 
     private pcStore: PcStore | null = null;
+
+    private history: History | null = null;
    
+    public get getHistory(): History | null {
+        return this.history;
+    }
+
+    public set setHistory(history: History<any>) {
+        this.history = history;
+    }
+
     @observable
     id: string = uuid.v1();
 
