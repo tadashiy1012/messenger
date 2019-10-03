@@ -4,30 +4,7 @@ import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
 import { ShowMode } from '../enums';
-
-function escape_html (string: string): string {
-    if(typeof string !== 'string') {
-        return string;
-    }
-    return string.replace(/[&'`"<>]/g, (match) => {
-        switch (match) {
-            case '&':
-                return '&amp;';
-            case "'": 
-                return '&#x27;';
-            case '`':
-                return '&#x60;';
-            case '"':
-                return '&quot;';
-            case '<': 
-                return '&lt;';
-            case '>': 
-                return '&gt;';
-            default:
-                return match
-        }
-    });
-}
+import escape_html from '../utils/escapeHtml';
 
 interface UserProps {
     store?: MyStoreType

@@ -7,21 +7,23 @@ export default class Watchers {
     private prevList: Array<UserType> = [];
     private prevCache: Array<CacheType> = [];
 
-    constructor(private id: string) {
+    constructor(
+        private id: string,
+        private getUser: () => UserType | null,
+        private getCache: () => Array<CacheType>,
+        private getSay: () => Array<SayType>,
+    ) {
     }
 
     cacheWatcher(
-        cache: Array<CacheType>, 
-        hearCb: (newHear: Array<SayType>) => void
+        hearCb: (result: Array<SayType>) => void
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
+            const cache = this.getCache();
             if (JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
                 this.prevCache = JSON.parse(JSON.stringify(cache));
-                console.log(cache);
-                localForage.setItem('user_message_cache', cache).catch((err) => console.error(err));
-                console.log('!cache changed!', cache);
-                let ids: Set<string> = new Set();
-                cache.forEach(e => ids.add(e.id));
+                console.log('!cache changed!');
+                let ids = new Set(cache.map(e => e.id));
                 let newHear: Array<SayType> = [];
                 ids.forEach(e => {
                     let filtered = cache.filter(ee => ee.id === e);
@@ -44,36 +46,44 @@ export default class Watchers {
     }
 
     sayWatcher(
-        cache: Array<CacheType>, 
-        say: Array<SayType>, 
-        currentUser: UserType | null, 
-        sayCb: (result: Array<SayType>) => void
+        sayCb: (result: Array<CacheType>) => void
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
+            const currentUser = this.getUser();
+            const say = this.getSay();
+            const cache = this.getCache();
             if (say.length > 0 && currentUser) {
                 const tgt = cache.find(e => {
-                    if (e.says && e.says.length > 0) {
-                        return e.says[0].authorId === currentUser.serial
+                    if (e.id) {
+                        return e.id === currentUser.serial;
                     } else {
                         return false;
                     }
                 });
-                if (tgt) {
-                    if (tgt.says) {
-                        tgt.timestamp = Date.now();
-                        say.forEach((say: SayType) => {
-                            const foundId = tgt.says.find(e => e.id === say.id);
-                            if (!foundId) {
-                                tgt.says.push(say);
-                            }
-                        });
-                    }
+                if (tgt && tgt.says) {
+                    console.log('update', tgt);
+                    tgt.timestamp = Date.now();
+                    say.forEach((say: SayType) => {
+                        const foundId = tgt.says.find(e => e.id === say.id);
+                        if (!foundId) {
+                            tgt.says.push(say);
+                        }
+                    });
                 } else {
+                    console.log('new');
                     cache.push({
-                        id: uuid.v1(), timestamp: Date.now(), says: say
+                        id: currentUser.serial, timestamp: Date.now(), says: say
                     });
                 }
-                resolve([true, {resultCb: sayCb, resultValue: []}]);
+                (async() => {
+                    try {
+                        await localForage.setItem('user_message_cache', cache); 
+                        console.log('cache saved!');  
+                    } catch (error) {
+                        console.error(error);
+                    }
+                })();
+                resolve([true, {resultCb: sayCb, resultValue: cache}]);
             } else {
                 resolve([false, {}]);
             }

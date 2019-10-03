@@ -61,7 +61,7 @@ class Follower extends React.Component<FollowerProps> {
                     <span css={{margin:'4px'}}>follow:{follower!.follow.length}</span>
                     <span css={{margin:'4px'}}>follower:{follower!.follower.length}</span>
                     <span css={{margin:'4px'}}>
-                        <button className="pure-button" onClick={() => {
+                        <button className="pure-button" disabled={follower!.follower.find(ee => ee === user!.serial) ? true: false} onClick={() => {
                             store!.updateUserFollow(follower!.serial).catch(err => console.error(err));
                         }}>follow</button>
                     </span>

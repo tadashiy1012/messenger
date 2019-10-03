@@ -371,7 +371,6 @@ export default class PcStore {
             } catch (error) {
                 console.error(error);
             }
-            console.log(this.cache);
             this.senders = new Senders(this.id, () => {
                 return this.cache;
             }, () => {
@@ -382,7 +381,17 @@ export default class PcStore {
             }, () => {
                 return this.getUsers();
             });
-            const watchers = new Watchers(this.id);
+            const watchers = new Watchers(
+                this.id,
+                () => {
+                    return this.getUser();
+                },
+                () => {
+                    return this.cache;
+                }, () => {
+                    return this.getSay();
+                }
+            );
             makeWs(
                 this.preOfferTransceiver.bind(this),
                 this.offerTansceiver.bind(this), 
@@ -397,11 +406,11 @@ export default class PcStore {
                 this.pcCCloseFn();
                 setInterval(() => {
                     const tasks = [
-                        watchers.sayWatcher(this.cache, this.getSay(), this.getUser(), (result) => {
+                        watchers.sayWatcher((result) => {
                             const say = this.getSay();
-                            say.splice(0, say.length, ...result);
+                            say.splice(0, say.length, ...[]);
                         }),
-                        watchers.cacheWatcher(this.cache, (result) => {
+                        watchers.cacheWatcher((result) => {
                             const hear = this.getHear();
                             hear.splice(0, hear.length, ...result);
                         }),

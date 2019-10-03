@@ -18,7 +18,12 @@ export default class Receivers {
                     if (found) {
                         if (found.timestamp <= e.timestamp) {
                             const idx = cache.indexOf(found);
-                            cache.splice(idx, 1, Object.assign({}, cache[idx], e));
+                            const newCache = Object.assign({}, cache[idx], e);
+                            if (JSON.stringify(newCache.says) !== JSON.stringify(found.says) && newCache.says.length > found.says.length) {
+                                const newSays = new Set([...found.says, ...newCache.says]);
+                                newCache.says = Array.from(newSays);
+                            }
+                            cache.splice(idx, 1, newCache);
                             console.log('(( cache update! ))');
                         } else {
                             console.log('(( cache not update! ))')

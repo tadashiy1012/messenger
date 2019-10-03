@@ -291,6 +291,7 @@ export default class MyStore {
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
+            const cache = this.pcStore!.getCache;
             const found = this.userList.find(e => e.email === email);
             if (found && bcrypt.compareSync(password, found.password)) {
                 this.currentUser = {
@@ -307,6 +308,12 @@ export default class MyStore {
                 };
                 found.clientId = this.currentUser.clientId;
                 found.update = this.currentUser.update;
+                const tgtCache = cache.find(e => e.id === found.serial);
+                if (!tgtCache) {
+                    cache.push({
+                        id: found.serial, timestamp: Date.now(), says: []
+                    });
+                }
                 resolve(true);
             } else {
                 resolve(false);
