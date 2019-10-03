@@ -114,18 +114,6 @@ export default class Setting extends React.Component<SettingProps> {
                     this.saveClickHandler();
                 }}>save</button>
             </div>
-            <hr />
-            <div css={{marginBottom:'22px'}}>
-                <h3>cache all clear</h3>
-                <button className="pure-button" onClick={() => {
-                    store!.allClear().then(() => {
-                        alert('clear success!');
-                    }).catch((err) => {
-                        console.error(err);
-                        alert('clear fail!');
-                    });
-                }}>all clear</button>
-            </div>
         </React.Fragment>
     }
     componentDidMount() {

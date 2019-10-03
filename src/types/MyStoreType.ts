@@ -18,6 +18,7 @@ export default interface MyStoreType {
     findAuthorname(authorId: string): string
     findUser(userSerial: string): UserType | null
     findUserSay(userSerial: string): Array<SayType>
+    findSay(sayId: string): SayType | undefined
     login(email: string, password: string): Promise<Boolean>
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
@@ -29,7 +30,8 @@ export default interface MyStoreType {
     setShowMode(mode: ShowMode): void
     showUserTarget: string
     setShowUserTarget(targetSerial: string | null): void
-    allClear(): Promise<Boolean>
+    showMessageTarget: string
+    setShowMessageTarget(targetId: string | null): void
     pcAState: PcStateType
     pcBState: PcStateType
     pcCState: PcStateType

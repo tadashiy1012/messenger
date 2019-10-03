@@ -280,6 +280,14 @@ export default class MyStore {
         }
     }
 
+    findSay(sayId: string): SayType | undefined {
+        const says: Array<SayType> = this.pcStore!.getCache.reduce<SayType[]>((acc, e) => {
+           acc.push(...e.says);
+           return acc;
+        }, []);
+        return says.find(e => e.id === sayId);
+    }
+
     @observable
     logged: Boolean = false;
 
@@ -291,7 +299,6 @@ export default class MyStore {
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
-            const cache = this.pcStore!.getCache;
             const found = this.userList.find(e => e.email === email);
             if (found && bcrypt.compareSync(password, found.password)) {
                 this.currentUser = {
@@ -308,12 +315,6 @@ export default class MyStore {
                 };
                 found.clientId = this.currentUser.clientId;
                 found.update = this.currentUser.update;
-                const tgtCache = cache.find(e => e.id === found.serial);
-                if (!tgtCache) {
-                    cache.push({
-                        id: found.serial, timestamp: Date.now(), says: []
-                    });
-                }
                 resolve(true);
             } else {
                 resolve(false);
@@ -373,7 +374,7 @@ export default class MyStore {
     }
 
     @observable
-    showDetail: Boolean = true;
+    showDetail: Boolean = false;
 
     @action
     setShowDetail(show: Boolean) {
@@ -405,6 +406,14 @@ export default class MyStore {
     }
 
     @observable
+    showMessageTarget: string | null = null;
+
+    @action
+    setShowMessageTarget(targetId: string | null) {
+        this.showMessageTarget = targetId;
+    }
+
+    @observable
     pcAState: PcStateType = {
         target: null,
         connection: 'n/a',
@@ -422,22 +431,6 @@ export default class MyStore {
         connection: 'n/a',
         dataChannel: 'n/a'
     };
-
-    @action
-    allClear(): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            this.pcStore!.setCache = [];
-            this.userList = [];
-            localForage.clear().then(() => {
-                this.currentUser = null;
-                this.showSetting = false;
-                this.logged = false;
-                resolve(true);
-            }).catch((err) => {
-                reject(err);
-            })
-        });
-    }
 
     constructor() {
         (async () => {

@@ -3,4 +3,5 @@ export enum ShowMode {
     USER,
     SETTING,
     FOLLOW,
+    MESSAGE,
 }
