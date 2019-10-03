@@ -280,6 +280,14 @@ export default class MyStore {
         }
     }
 
+    findSay(sayId: string): SayType | undefined {
+        const says: Array<SayType> = this.pcStore!.getCache.reduce<SayType[]>((acc, e) => {
+           acc.push(...e.says);
+           return acc;
+        }, []);
+        return says.find(e => e.id === sayId);
+    }
+
     @observable
     logged: Boolean = false;
 
@@ -402,6 +410,14 @@ export default class MyStore {
     @action
     setShowUserTarget(targetSerial: string | null) {
         this.showUserTarget = targetSerial;
+    }
+
+    @observable
+    showMessageTarget: string | null = null;
+
+    @action
+    setShowMessageTarget(targetId: string | null) {
+        this.showMessageTarget = targetId;
     }
 
     @observable

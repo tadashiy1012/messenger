@@ -6,10 +6,29 @@ import { MyStoreType, SayType } from '../types';
 import { ShowMode } from '../enums';
 import escape_html from '../utils/escapeHtml';
 
+interface MessageProps {
+    store?: MyStoreType
+}
+
+@inject('store')
+@observer
+class Message extends React.Component<MessageProps> {
+    render() {
+        const {store} = this.props;
+        const tgtId = store!.showMessageTarget;
+        const tgt = store!.findSay(tgtId);
+        return <div>
+            <h3>message</h3>
+            <p>{tgt!.say}</p>
+        </div>
+    }
+}
+
 interface GlobalProps {
     store?: MyStoreType
     likeClickHandler(say: SayType): void
     unLikeClickHandler(say: SayType): void
+    messageClickHandler(say: SayType): void
 }
 
 @inject('store')
@@ -47,7 +66,9 @@ class GlobalTL extends React.Component<GlobalProps> {
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
                     </span>
                 </div>
-                <div css={{marginLeft:'22px', padding:'6px'}}>
+                <div css={{marginLeft:'22px', padding:'6px', cursor:'pointer'}} onClick={() => {
+                    this.props.messageClickHandler(e);
+                }}>
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
@@ -73,6 +94,7 @@ interface LocalProps {
     store?: MyStoreType
     likeClickHandler(say: SayType): void
     unLikeClickHandler(say: SayType): void
+    messageClickHandler(say: SayType): void
 }
 
 @inject('store')
@@ -104,7 +126,7 @@ class LocalTL extends React.Component<LocalProps> {
             const naLike = user && e.like.find(ee => ee === user!.serial) ? 
                 <i className="material-icons">favorite</i> :
                 <i className="material-icons">favorite_border</i>;
-            return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
+            return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}} >
                 <div css={{display:'flex', alignItems:'center'}}>
                     <a href="#" onClick={(ev) => {
                         ev.preventDefault();
@@ -119,7 +141,9 @@ class LocalTL extends React.Component<LocalProps> {
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
                     </span>
                 </div>
-                <div css={{marginLeft:'22px', padding:'6px'}}>
+                <div css={{marginLeft:'22px', padding:'6px', cursor:'pointer'}} onClick={() => {
+                    this.props.messageClickHandler(e);
+                }}>
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
@@ -156,10 +180,26 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const {store} = this.props;
         store!.updateUserUnLike(tgt).catch(err => console.error(err));
     }
+    messageClickHandler(tgt: SayType) {
+        const {store} = this.props;
+        store!.setShowMessageTarget(tgt.id);
+        store!.setShowMode(ShowMode.MESSAGE);
+    }
     render() {
+        const {store} = this.props;
+        const tl = <React.Fragment>
+                <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} 
+                    unLikeClickHandler={this.unLikeClickHandler.bind(this)}
+                    messageClickHandler={this.messageClickHandler.bind(this)} />
+                <LocalTL likeClickHandler={this.likeClickHandler.bind(this)}
+                    unLikeClickHandler={this.unLikeClickHandler.bind(this)}
+                    messageClickHandler={this.messageClickHandler.bind(this)} /> 
+            </React.Fragment>;
+        const message = <React.Fragment>
+                <Message />
+            </React.Fragment>;
         return <div css={{display:'flex', flexDirection:'row', justifyContent:'space-around'}}>
-            <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} unLikeClickHandler={this.unLikeClickHandler.bind(this)} />
-            <LocalTL likeClickHandler={this.likeClickHandler.bind(this)} unLikeClickHandler={this.unLikeClickHandler.bind(this)} />
-        </div>
+            {store!.showMode === ShowMode.MAIN ? tl : message}            
+        </div>;
     }
 }

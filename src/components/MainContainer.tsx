@@ -39,7 +39,7 @@ export default class MainContainer extends React.Component<MainContainerProps> {
     render() {
         const {store} = this.props;
         let child = null;
-        if (store!.showMode === ShowMode.MAIN) {
+        if (store!.showMode === ShowMode.MAIN || store!.showMode === ShowMode.MESSAGE) {
             child = <Main logged={store!.logged} />;
         } else if (store!.showMode === ShowMode.USER) {
             child = <User />;
