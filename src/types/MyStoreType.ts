@@ -32,7 +32,6 @@ export default interface MyStoreType {
     setShowUserTarget(targetSerial: string | null): void
     showMessageTarget: string
     setShowMessageTarget(targetId: string | null): void
-    allClear(): Promise<Boolean>
     pcAState: PcStateType
     pcBState: PcStateType
     pcCState: PcStateType

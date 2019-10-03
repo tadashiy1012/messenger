@@ -21,8 +21,16 @@ export default class Watchers {
         return new Promise((resolve, reject) => {
             const cache = this.getCache();
             if (JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
-                this.prevCache = JSON.parse(JSON.stringify(cache));
                 console.log('!cache changed!');
+                (async() => {
+                    try {
+                        await localForage.setItem('user_message_cache', cache); 
+                        console.log('cache saved!');
+                    } catch (error) {
+                        console.error(error);
+                    }
+                })();
+                this.prevCache = JSON.parse(JSON.stringify(cache));
                 let ids = new Set(cache.map(e => e.id));
                 let newHear: Array<SayType> = [];
                 ids.forEach(e => {
@@ -53,6 +61,7 @@ export default class Watchers {
             const say = this.getSay();
             const cache = this.getCache();
             if (say.length > 0 && currentUser) {
+                console.log('!say changed!');
                 const tgt = cache.find(e => {
                     if (e.id) {
                         return e.id === currentUser.serial;
@@ -61,7 +70,7 @@ export default class Watchers {
                     }
                 });
                 if (tgt && tgt.says) {
-                    console.log('update', tgt);
+                    console.log('cache update', tgt);
                     tgt.timestamp = Date.now();
                     say.forEach((say: SayType) => {
                         const foundId = tgt.says.find(e => e.id === say.id);
@@ -70,19 +79,11 @@ export default class Watchers {
                         }
                     });
                 } else {
-                    console.log('new');
+                    console.log('cache new');
                     cache.push({
-                        id: currentUser.serial, timestamp: Date.now(), says: say
+                        id: currentUser.serial, timestamp: Date.now(), says: [...say]
                     });
                 }
-                (async() => {
-                    try {
-                        await localForage.setItem('user_message_cache', cache); 
-                        console.log('cache saved!');  
-                    } catch (error) {
-                        console.error(error);
-                    }
-                })();
                 resolve([true, {resultCb: sayCb, resultValue: cache}]);
             } else {
                 resolve([false, {}]);
