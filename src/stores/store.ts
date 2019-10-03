@@ -257,7 +257,13 @@ export default class MyStore {
         });
     }
     
+    @observable
     private userList: Array<UserType> = [];
+
+    @computed
+    public get getUserList(): Array<UserType> {
+        return this.userList;
+    }
 
     findAuthorIcon(authorId: string): string {
         const found = this.userList.find(e => e.serial === authorId);
@@ -451,7 +457,7 @@ export default class MyStore {
                 console.error(error);
             }
             this.pcStore = new PcStore(this.id, () => {
-                return this.userList;
+                return this.getUserList;
             }, () => {
                 return this.say;
             }, () => {

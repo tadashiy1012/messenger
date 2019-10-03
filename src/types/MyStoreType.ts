@@ -1,7 +1,10 @@
 import { UserType, SayType, PcStateType } from ".";
 import { ShowMode } from "../enums";
+import { History } from 'history';
 
 export default interface MyStoreType {
+    getHistory: History | null
+    setHistory: History | null
     id: string
     currentUser: UserType
     getUser: UserType | null
@@ -10,6 +13,7 @@ export default interface MyStoreType {
     updateUserUnFollow(tgtSerial: string): Promise<Boolean>
     updateUserLike(tgtSay: SayType): Promise<Boolean>
     updateUserUnLike(tgtSay: SayType): Promise<Boolean>
+    getUserList: Array<UserType>
     logged: Boolean
     setLogged(logged: Boolean): void
     addSay(say: SayType): Promise<Boolean>

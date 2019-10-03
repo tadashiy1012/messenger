@@ -99,25 +99,32 @@ export default class Setting extends React.Component<SettingProps> {
     }
     render() {
         const {store} = this.props;
-        const icon = store!.currentUser ? store!.currentUser.icon : noImage;
-        return <React.Fragment>
-            <div className="pure-form pure-form-stacked">
-                <span>screen name</span>
-                <input type="text" className="pure-input-1-3" ref={this.nameRef} />
-                <span>icon</span>
-                <br />
-                <img src={icon} css={{width:'128px', height:'128px', background:'gray'}} />
-                <input type="file" className="pure-input-1-3" ref={this.iconRef} />
-                <span>password</span>
-                <input type="password" className="pure-input-1-3" ref={this.passRef} />
-                <button className="pure-button" onClick={() => {
-                    this.saveClickHandler();
-                }}>save</button>
-            </div>
-        </React.Fragment>
+        if (!store!.logged) {
+            store!.getHistory!.replace('/');
+            return null;
+        } else {
+            const icon = store!.currentUser ? store!.currentUser.icon : noImage;
+            return <React.Fragment>
+                <div className="pure-form pure-form-stacked">
+                    <span>screen name</span>
+                    <input type="text" className="pure-input-1-3" ref={this.nameRef} />
+                    <span>icon</span>
+                    <br />
+                    <img src={icon} css={{width:'128px', height:'128px', background:'gray'}} />
+                    <input type="file" className="pure-input-1-3" ref={this.iconRef} />
+                    <span>password</span>
+                    <input type="password" className="pure-input-1-3" ref={this.passRef} />
+                    <button className="pure-button" onClick={() => {
+                        this.saveClickHandler();
+                    }}>save</button>
+                </div>
+            </React.Fragment>
+        }
     }
     componentDidMount() {
         const {store} = this.props;
-        this.nameRef.current!.value = store!.currentUser!.name
+        if (this.nameRef.current && store!.currentUser) {
+            this.nameRef.current!.value = store!.currentUser!.name
+        }
     }
 }

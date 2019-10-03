@@ -51,7 +51,8 @@ class Navi extends React.Component<{store?: MyStoreType}> {
     render() {
         const {store} = this.props;
         const loggedMenu = <React.Fragment>
-            <Link to="/user" className="pure-button" css={{margin:'0px 4px'}}>User</Link>
+            <Link to={{pathname:'/user', search: store!.getUser ? '?tgt=' + store!.getUser.serial : ''}}
+                className="pure-button" css={{margin:'0px 4px'}}>User</Link>
             <Link to="/setting" className="pure-button" css={{margin:'0px 4px'}}>Setting</Link>
         </React.Fragment>
         return <React.Fragment>

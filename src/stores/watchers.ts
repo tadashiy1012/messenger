@@ -98,8 +98,14 @@ export default class Watchers {
             if (JSON.stringify(userList) !== JSON.stringify(this.prevList)) {
                 (async () => {
                     try {
-                        console.log(userList);
-                        await localForage.setItem('user_list', userList);
+                        await localForage.setItem('user_list', [...userList.map(e => {
+                            const copy = Object.assign({}, e);
+                            copy.follow = [...copy.follow];
+                            copy.follower = [...copy.follower];
+                            copy.like = [...copy.like];
+                            return copy;
+                        })]);
+                        console.log('user list saved!');
                     } catch (err) {
                         console.error(err);
                     }
