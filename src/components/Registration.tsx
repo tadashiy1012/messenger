@@ -38,8 +38,8 @@ export default class Registration extends React.Component<RegistrationProps> {
     };
     render() {
         return <React.Fragment>
-            <div className="pure-form pure-form-stacked">
-                <h2 css={{marginBottom:'2px'}}>registration</h2>
+            <div className="pure-form pure-form-stacked" css={{margin:'12px 0px'}}>
+                <h3 css={{marginBottom:'2px'}}>registration</h3>
                 <span>email</span>
                 <input type="email" className="pure-input-1-3" ref={this.emailRef} />
                 <span>password</span>

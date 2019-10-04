@@ -5,7 +5,7 @@ import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
 import Login from './Login';
 import Registration from './Registration';
-import LoggedContainer from './LoggedContainer';
+import Logout from './Logout';
 
 interface LoginContainerProps {
     store?: MyStoreType
@@ -21,9 +21,11 @@ export default class LoginContainer extends React.Component<LoginContainerProps,
         };
     }
     render() {
+        const {router} = this.context;
+        console.log(router);
         const {store} = this.props;
         return <React.Fragment>
-            {store!.logged ? <LoggedContainer /> : <React.Fragment>
+            {store!.logged ? <Logout /> : <React.Fragment>
                 <div css={{display:this.state.login ? 'block':'none', margin:'12px 0px'}}>
                     <Login />
                     <a href="#" onClick={(ev) => {

@@ -43,7 +43,7 @@ export default class Writer extends React.Component<WriterProps> {
     }
     render() {
         const {store} = this.props;
-        return <div className="pure-form" css={{display:'flex', alignItems:'center'}}>
+        return <div className="pure-form" css={{display:'flex', alignItems:'center', margin:'14px 0px'}}>
             <a href="#" onClick={(ev) => {
                 ev.preventDefault();
                 const user = store!.getUser;

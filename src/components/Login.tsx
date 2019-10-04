@@ -3,6 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
+import { history } from '../stores';
 
 interface LoginProps {
     store?: MyStoreType
@@ -25,6 +26,7 @@ export default class Login extends React.Component<LoginProps> {
         store!.login(email, password).then((result) => {
             if (result) {
                 store!.setLogged(true);
+                history.push('/');
             } else {
                 alert('login fail!');
             }
@@ -36,7 +38,7 @@ export default class Login extends React.Component<LoginProps> {
     render() {
         return <React.Fragment>
             <div className="pure-form pure-form-stacked" css={{margin:'12px 0px'}}>
-                <h2 css={{marginBottom:'2px'}}>login</h2>
+                <h3 css={{marginBottom:'2px'}}>login</h3>
                 <span>email</span>
                 <input type="email" className="pure-input-1-3" ref={this.emailRef} />
                 <span>password</span>
