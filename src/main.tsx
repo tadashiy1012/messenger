@@ -18,7 +18,7 @@ const store = new MyStore();
 
 const Main = () => (
     <React.Fragment>
-        <h2>Main</h2>
+        <h2 css={{margin:'8px 0px'}}>Main</h2>
         <TimeLine />
     </React.Fragment>
 );
@@ -67,7 +67,7 @@ class Navi extends React.Component<{store?: MyStoreType}> {
 const App = () => (
     <Router history={history}>
         <Provider store={store}>
-            <div css={{width: '1024px', margin: '0px auto'}}>
+            <div css={{width: '800px', margin: '0px auto'}}>
                 <AppTitle />
                 <Status />
                 <Navi />

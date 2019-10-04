@@ -16,7 +16,7 @@ interface SayProps {
 class Say extends React.Component<SayProps> {
     render() {
         const {store} = this.props;
-        return this.props.say.map((e) => {
+        const child = this.props.say.map((e) => {
             const dt = new Date(e.date);
             const name = store!.findAuthorname(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
@@ -43,6 +43,7 @@ class Say extends React.Component<SayProps> {
                 </div>
             </li>
         });
+        return <ul css={{listStyleType:'none', paddingLeft:'0px'}}>{child}</ul>
     }
 }
 
@@ -68,7 +69,7 @@ class Follow extends React.Component<FollowProps> {
                 </div>
             </li>
         });
-        return <React.Fragment>{child}</React.Fragment>
+        return <ul css={{listStyleType:'none', paddingLeft:'0px'}}>{child}</ul>
     }
 }
 
@@ -94,7 +95,7 @@ class Follower extends React.Component<FollowerProps> {
                 </div>
             </li>
         });
-        return <React.Fragment>{child}</React.Fragment>
+        return <ul css={{listStyleType:'none', paddingLeft:'0px'}}>{child}</ul>
     }
 }
 
@@ -114,14 +115,21 @@ interface UserProps {
     store?: MyStoreType
 }
 
+interface UserState {
+    say: SayType[]
+    sayLen: number
+    mode: number
+}
+
 @inject('store')
 @observer
-export default class User extends React.Component<UserProps, {say: SayType[], sayLen: number}> {
+export default class User extends React.Component<UserProps, UserState> {
     constructor(props: Readonly<UserProps>) {
         super(props);
         this.state = {
             say: [],
-            sayLen: -1
+            sayLen: -1,
+            mode: 0
         };
     }
     render() {
@@ -132,10 +140,18 @@ export default class User extends React.Component<UserProps, {say: SayType[], sa
             let followBtn = null;
             let unfollowBtn = null;
             if (store!.logged && currentUser && currentUser.serial !== tgtUser.serial) {
-                const found = tgtUser.follow.find(e => e === currentUser.serial);
-                console.log(found);
-                followBtn = found ? null : <FollowButton store={store} tgtUser={tgtUser} />;
-                unfollowBtn = found ? <UnFollowButton store={store} tgtUser={tgtUser} /> : null;
+                const found1 = currentUser.follow.find(e => e === tgtUser.serial);
+                const found2 = tgtUser.follower.find(e => e === currentUser.serial);
+                followBtn = found1 ? null : <FollowButton store={store} tgtUser={tgtUser} />;
+                unfollowBtn = found2 ? <UnFollowButton store={store} tgtUser={tgtUser} /> : null;
+            }
+            let contents = null;
+            if (this.state.mode === 0) {
+                contents = <Say say={this.state.say} />
+            } else if (this.state.mode === 1) {
+                contents = <Follow user={tgtUser} />
+            } else if (this.state.mode === 2) {
+                contents = <Follower user={tgtUser} />
             }
             return <React.Fragment>
                 <div css={{display:'flex', alignItems:'center'}}>
@@ -148,25 +164,25 @@ export default class User extends React.Component<UserProps, {say: SayType[], sa
                     {followBtn}
                     {unfollowBtn}
                 </div>
-                <div css={{display:'flex', justifyContent:'space-between'}}>
-                    <div css={{width:'33%'}}>
-                        <h4>say</h4>
-                        <ul css={{listStyleType:'none', padding:'0px'}}>
-                            <Say say={this.state.say} />
-                        </ul>
+                <div css={{display:'flex', marginTop:'14px'}}>
+                    <div css={{margin:'0px 4px'}}>
+                        <button className="pure-button" onClick={() => {
+                            this.setState({mode: 0});
+                        }}>say</button>
                     </div>
-                    <div css={{width:'33%'}}>
-                        <h4>follow</h4>
-                        <ul css={{listStyleType:'none', padding:'0px'}}>
-                            <Follow user={tgtUser} />
-                        </ul>
+                    <div css={{margin:'0px 4px'}}>
+                        <button className="pure-button" onClick={() => {
+                            this.setState({mode: 1});
+                        }}>follow</button>
                     </div>
-                    <div css={{width:'33%'}}>
-                        <h4>follower</h4>
-                        <ul css={{listStyleType:'none', padding:'0px'}}>
-                            <Follower user={tgtUser} />
-                        </ul>
+                    <div css={{margin:'0px 4px'}}>
+                        <button className="pure-button" onClick={() => {
+                            this.setState({mode: 2});
+                        }}>follower</button>
                     </div>
+                </div>
+                <div>
+                    {contents}
                 </div>
             </React.Fragment>
         } else {
@@ -182,10 +198,8 @@ export default class User extends React.Component<UserProps, {say: SayType[], sa
                 console.log(tgtSerial);
                 store!.setShowUserTarget(tgtSerial);
                 store!.findUserAsync(tgtSerial).then((resp) => {
-                    console.log(resp);
                     if (resp) {
                         store!.findUserSay(resp.serial).then((resp2) => {
-                            console.log(resp2);
                             this.setState({sayLen: resp2.length, say: resp2});
                         });
                     }

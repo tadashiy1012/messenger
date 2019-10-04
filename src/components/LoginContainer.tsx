@@ -5,7 +5,6 @@ import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
 import Login from './Login';
 import Registration from './Registration';
-import LoggedContainer from './LoggedContainer';
 import Logout from './Logout';
 
 interface LoginContainerProps {

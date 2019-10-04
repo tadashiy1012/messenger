@@ -47,9 +47,7 @@ class GlobalTL extends React.Component<GlobalProps> {
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
                     </span>
                 </div>
-                <div css={{marginLeft:'22px', padding:'6px', cursor:'pointer'}} onClick={() => {
-                    this.props.messageClickHandler(e);
-                }}>
+                <div css={{marginLeft:'22px', padding:'6px'}}>
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
@@ -64,8 +62,8 @@ class GlobalTL extends React.Component<GlobalProps> {
                 </div>
             </li>
         });
-        return <div css={{width:store!.logged ? '48%':'98%'}}>
-            <h4>global timeline</h4>
+        return <div css={{width:store!.logged ? '48%':'100%'}}>
+            <h4 css={{margin:'2px 0px'}}>global timeline</h4>
             <ul css={{listStyleType:'none', padding:'0px'}}>{child1}</ul>
         </div>
     }
@@ -118,9 +116,7 @@ class LocalTL extends React.Component<LocalProps> {
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
                     </span>
                 </div>
-                <div css={{marginLeft:'22px', padding:'6px', cursor:'pointer'}} onClick={() => {
-                    this.props.messageClickHandler(e);
-                }}>
+                <div css={{marginLeft:'22px', padding:'6px'}}>
                     <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
@@ -136,7 +132,7 @@ class LocalTL extends React.Component<LocalProps> {
             </li>
         });
         return <div css={{width:'48%', display:store!.logged ? 'block':'none'}}>
-            <h4>local timeline</h4>
+            <h4 css={{margin:'2px 0px'}}>local timeline</h4>
             <ul css={{listStyleType:'none', padding:'0px'}}>{child2}</ul>
         </div>
     }
@@ -167,7 +163,7 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const writer = store!.logged ? <Writer /> : null;
         return <React.Fragment>
             {writer}
-            <div css={{display:'flex', flexDirection:'row', justifyContent:'space-around'}}>
+            <div css={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>
                 <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} 
                     unLikeClickHandler={this.unLikeClickHandler.bind(this)}
                     messageClickHandler={this.messageClickHandler.bind(this)} />
