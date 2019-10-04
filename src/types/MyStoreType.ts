@@ -1,7 +1,6 @@
 import { UserType, SayType, PcStateType } from ".";
 
 export default interface MyStoreType {
-    id: string
     currentUser: UserType
     getUser: UserType | null
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean>

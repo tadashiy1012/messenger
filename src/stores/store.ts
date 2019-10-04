@@ -5,13 +5,11 @@ import * as bcrypt from 'bcryptjs';
 import { SayType, UserType, PcStateType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import PcStore from './pcStore';
+import clientId from './clientId';
 
 export default class MyStore {
 
     private pcStore: PcStore | null = null;
-
-    @observable
-    id: string = uuid.v1();
 
     @observable
     currentUser: UserType | null = null;
@@ -224,7 +222,7 @@ export default class MyStore {
             if (this.currentUser) {
                 const currentSerial = this.currentUser.serial;
                 const found = this.userList.find(e => e.serial === currentSerial);
-                if (found && found.clientId === this.id) {
+                if (found && found.clientId === clientId) {
                     this.say.push(say);
                     resolve(true);
                 } else {
@@ -368,7 +366,7 @@ export default class MyStore {
                     follow: found.follow,
                     follower: found.follower,
                     like: found.like,
-                    clientId: this.id,
+                    clientId: clientId,
                     update: Date.now()
                 };
                 found.clientId = this.currentUser.clientId;
@@ -421,7 +419,7 @@ export default class MyStore {
                     follow: [],
                     follower: [],
                     like: [],
-                    clientId: this.id,
+                    clientId: clientId,
                     update: Date.now()
                 };
                 this.userList.push(user);
@@ -488,7 +486,8 @@ export default class MyStore {
             } catch (error) {
                 console.error(error);
             }
-            this.pcStore = new PcStore(this.id, () => {
+            this.pcStore = new PcStore(
+            () => {
                 return this.getUserList;
             }, () => {
                 return this.say;

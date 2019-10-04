@@ -8,7 +8,6 @@ export default class Watchers {
     private prevCache: Array<CacheType> = [];
 
     constructor(
-        private id: string,
         private getUser: () => UserType | null,
         private getCache: () => Array<CacheType>,
         private getSay: () => Array<SayType>,

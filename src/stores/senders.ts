@@ -1,3 +1,4 @@
+import clientId from './clientId';
 import { CacheType, UserType } from "../types";
 
 export default class Senders {
@@ -8,7 +9,6 @@ export default class Senders {
     private prevUsers: Array<UserType> = [];
 
     constructor(
-        private clientId: string,
         private getCache: () => Array<CacheType>,
         private getUsers: () => Array<UserType>
     ) {}
@@ -23,7 +23,7 @@ export default class Senders {
                 console.log(dts, this.beforeCacheSend);
                 this.beforeCacheSend = Date.now();
                 const json = {
-                    from: this.clientId,
+                    from: clientId,
                     sendTime: this.beforeCacheSend,
                     payload: {
                         cache
@@ -48,7 +48,7 @@ export default class Senders {
                 this.prevUsers = JSON.parse(JSON.stringify(users));
                 this.beforeListSend = Date.now();
                 const json = {
-                    from: this.clientId,
+                    from: clientId,
                     sendTime: this.beforeListSend,
                     payload: {
                         userList: users

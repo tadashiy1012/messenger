@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
+import { clientId } from '../stores'
 import { MyStoreType } from '../types';
 
 interface PcStatusProps {
@@ -33,7 +34,7 @@ export default class Status extends React.Component<StatusProps> {
         return <React.Fragment>
             <div css={{display:store!.showDetail ? 'block':'none'}}>
                 <h2 css={{margin:'2px 0px'}}>status</h2>
-                <h4 css={{margin:'4px 0px'}}>id:{store!.id || 'no id'}</h4>
+                <h4 css={{margin:'4px 0px'}}>id:{clientId || 'no id'}</h4>
                 <PcStatus />
             </div>
         </React.Fragment>
