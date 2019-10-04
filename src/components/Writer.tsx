@@ -5,7 +5,7 @@ import {css, jsx} from '@emotion/core';
 import * as uuid from 'uuid';
 import { SayType, MyStoreType } from '../types';
 import { noImage } from '../utils/noImageIcon';
-import { ShowMode } from '../enums';
+import { Link } from 'react-router-dom';
 
 interface WriterProps {
     store?: MyStoreType
@@ -44,15 +44,10 @@ export default class Writer extends React.Component<WriterProps> {
     render() {
         const {store} = this.props;
         return <div className="pure-form" css={{display:'flex', alignItems:'center', margin:'14px 0px'}}>
-            <a href="#" onClick={(ev) => {
-                ev.preventDefault();
-                const user = store!.getUser;
-                store!.setShowUserTarget(user!.serial);
-                store!.setShowMode(ShowMode.USER);
-            }}>
+            <Link to={{pathname:'/user', search: '?tgt=' + store!.getUser!.serial}}>
                 <img src={store!.currentUser ? store!.currentUser.icon : noImage} width="32" height="32" css={{
                     borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
-            </a>
+            </Link>
             <span>{store!.currentUser ? store!.currentUser.name : 'no_name'}'s say: </span>
             <textarea className="pure-input pure-input-1-3"
                 css={{margin:'0px 4px'}}

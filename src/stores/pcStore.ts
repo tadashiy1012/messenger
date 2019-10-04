@@ -25,6 +25,7 @@ export default class PcStore {
     
     private cache: Array<CacheType> = [];
     private ws: MyWebSocket | null = null;
+    private watchers: Watchers | null = null;
 
     pcACloseFn() {
         if (this.dcA) {this.dcA.close();}
@@ -349,6 +350,27 @@ export default class PcStore {
         });
     }
 
+    private timerTask = () => {
+        const tasks = [
+            this.watchers!.sayWatcher((result) => {
+                const say = this.getSay();
+                say.splice(0, say.length, ...[]);
+            }),
+            this.watchers!.cacheWatcher((result) => {
+                const hear = this.getHear();
+                hear.splice(0, hear.length, ...result);
+            }),
+            this.watchers!.userListWatcher(this.getUsers())
+        ];
+        Promise.all(tasks).then((results) => {
+            results.forEach(e => {
+                if (e[0] && e[1].resultCb && e[1].resultValue) {
+                    e[1].resultCb(e[1].resultValue);
+                }
+            });
+        }).catch((err) => console.error(err));
+    };
+
     public get getCache(): CacheType[] {
         return this.cache;
     }
@@ -381,7 +403,7 @@ export default class PcStore {
             }, () => {
                 return this.getUsers();
             });
-            const watchers = new Watchers(
+            this.watchers = new Watchers(
                 this.id,
                 () => {
                     return this.getUser();
@@ -392,6 +414,7 @@ export default class PcStore {
                     return this.getSay();
                 }
             );
+            this.timerTask();
             makeWs(
                 this.preOfferTransceiver.bind(this),
                 this.offerTansceiver.bind(this), 
@@ -405,24 +428,7 @@ export default class PcStore {
                 this.pcBCloseFn();
                 this.pcCCloseFn();
                 setInterval(() => {
-                    const tasks = [
-                        watchers.sayWatcher((result) => {
-                            const say = this.getSay();
-                            say.splice(0, say.length, ...[]);
-                        }),
-                        watchers.cacheWatcher((result) => {
-                            const hear = this.getHear();
-                            hear.splice(0, hear.length, ...result);
-                        }),
-                        watchers.userListWatcher(this.getUsers())
-                    ];
-                    Promise.all(tasks).then((results) => {
-                        results.forEach(e => {
-                            if (e[0] && e[1].resultCb && e[1].resultValue) {
-                                e[1].resultCb(e[1].resultValue);
-                            }
-                        });
-                    }).catch((err) => console.error(err));
+                    this.timerTask();
                 }, 2000);
             }).catch(err => console.error(err));
         })();

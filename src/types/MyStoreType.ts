@@ -1,6 +1,4 @@
 import { UserType, SayType, PcStateType } from ".";
-import { ShowMode } from "../enums";
-import { History, Location } from 'history';
 
 export default interface MyStoreType {
     id: string
@@ -29,8 +27,6 @@ export default interface MyStoreType {
     setShowDetail(show: Boolean): void
     showSetting: Boolean
     setShowSetting(show: Boolean): void
-    showMode: ShowMode
-    setShowMode(mode: ShowMode): void
     showUserTarget: string
     setShowUserTarget(targetSerial: string | null): void
     showMessageTarget: string

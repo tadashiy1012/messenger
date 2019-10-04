@@ -1,10 +1,9 @@
-import {observable, computed, action, observe} from 'mobx';
+import { observable, computed, action } from 'mobx';
 import * as localForage from 'localforage';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import { SayType, UserType, CacheType, PcStateType } from '../types';
+import { SayType, UserType, PcStateType } from '../types';
 import { noImage } from '../utils/noImageIcon';
-import { ShowMode } from '../enums';
 import PcStore from './pcStore';
 
 export default class MyStore {
@@ -280,7 +279,7 @@ export default class MyStore {
     }
 
     findUserAsync(userSerial: string): Promise<UserType | null> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (this.userList.length > 0) {
                 const found = this.userList.find(e => e.serial === userSerial);
                 resolve(found);
@@ -304,7 +303,7 @@ export default class MyStore {
     }
 
     findUserSay(userSerial: string): Promise<Array<SayType>> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (this.pcStore) {
                 const cache = this.pcStore.getCache;
                 const found = cache.find(e => e.says[0].authorId === userSerial);
@@ -392,7 +391,6 @@ export default class MyStore {
                     found.clientId = 'no id';
                     found.update = Date.now();
                     this.currentUser = null;
-                    this.showMode = ShowMode.MAIN;
                     this.logged = false;
                     resolve(true);
                 } else {
@@ -446,14 +444,6 @@ export default class MyStore {
     @action
     setShowSetting(show: Boolean) {
         this.showSetting = show;
-    }
-
-    @observable
-    showMode: ShowMode = ShowMode.MAIN;
-
-    @action
-    setShowMode(mode: ShowMode) {
-        this.showMode = mode;
     }
 
     @observable
