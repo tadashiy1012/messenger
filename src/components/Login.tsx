@@ -3,6 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType } from '../types';
+import { history } from '../stores';
 
 interface LoginProps {
     store?: MyStoreType
@@ -25,6 +26,7 @@ export default class Login extends React.Component<LoginProps> {
         store!.login(email, password).then((result) => {
             if (result) {
                 store!.setLogged(true);
+                history.push('/');
             } else {
                 alert('login fail!');
             }

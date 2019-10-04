@@ -22,6 +22,8 @@ export default class LoginContainer extends React.Component<LoginContainerProps,
         };
     }
     render() {
+        const {router} = this.context;
+        console.log(router);
         const {store} = this.props;
         return <React.Fragment>
             {store!.logged ? <Logout /> : <React.Fragment>

@@ -1,28 +1,13 @@
 /** @jsx jsx */
 import * as React from 'react';
+import {LocationDescriptorObject} from 'history';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { MyStoreType, SayType } from '../types';
 import { ShowMode } from '../enums';
 import escape_html from '../utils/escapeHtml';
-
-interface MessageProps {
-    store?: MyStoreType
-}
-
-@inject('store')
-@observer
-class Message extends React.Component<MessageProps> {
-    render() {
-        const {store} = this.props;
-        const tgtId = store!.showMessageTarget;
-        const tgt = store!.findSay(tgtId);
-        return <div>
-            <h3>message</h3>
-            <p>{tgt!.say}</p>
-        </div>
-    }
-}
+import Writer from './Writer';
+import { Link } from 'react-router-dom';
 
 interface GlobalProps {
     store?: MyStoreType
@@ -53,14 +38,10 @@ class GlobalTL extends React.Component<GlobalProps> {
                 <i className="material-icons">favorite_border</i>;
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <a href="#" onClick={(ev) => {
-                        ev.preventDefault();
-                        store!.setShowUserTarget(e.authorId);
-                        store!.setShowMode(ShowMode.USER);
-                    }}>
+                    <Link to={{pathname:'/user', search: '?tgt=' + e.authorId}}>
                         <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                             borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                    </a>
+                    </Link>
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
@@ -83,7 +64,7 @@ class GlobalTL extends React.Component<GlobalProps> {
                 </div>
             </li>
         });
-        return <div css={{width:store!.logged ? '46%':'88%'}}>
+        return <div css={{width:store!.logged ? '48%':'98%'}}>
             <h4>global timeline</h4>
             <ul css={{listStyleType:'none', padding:'0px'}}>{child1}</ul>
         </div>
@@ -128,14 +109,10 @@ class LocalTL extends React.Component<LocalProps> {
                 <i className="material-icons">favorite_border</i>;
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}} >
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <a href="#" onClick={(ev) => {
-                        ev.preventDefault();
-                        store!.setShowUserTarget(e.authorId);
-                        store!.setShowMode(ShowMode.USER);
-                    }}>
+                    <Link to={{pathname:'/user', search: '?tgt=' + e.authorId}}>
                         <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                             borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                    </a>
+                    </Link>
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
                         {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
@@ -158,7 +135,7 @@ class LocalTL extends React.Component<LocalProps> {
                 </div>
             </li>
         });
-        return <div css={{width:'46%', display:store!.logged ? 'block':'none'}}>
+        return <div css={{width:'48%', display:store!.logged ? 'block':'none'}}>
             <h4>local timeline</h4>
             <ul css={{listStyleType:'none', padding:'0px'}}>{child2}</ul>
         </div>
@@ -187,19 +164,17 @@ export default class TimeLine extends React.Component<TimeLineProps> {
     }
     render() {
         const {store} = this.props;
-        const tl = <React.Fragment>
+        const writer = store!.logged ? <Writer /> : null;
+        return <React.Fragment>
+            {writer}
+            <div css={{display:'flex', flexDirection:'row', justifyContent:'space-around'}}>
                 <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} 
                     unLikeClickHandler={this.unLikeClickHandler.bind(this)}
                     messageClickHandler={this.messageClickHandler.bind(this)} />
                 <LocalTL likeClickHandler={this.likeClickHandler.bind(this)}
                     unLikeClickHandler={this.unLikeClickHandler.bind(this)}
                     messageClickHandler={this.messageClickHandler.bind(this)} /> 
-            </React.Fragment>;
-        const message = <React.Fragment>
-                <Message />
-            </React.Fragment>;
-        return <div css={{display:'flex', flexDirection:'row', justifyContent:'space-around'}}>
-            {store!.showMode === ShowMode.MAIN ? tl : message}            
-        </div>;
+            </div>
+        </React.Fragment>
     }
 }

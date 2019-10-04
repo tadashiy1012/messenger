@@ -1,11 +1,10 @@
 /** @jsx jsx */
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {HashRouter as Router, Switch, Route, Link} from 'react-router-dom';
-import {createHashHistory} from 'history';
+import {Router, Switch, Route, Link} from 'react-router-dom';
 import { Provider, observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { MyStore } from './stores';
+import { MyStore, history } from './stores';
 import { 
     AppTitle, Status, LoginContainer, TimeLine, 
     Setting as MySetting, User as MyUser
@@ -15,7 +14,7 @@ import 'material-design-icons/iconfont/material-icons.css';
 import { MyStoreType } from './types';
 
 const store = new MyStore();
-store.setHistory = createHashHistory();
+
 
 const Main = () => (
     <React.Fragment>
@@ -66,7 +65,7 @@ class Navi extends React.Component<{store?: MyStoreType}> {
 }
 
 const App = () => (
-    <Router>
+    <Router history={history}>
         <Provider store={store}>
             <div css={{width: '1024px', margin: '0px auto'}}>
                 <AppTitle />

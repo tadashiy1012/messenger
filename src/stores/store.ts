@@ -6,21 +6,10 @@ import { SayType, UserType, CacheType, PcStateType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import { ShowMode } from '../enums';
 import PcStore from './pcStore';
-import { History } from 'history';
 
 export default class MyStore {
 
     private pcStore: PcStore | null = null;
-
-    private history: History | null = null;
-   
-    public get getHistory(): History | null {
-        return this.history;
-    }
-
-    public set setHistory(history: History<any>) {
-        this.history = history;
-    }
 
     @observable
     id: string = uuid.v1();
@@ -35,7 +24,7 @@ export default class MyStore {
 
     private userNormalize(user: UserType): UserType {
         user.follow = [...user.follow];
-        user.follower = [...user.follow];
+        user.follower = [...user.follower];
         user.like = [...user.like];
         return user;
     }
@@ -97,6 +86,7 @@ export default class MyStore {
                     const idx2 = this.userList.indexOf(found2);
                     const user2 = Object.assign({}, found2);
                     user2.follower = [...user2.follower, user.serial];
+                    this.userNormalize(user2);
                     user2.update = Date.now();
                     this.userList.splice(idx2, 1, user2);
                 } else {
@@ -130,6 +120,7 @@ export default class MyStore {
                     const idx2 = this.userList.indexOf(found2);
                     const user2 = Object.assign({}, found2);
                     user2.follower = [...user2.follower.filter(e => e !== user.serial)];
+                    this.userNormalize(user2);
                     user2.update = Date.now();
                     this.userList.splice(idx2, 1, user2);
                 } else {
@@ -288,13 +279,64 @@ export default class MyStore {
         return found || null
     }
 
-    findUserSay(userSerial: string): Array<SayType> {
-        const found = this.pcStore!.getCache.find(e => e.says[0].authorId === userSerial);
-        if (found) {
-            return found.says;
-        } else {
-            return [];
-        }
+    findUserAsync(userSerial: string): Promise<UserType | null> {
+        return new Promise((resolve, reject) => {
+            if (this.userList.length > 0) {
+                const found = this.userList.find(e => e.serial === userSerial);
+                resolve(found);
+            } else {
+                let count = 0;
+                const timer = setInterval(() => {
+                    if (count > 5) {
+                        console.log('findUserAsync time out');
+                        clearInterval(timer);
+                        resolve(null);
+                    }
+                    if (this.userList.length > 0) {
+                        const found = this.userList.find(e => e.serial === userSerial);
+                        clearInterval(timer);
+                        resolve(found);
+                    }
+                    count += 1;
+                }, 1000)
+            }
+        });
+    }
+
+    findUserSay(userSerial: string): Promise<Array<SayType>> {
+        return new Promise((resolve, reject) => {
+            if (this.pcStore) {
+                const cache = this.pcStore.getCache;
+                const found = cache.find(e => e.says[0].authorId === userSerial);
+                if (found) {
+                    resolve(found.says);
+                } else {
+                    resolve([]);
+                }
+            } else {
+                let count = 0;
+                const timer = setInterval(() => {
+                    if (count > 5) {
+                        console.log('findUsersay time out');
+                        clearInterval(timer);
+                        resolve([]);
+                    }
+                    if (this.pcStore) {
+                        const cache = this.pcStore.getCache;
+                        const found = cache.find(e => e.says[0].authorId === userSerial);
+                        if (found) {
+                            clearInterval(timer);
+                            resolve(found.says);
+                        } else {
+                            clearInterval(timer);
+                            resolve([]);
+                        }
+                    }
+                    count += 1;
+                }, 1000);
+            }
+        });
+        
     }
 
     findSay(sayId: string): SayType | undefined {

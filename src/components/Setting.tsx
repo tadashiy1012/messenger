@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
+import { history } from '../stores';
 import { MyStoreType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 
@@ -100,7 +101,6 @@ export default class Setting extends React.Component<SettingProps> {
     render() {
         const {store} = this.props;
         if (!store!.logged) {
-            store!.getHistory!.replace('/');
             return null;
         } else {
             const icon = store!.currentUser ? store!.currentUser.icon : noImage;
@@ -123,6 +123,9 @@ export default class Setting extends React.Component<SettingProps> {
     }
     componentDidMount() {
         const {store} = this.props;
+        if (!store!.logged) {
+            history.push('/');
+        }
         if (this.nameRef.current && store!.currentUser) {
             this.nameRef.current!.value = store!.currentUser!.name
         }

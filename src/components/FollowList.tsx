@@ -21,7 +21,7 @@ class Follow extends React.Component<FollowProps> {
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follow!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />
                     <span css={{margin:'4px'}}>{follow!.name}</span>
-                    <span css={{margin:'4px'}}>say:{store!.findUserSay(follow!.serial).length}</span>
+                    <span css={{margin:'4px'}}>say:{0}</span>
                     <span css={{margin:'4px'}}>follow:{follow!.follow.length}</span>
                     <span css={{margin:'4px'}}>follower:{follow!.follower.length}</span>
                     <span css={{margin:'4px'}}>
@@ -57,7 +57,7 @@ class Follower extends React.Component<FollowerProps> {
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follower!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />
                     <span css={{margin:'4px'}}>{follower!.name}</span>
-                    <span css={{margin:'4px'}}>say:{store!.findUserSay(follower!.serial).length}</span>
+                    <span css={{margin:'4px'}}>say:{0}</span>
                     <span css={{margin:'4px'}}>follow:{follower!.follow.length}</span>
                     <span css={{margin:'4px'}}>follower:{follower!.follower.length}</span>
                     <span css={{margin:'4px'}}>
