@@ -1,6 +1,7 @@
 import clientId from './clientId';
 import { WsPayloadType, PcStateType } from "../types";
 import { MyWebSocket } from "../utils";
+import connStateStore from './connStateStore';
 
 export default class Transceivers {
 
@@ -8,7 +9,6 @@ export default class Transceivers {
         private getWs: () => MyWebSocket | null,
         private getPc: (category: string) => RTCPeerConnection | null,
         private getCdQueue: (category: string) => RTCIceCandidate[],
-        private getPcState: () => [PcStateType, PcStateType, PcStateType],
         private getPOffer: () => string | null,
         private resetPOffer: () => void,
     ) {}
@@ -80,7 +80,7 @@ export default class Transceivers {
                         type: 'answer',
                         sdp: answer
                     });
-                    this.getPcState()[0].target = id;
+                    connStateStore.pcAState.target = id;
                     pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                     console.log('pcA set answer');
                     cdQueueA.forEach(e => {
@@ -117,15 +117,15 @@ export default class Transceivers {
                     sdpMLineIndex: candidate.sdpMLineIndex,
                     sdpMid: candidate.sdpMid
                 });
-                if (id === this.getPcState()[0].target && pc == 'A' && pcA) {
+                if (id === connStateStore.pcAState.target && pc == 'A' && pcA) {
                     console.log('pcA add candidate', pc);
                     pcA.addIceCandidate(cd).catch((err) => console.error(err));
                     resolve(true);
-                } else if (id === this.getPcState()[1].target && pc == 'B' && pcB) {
+                } else if (id === connStateStore.pcBState.target && pc == 'B' && pcB) {
                     console.log('pcB add candidate', pc);
                     pcB.addIceCandidate(cd).catch((err) => console.error(err));
                     resolve(true);
-                } else if (id === this.getPcState()[2].target && pc == 'C' && pcC) {
+                } else if (id === connStateStore.pcCState.target && pc == 'C' && pcC) {
                     console.log('pcC add candidate', pc);
                     pcC.addIceCandidate(cd).catch((err) => console.error(err));
                     resolve(true);
@@ -148,7 +148,7 @@ export default class Transceivers {
             const {id, to, offer} = payload;
             if (id !== clientId && to === clientId && offer 
                     && pcB && pcB.remoteDescription === null) {
-                this.getPcState()[1].target = id;
+                connStateStore.pcBState.target = id;
                 let answer: RTCSessionDescriptionInit | null = null;
                 const offerDesc = new RTCSessionDescription({
                     type: 'offer',
@@ -187,7 +187,7 @@ export default class Transceivers {
                 }).catch((err) => console.error(err));
             } else if (id !== clientId && to === clientId && offer 
                     && pcC && pcC.remoteDescription === null) {
-                this.getPcState()[2].target = id;
+                connStateStore.pcCState.target = id;
                 let answer: RTCSessionDescriptionInit | null = null;
                 const offerDesc = new RTCSessionDescription({
                     type: 'offer',

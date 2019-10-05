@@ -21,7 +21,4 @@ export default interface MyStoreType {
     login(email: string, password: string): Promise<Boolean>
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
-    pcAState: PcStateType
-    pcBState: PcStateType
-    pcCState: PcStateType
 }

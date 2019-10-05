@@ -9,6 +9,7 @@ import Transceivers from "./transceivers";
 import clientId from './clientId';
 import users from './users';
 import caches from './caches';
+import connStateStore from './connStateStore';
 
 export default class PcStore {
     
@@ -35,24 +36,24 @@ export default class PcStore {
         if(this.pcA) {this.pcA.close();}
         this.dcA = null;
         this.pcA = null;
-        this.getState()[0].target = null;
+        connStateStore.pcAState.target = null;
         this.pcA = makePCA(this.pcACloseFn.bind(this), (state: RTCIceConnectionState) => {
-            this.getState()[0].connection = state;
+            connStateStore.pcAState.connection = state;
             if (state === 'connected') {
-                console.log('pcA', '@@@ connected:', this.getState()[0].target, '@@@');
+                console.log('pcA', '@@@ connected:', connStateStore.pcAState.target, '@@@');
                 setTimeout(() => {
                     if (state === 'connected' && this.dcA && this.dcA.readyState !== 'open') {
                         this.pcACloseFn();
                     }
                 }, 10 * 1000);
             } else if (state === 'disconnected' || state === 'failed') {
-                this.getState()[0].target = null;
+                connStateStore.pcAState.target = null;
             }
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueA.push(candidate);
         }, (channel: RTCDataChannel) => {
             this.dcA = setupDC(channel, (state) => {
-                this.getState()[0].dataChannel = state;
+                connStateStore.pcAState.dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
                     caches.replaceAll(result[0]);
@@ -66,7 +67,7 @@ export default class PcStore {
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
             ]);
-            this.getState()[0].dataChannel = this.dcA.readyState;
+            connStateStore.pcAState.dataChannel = this.dcA.readyState;
         });
         makePreOffer(clientId, this.pcA!, this.ws!).then((preOffer) => {
             this.preOffer = preOffer;
@@ -78,19 +79,19 @@ export default class PcStore {
         if (this.pcB) {this.pcB.close();}
         this.dcB = null;
         this.pcB = null;
-        this.getState()[1].target = null;
+        connStateStore.pcBState.target = null;
         this.pcB = makePCBC('pcB', this.pcBCloseFn.bind(this), (state: RTCIceConnectionState) => {
-            this.getState()[1].connection = state;
+            connStateStore.pcBState.connection = state;
             if (state === 'connected') {
-                console.log('pcB', '@@@ connected:', this.getState()[1].target, '@@@');
+                console.log('pcB', '@@@ connected:', connStateStore.pcBState.target, '@@@');
             } else if (state === 'disconnected' || state === 'failed') {
-                this.getState()[1].target = null;
+                connStateStore.pcBState.target = null;
             }
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueB.push(candidate);
         }, (channel: RTCDataChannel) => {
             this.dcB = setupDC(channel, (state) => {
-                this.getState()[1].dataChannel = state;
+                connStateStore.pcBState.dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
                     caches.replaceAll(result[0]);
@@ -104,7 +105,7 @@ export default class PcStore {
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
             ]);
-            this.getState()[1].dataChannel = this.dcB.readyState;
+            connStateStore.pcBState.dataChannel = this.dcB.readyState;
         });
     };
 
@@ -113,19 +114,19 @@ export default class PcStore {
         if (this.pcC) {this.pcC.close();}
         this.dcC = null;
         this.pcC = null;
-        this.getState()[2].target = null;
+        connStateStore.pcCState.target = null;
         this.pcC = makePCBC('pcC', this.pcCCloseFn.bind(this), (state: RTCIceConnectionState) => {
-            this.getState()[2].connection = state;
+            connStateStore.pcCState.connection = state;
             if (state === 'connected') {
-                console.log('pcB', '@@@ connected:', this.getState()[2].target, '@@@');
+                console.log('pcB', '@@@ connected:', connStateStore.pcCState.target, '@@@');
             } else if (state === 'disconnected' || state === 'failed') {
-                this.getState()[2].target = null;
+                connStateStore.pcCState.target = null;
             }
         }, (candidate: RTCIceCandidate) => {
             this.cdQueueC.push(candidate);
         }, (channel: RTCDataChannel) => {
             this.dcC = setupDC(channel, (state) => {
-                this.getState()[2].dataChannel = state;
+                connStateStore.pcCState.dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
                     caches.replaceAll(result[0]);
@@ -139,7 +140,7 @@ export default class PcStore {
                 this.receivers!.cacheReceiver.bind(this.receivers),
                 this.receivers!.usersReceiver.bind(this.receivers)
             ]);
-            this.getState()[2].dataChannel = this.dcC.readyState;
+            connStateStore.pcCState.dataChannel = this.dcC.readyState;
         });
     };
 
@@ -167,8 +168,7 @@ export default class PcStore {
     constructor(
         private getSay: () => Array<SayType>,
         private getHear: () => Array<SayType>,
-        private getUser: () => UserType | null,
-        private getState: () => [PcStateType, PcStateType, PcStateType]
+        private getUser: () => UserType | null
     ) {
         console.log(users.getUsers);
         console.log(caches.getCaches);
@@ -197,8 +197,6 @@ export default class PcStore {
                 } else {
                     return [];
                 }
-            }, () => {
-                return this.getState();
             }, () => {
                 return this.preOffer;
             }, () => {

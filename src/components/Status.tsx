@@ -3,21 +3,22 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { clientId } from '../stores'
-import { MyStoreType, SettingStoreType } from '../types';
+import { MyStoreType, SettingStoreType, ConnStateStoreType } from '../types';
 
 interface PcStatusProps {
     store?: MyStoreType
+    conn?: ConnStateStoreType
 }
 
-@inject('store')
+@inject('conn')
 @observer
 class PcStatus extends React.Component<PcStatusProps> {
     render() {
-        const {store} = this.props;
+        const {conn} = this.props;
         return <ul css={{fontSize:'13px', marginTop:'2px'}}>
-            <li>pcA:{store!.pcAState.target} [{store!.pcAState.connection}] [{store!.pcAState.dataChannel}]</li>
-            <li>pcB:{store!.pcBState.target} [{store!.pcBState.connection}] [{store!.pcBState.dataChannel}]</li>
-            <li>pcC:{store!.pcCState.target} [{store!.pcCState.connection}] [{store!.pcCState.dataChannel}]</li>
+            <li>pcA:{conn!.pcAState.target} [{conn!.pcAState.connection}] [{conn!.pcAState.dataChannel}]</li>
+            <li>pcB:{conn!.pcBState.target} [{conn!.pcBState.connection}] [{conn!.pcBState.dataChannel}]</li>
+            <li>pcC:{conn!.pcCState.target} [{conn!.pcCState.connection}] [{conn!.pcCState.dataChannel}]</li>
         </ul>
     }
 }
@@ -27,11 +28,11 @@ interface StatusProps {
     setting?: SettingStoreType
 }
 
-@inject('store', 'setting')
+@inject('setting')
 @observer
 export default class Status extends React.Component<StatusProps> {
     render() {
-        const {store, setting} = this.props;
+        const {setting} = this.props;
         return <React.Fragment>
             <div css={{display:setting!.showDetail ? 'block':'none'}}>
                 <h2 css={{margin:'2px 0px'}}>status</h2>

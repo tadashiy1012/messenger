@@ -5,6 +5,7 @@ import WsPayloadType from './WsPayloadType';
 import MyStoreType from './MyStoreType';
 import PcStateType from './PcStateType';
 import SettingStoreType from './SettingStoreType';
+import ConnStateStoreType from './ConnStateStoreType';
 
 export {
     SayType,
@@ -14,4 +15,5 @@ export {
     MyStoreType,
     PcStateType,
     SettingStoreType,
+    ConnStateStoreType,
 };

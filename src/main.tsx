@@ -4,14 +4,14 @@ import * as ReactDOM from 'react-dom';
 import {Router, Switch, Route, Link} from 'react-router-dom';
 import { Provider, observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { MyStore, history, SettingStore } from './stores';
+import { MyStore, history, SettingStore, connStateStore } from './stores';
 import { 
     AppTitle, Status, LoginContainer, TimeLine, 
     Setting as MySetting, User as MyUser
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
-import { MyStoreType, SettingStoreType } from './types';
+import { MyStoreType } from './types';
 
 const store = new MyStore();
 const setting = new SettingStore();
@@ -67,7 +67,7 @@ class Navi extends React.Component<{store?: MyStoreType}> {
 
 const App = () => (
     <Router history={history}>
-        <Provider store={store} setting={setting}>
+        <Provider store={store} setting={setting} conn={connStateStore}>
             <div css={{width: '800px', margin: '0px auto'}}>
                 <AppTitle />
                 <Status />

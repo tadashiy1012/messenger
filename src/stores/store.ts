@@ -381,25 +381,6 @@ export default class MyStore {
         });
     }
 
-    @observable
-    pcAState: PcStateType = {
-        target: null,
-        connection: 'n/a',
-        dataChannel: 'n/a'
-    };
-    @observable
-    pcBState: PcStateType = {
-        target: null,
-        connection: 'n/a',
-        dataChannel: 'n/a'
-    };
-    @observable
-    pcCState: PcStateType = {
-        target: null,
-        connection: 'n/a',
-        dataChannel: 'n/a'
-    };
-
     constructor() {
         console.log(users.getUsers);
         console.log(caches.getCaches);
@@ -410,8 +391,6 @@ export default class MyStore {
             return this.hear;
         }, () => {
             return this.getUser;
-        }, () => {
-            return [this.pcAState, this.pcBState, this.pcCState];
         });
     }
 
