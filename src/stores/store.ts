@@ -1,8 +1,7 @@
 import { observable, computed, action } from 'mobx';
-import * as localForage from 'localforage';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import { SayType, UserType, PcStateType } from '../types';
+import { SayType, UserType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import PcStore from './pcStore';
 import clientId from './clientId';

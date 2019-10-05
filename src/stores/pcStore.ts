@@ -1,11 +1,10 @@
 import * as localForage from 'localforage';
-import { setupDC, makePCBC, makePreOffer, makePCA, MyWebSocket } from "../utils";
+import { setupDC, makePCBC, makePreOffer, makePCA, MyWebSocket, makeWS } from "../utils";
 import { UserType, CacheType, SayType, PcStateType } from "../types";
-import Senders from "./senders";
-import Receivers from "./receivers";
-import makeWs from "../utils/mekeWS";
-import Watchers from "./watchers";
-import Transceivers from "./transceivers";
+import Senders from "./pcSenders";
+import Receivers from "./pcReceivers";
+import Watchers from "./pcWatchers";
+import Transceivers from "./pcTransceivers";
 import clientId from './clientId';
 import users from './users';
 import caches from './caches';
@@ -210,7 +209,7 @@ export default class PcStore {
                 }
             );
             this.timerTask();
-            makeWs(
+            makeWS(
                 this.transceivers.preOfferTransceiver.bind(this.transceivers),
                 this.transceivers.offerTansceiver.bind(this.transceivers), 
                 this.transceivers.answerTransceiver.bind(this.transceivers), 
