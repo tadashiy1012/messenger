@@ -17,7 +17,7 @@ export default class UserSay extends React.Component<SayProps> {
         const {store} = this.props;
         const child = this.props.say.map((e) => {
             const dt = new Date(e.date);
-            const name = store!.findAuthorname(e.authorId);
+            const name = store!.findAuthorName(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{

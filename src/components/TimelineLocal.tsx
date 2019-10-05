@@ -33,7 +33,7 @@ export default class LocalTL extends React.Component<LocalProps> {
             return found ? true:false;
         }).map(e => {
             const dt = new Date(e.date);
-            const name = store!.findAuthorname(e.authorId);
+            const name = store!.findAuthorName(e.authorId);
             const alike = user && e.like.find(ee => ee === user!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.props.unLikeClickHandler(e)}}>favorite</i> :

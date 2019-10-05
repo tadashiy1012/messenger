@@ -7,6 +7,8 @@ import makeWs from "../utils/mekeWS";
 import Watchers from "./watchers";
 import Transceivers from "./transceivers";
 import clientId from './clientId';
+import users from './users';
+import caches from './caches';
 
 export default class PcStore {
     
@@ -26,7 +28,6 @@ export default class PcStore {
     private transceivers: Transceivers | null = null;
     private watchers: Watchers | null = null;
     
-    private cache: Array<CacheType> = [];
     private ws: MyWebSocket | null = null;
 
     private pcACloseFn() {
@@ -54,11 +55,9 @@ export default class PcStore {
                 this.getState()[0].dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
-                    const cache = this.cache;
-                    cache.splice(0, cache.length, ...result[0]);
+                    caches.replaceAll(result[0]);
                 } else if (result[0] === null && result[1] !== null) {
-                    const users = this.getUsers();
-                    users.splice(0, users.length, ...result[1]);
+                    users.replaceAll(result[1]);
                 }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
@@ -94,11 +93,9 @@ export default class PcStore {
                 this.getState()[1].dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
-                    const cache = this.cache;
-                    cache.splice(0, cache.length, ...result[0]);
+                    caches.replaceAll(result[0]);
                 } else if (result[0] === null && result[1] !== null) {
-                    const users = this.getUsers();
-                    users.splice(0, users.length, ...result[1]);
+                    users.replaceAll(result[1]);
                 }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
@@ -131,11 +128,9 @@ export default class PcStore {
                 this.getState()[2].dataChannel = state;
             }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
                 if (result[0] !== null && result[1] === null) {
-                    const cache = this.cache;
-                    cache.splice(0, cache.length, ...result[0]);
+                    caches.replaceAll(result[0]);
                 } else if (result[0] === null && result[1] !== null) {
-                    const users = this.getUsers();
-                    users.splice(0, users.length, ...result[1]);
+                    users.replaceAll(result[1]);
                 }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
@@ -158,7 +153,7 @@ export default class PcStore {
                 const hear = this.getHear();
                 hear.splice(0, hear.length, ...result);
             }),
-            this.watchers!.userListWatcher(this.getUsers())
+            this.watchers!.userListWatcher()
         ];
         Promise.all(tasks).then((results) => {
             results.forEach(e => {
@@ -169,37 +164,17 @@ export default class PcStore {
         }).catch((err) => console.error(err));
     };
 
-    public get getCache(): CacheType[] {
-        return this.cache;
-    }
-
-    public set setCache(cache: CacheType[]) {
-        this.cache = cache;
-    }
-
     constructor(
-        private getUsers: () => Array<UserType>,
         private getSay: () => Array<SayType>,
         private getHear: () => Array<SayType>,
         private getUser: () => UserType | null,
         private getState: () => [PcStateType, PcStateType, PcStateType]
     ) {
+        console.log(users.getUsers);
+        console.log(caches.getCaches);
         (async() => {
-            try {
-                this.cache = await localForage.getItem('user_message_cache') || [];   
-            } catch (error) {
-                console.error(error);
-            }
-            this.senders = new Senders(() => {
-                return this.cache;
-            }, () => {
-                return this.getUsers();
-            });
-            this.receivers = new Receivers(() => {
-                return this.cache;
-            }, () => {
-                return this.getUsers();
-            });
+            this.senders = new Senders();
+            this.receivers = new Receivers();
             this.transceivers = new Transceivers(() => {
                 return this.ws;
             }, (category: string) => {
@@ -238,9 +213,6 @@ export default class PcStore {
             this.watchers = new Watchers(
                 () => {
                     return this.getUser();
-                },
-                () => {
-                    return this.cache;
                 }, () => {
                     return this.getSay();
                 }

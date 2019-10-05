@@ -1,6 +1,8 @@
 import * as localForage from 'localforage';
 import { SayType, UserType, CacheType } from "../types";
 import uuid = require('uuid');
+import users from './users';
+import caches from './caches';
 
 export default class Watchers {
 
@@ -9,7 +11,6 @@ export default class Watchers {
 
     constructor(
         private getUser: () => UserType | null,
-        private getCache: () => Array<CacheType>,
         private getSay: () => Array<SayType>,
     ) {
     }
@@ -18,34 +19,32 @@ export default class Watchers {
         hearCb: (result: Array<SayType>) => void
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
-            const cache = this.getCache();
-            if (JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
+            if (!caches.compare(this.prevCache)) {
                 console.log('!cache changed!');
-                (async() => {
-                    try {
-                        await localForage.setItem('user_message_cache', cache); 
-                        console.log('cache saved!');
-                    } catch (error) {
-                        console.error(error);
+                caches.save().then((result) => {
+                    if (result) {
+                        this.prevCache = JSON.parse(JSON.stringify(caches.getCaches));
+                        let ids = new Set(caches.getCaches.map(e => e.id));
+                        let newHear: Array<SayType> = [];
+                        ids.forEach(e => {
+                            let filtered = caches.getCaches.filter(ee => ee.id === e);
+                            if (filtered && filtered.length > 0) {
+                                if (filtered.length >= 2) {
+                                    filtered = filtered.sort((a, b) => {
+                                        return b.timestamp - a.timestamp;
+                                    });
+                                }
+                                if (filtered[0].says) {
+                                    newHear = [...filtered[0].says, ...newHear];
+                                }
+                            }
+                        });
+                        resolve([true, {resultCb: hearCb, resultValue: newHear}]);
+                    } else {
+                        resolve([false, {}]);
                     }
-                })();
-                this.prevCache = JSON.parse(JSON.stringify(cache));
-                let ids = new Set(cache.map(e => e.id));
-                let newHear: Array<SayType> = [];
-                ids.forEach(e => {
-                    let filtered = cache.filter(ee => ee.id === e);
-                    if (filtered && filtered.length > 0) {
-                        if (filtered.length >= 2) {
-                            filtered = filtered.sort((a, b) => {
-                                return b.timestamp - a.timestamp;
-                            });
-                        }
-                        if (filtered[0].says) {
-                            newHear = [...filtered[0].says, ...newHear];
-                        }
-                    }
-                });
-                resolve([true, {resultCb: hearCb, resultValue: newHear}]);
+                }).catch(err => reject(err));
+                
             } else {
                 resolve([false, {}]);
             }
@@ -58,10 +57,9 @@ export default class Watchers {
         return new Promise((resolve, reject) => {
             const currentUser = this.getUser();
             const say = this.getSay();
-            const cache = this.getCache();
             if (say.length > 0 && currentUser) {
                 console.log('!say changed!');
-                const tgt = cache.find(e => {
+                const tgt = caches.getCaches.find(e => {
                     if (e.id) {
                         return e.id === currentUser.serial;
                     } else {
@@ -79,38 +77,31 @@ export default class Watchers {
                     });
                 } else {
                     console.log('cache new');
-                    cache.push({
+                    caches.add({
                         id: currentUser.serial, timestamp: Date.now(), says: [...say]
                     });
                 }
-                resolve([true, {resultCb: sayCb, resultValue: cache}]);
+                resolve([true, {resultCb: sayCb, resultValue: []}]);
             } else {
                 resolve([false, {}]);
             }
         });
     }
 
-    userListWatcher(
-        userList: Array<UserType>
-    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
+    userListWatcher(): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
-            if (JSON.stringify(userList) !== JSON.stringify(this.prevList)) {
-                (async () => {
-                    try {
-                        await localForage.setItem('user_list', [...userList.map(e => {
-                            const copy = Object.assign({}, e);
-                            copy.follow = [...copy.follow];
-                            copy.follower = [...copy.follower];
-                            copy.like = [...copy.like];
-                            return copy;
-                        })]);
+            if (JSON.stringify(users) !== JSON.stringify(this.prevList)) {
+                users.save().then((result) => {
+                    if (result) {
                         console.log('user list saved!');
-                    } catch (err) {
-                        console.error(err);
+                        this.prevList = JSON.parse(JSON.stringify(users));
+                        resolve([true, {}]);
+                    } else {
+                        resolve([false, {}]);
                     }
-                })();
-                this.prevList = JSON.parse(JSON.stringify(userList));
-                resolve([true, {}]);
+                }).catch(err => {
+                    reject(err);
+                });
             } else {
                 resolve([false, {}]);
             }

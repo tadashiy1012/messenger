@@ -1,17 +1,14 @@
 import * as localForage from 'localforage';
 import { CacheType, UserType } from "../types";
+import users from './users';
+import caches from './caches';
 
 export default class Receivers {
-
-    constructor(
-        private getCache:() => Array<CacheType>,
-        private getUsers:() => Array<UserType>
-    ) {}
 
     cacheReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
         return new Promise((resolve, reject) => {
             if (payload && payload.cache) {
-                const cache: Array<CacheType> = JSON.parse(JSON.stringify(this.getCache()));
+                const cache: Array<CacheType> = JSON.parse(JSON.stringify(caches.getCaches));
                 console.log('<<received cache>>', cache, payload.cache);
                 payload.cache.forEach((e: CacheType) => {
                     const found = cache.find(ee => ee.id == e.id);
@@ -44,23 +41,21 @@ export default class Receivers {
         return new Promise((resolve, reject) => {
             if (payload && payload.userList) {
                 console.log('<<received userList>>');
-                const users: Array<UserType> = JSON.parse(JSON.stringify(this.getUsers()));
+                const list: Array<UserType> = JSON.parse(JSON.stringify(users.getUsers));
                 payload.userList.forEach((e: UserType) => {
-                    const found = users.find(ee => ee.serial === e.serial);
+                    const found = list.find(ee => ee.serial === e.serial);
                     if (found) {
                         if (found.update < e.update) {
-                            const idx = users.indexOf(found);
-                            users.splice(idx, 1, e);
+                            const idx = list.indexOf(found);
+                            list.splice(idx, 1, e);
                             console.log('(( user list update! ))');
                         }
                     } else {
-                        users.push(e);
+                        list.push(e);
                         console.log('(( new user added! ))');
                     }
                 });
-                localForage.setItem('user_list', users)
-                    .catch(err => console.error(err));
-                resolve([true, [null, users]]);
+                resolve([true, [null, list]]);
             } else {
                 resolve([false, [null, null]]);
             }

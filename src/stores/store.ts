@@ -6,10 +6,10 @@ import { SayType, UserType, PcStateType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import PcStore from './pcStore';
 import clientId from './clientId';
+import users from './users';
+import caches from './caches';
 
 export default class MyStore {
-
-    private pcStore: PcStore | null = null;
 
     @observable
     currentUser: UserType | null = null;
@@ -40,22 +40,12 @@ export default class MyStore {
                 }
                 this.userNormalize(user);
                 user.update = Date.now();
-                this.currentUser = user;
-                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
-                if (found) {
-                    const idx = this.userList.indexOf(found);
-                    const user = Object.assign({}, this.getUser);
-                    if (user) {
-                        this.userList.splice(idx, 1, user);
-                    }
-                    resolve(true);
-                } else {
-                    const user = Object.assign({}, this.getUser);
-                    if (user) {
-                        this.userList.push(user);
-                    }
-                    resolve(true);
+                const result = users.update(user);
+                if (!result) {
+                    users.add(user);
                 }
+                this.currentUser = user;
+                resolve(true);
             } else {
                 reject(new Error('login state error!'));
             }
@@ -66,26 +56,24 @@ export default class MyStore {
     updateUserFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
-                const user = Object.assign({}, this.getUser);
-                user.follow = [...user.follow, tgtSerial];
-                this.userNormalize(user);
-                user.update = Date.now();
-                this.currentUser = user;
-                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                const userA = Object.assign({}, this.getUser);
+                userA.follow = [...userA.follow, tgtSerial];
+                this.userNormalize(userA);
+                userA.update = Date.now();
+                this.currentUser = userA;
+                const found = users.find(this.currentUser);
                 if (found) {
-                    const idx = this.userList.indexOf(found);
-                    this.userList.splice(idx, 1, user);
+                    users.update(userA);
                 } else {
                     reject(new Error('user not found'));
                 }
-                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                const found2 = users.getUsers.find(e => e.serial === tgtSerial);
                 if (found2) {
-                    const idx2 = this.userList.indexOf(found2);
-                    const user2 = Object.assign({}, found2);
-                    user2.follower = [...user2.follower, user.serial];
-                    this.userNormalize(user2);
-                    user2.update = Date.now();
-                    this.userList.splice(idx2, 1, user2);
+                    const userB = Object.assign({}, found2);
+                    userB.follower = [...userB.follower, userA.serial];
+                    this.userNormalize(userB);
+                    userB.update = Date.now();
+                    users.update(userB);
                 } else {
                     reject(new Error('follow target user not found'));
                 }
@@ -100,26 +88,24 @@ export default class MyStore {
     updateUserUnFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
-                const user = Object.assign({}, this.getUser);
-                user.follow = [...user.follow.filter(e => e !== tgtSerial)];
-                this.userNormalize(user);
-                user.update = Date.now();
-                this.currentUser = user;
-                const found = this.userList.find(e => e.serial === this.currentUser!.serial);
+                const userA = Object.assign({}, this.getUser);
+                userA.follow = [...userA.follow.filter(e => e !== tgtSerial)];
+                this.userNormalize(userA);
+                userA.update = Date.now();
+                this.currentUser = userA;
+                const found = users.find(this.currentUser);
                 if (found) {
-                    const idx = this.userList.indexOf(found);
-                    this.userList.splice(idx, 1, user);
+                    users.update(userA);
                 } else {
                     reject(new Error('user not found'));
                 }
-                const found2 = this.userList.find(e => e.serial === tgtSerial);
+                const found2 = users.getUsers.find(e => e.serial === tgtSerial);
                 if (found2) {
-                    const idx2 = this.userList.indexOf(found2);
-                    const user2 = Object.assign({}, found2);
-                    user2.follower = [...user2.follower.filter(e => e !== user.serial)];
-                    this.userNormalize(user2);
-                    user2.update = Date.now();
-                    this.userList.splice(idx2, 1, user2);
+                    const userB = Object.assign({}, found2);
+                    userB.follower = [...userB.follower.filter(e => e !== userA.serial)];
+                    this.userNormalize(userB);
+                    userB.update = Date.now();
+                    users.update(userB);
                 } else {
                     reject(new Error('follow target user not found'));
                 }
@@ -147,14 +133,13 @@ export default class MyStore {
                 copyUser.update = Date.now();
                 copySay.like = [...copySay.like, copyUser.serial];
                 copySay.reply = [...copySay.reply];
-                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
+                const foundUser = users.find(copyUser);
                 if (foundUser) {
-                    const idx = this.userList.indexOf(foundUser);
-                    this.userList.splice(idx, 1, copyUser);
+                    users.update(copyUser);
                 } else {
                     reject(new Error('user not found'));
                 }
-                const cache = this.pcStore!.getCache;
+                const cache = caches.getCaches;
                 cache.forEach((e) => {
                     const found = e.says.find((ee) => ee.id === copySay.id);
                     if (found) {
@@ -189,14 +174,13 @@ export default class MyStore {
                 copySay.like.splice(copySay.like.indexOf(foundLiker!), 1);
                 copySay.like = [...copySay.like];
                 copySay.reply = [...copySay.reply];
-                const foundUser = this.userList.find(e => e.serial === copyUser.serial);
+                const foundUser = users.find(copyUser);
                 if (foundUser) {
-                    const idx = this.userList.indexOf(foundUser);
-                    this.userList.splice(idx, 1, copyUser);
+                    users.update(copyUser);
                 } else {
                     reject(new Error('user not found'));
                 }
-                const cache = this.pcStore!.getCache;
+                const cache = caches.getCaches;
                 cache.forEach((e) => {
                     const found = e.says.find((ee) => ee.id === copySay.id);
                     if (found) {
@@ -221,7 +205,7 @@ export default class MyStore {
             console.log('$say:', say);
             if (this.currentUser) {
                 const currentSerial = this.currentUser.serial;
-                const found = this.userList.find(e => e.serial === currentSerial);
+                const found = users.getUsers.find(e => e.serial === currentSerial);
                 if (found && found.clientId === clientId) {
                     this.say.push(say);
                     resolve(true);
@@ -244,17 +228,9 @@ export default class MyStore {
             return a.date - b.date
         });
     }
-    
-    @observable
-    private userList: Array<UserType> = [];
-
-    @computed
-    public get getUserList(): Array<UserType> {
-        return this.userList;
-    }
 
     findAuthorIcon(authorId: string): string {
-        const found = this.userList.find(e => e.serial === authorId);
+        const found = users.getUsers.find(e => e.serial === authorId);
         if (found && found.icon) {
             return found.icon === '' ? noImage : found.icon;
         } else {
@@ -262,8 +238,8 @@ export default class MyStore {
         }
     }
 
-    findAuthorname(authorId: string): string {
-        const found = this.userList.find(e => e.serial === authorId);
+    findAuthorName(authorId: string): string {
+        const found = users.getUsers.find(e => e.serial === authorId);
         if (found && found.name) {
             return found.name
         } else {
@@ -272,14 +248,14 @@ export default class MyStore {
     }
 
     findUser(userSerial: string): UserType | null {
-        const found = this.userList.find(e => e.serial === userSerial);
+        const found = users.getUsers.find(e => e.serial === userSerial);
         return found || null
     }
 
     findUserAsync(userSerial: string): Promise<UserType | null> {
         return new Promise((resolve) => {
-            if (this.userList.length > 0) {
-                const found = this.userList.find(e => e.serial === userSerial);
+            if (users.getUsers.length > 0) {
+                const found = users.getUsers.find(e => e.serial === userSerial);
                 resolve(found);
             } else {
                 let count = 0;
@@ -289,8 +265,8 @@ export default class MyStore {
                         clearInterval(timer);
                         resolve(null);
                     }
-                    if (this.userList.length > 0) {
-                        const found = this.userList.find(e => e.serial === userSerial);
+                    if (users.getUsers.length > 0) {
+                        const found = users.getUsers.find(e => e.serial === userSerial);
                         clearInterval(timer);
                         resolve(found);
                     }
@@ -302,42 +278,19 @@ export default class MyStore {
 
     findUserSay(userSerial: string): Promise<Array<SayType>> {
         return new Promise((resolve) => {
-            if (this.pcStore) {
-                const cache = this.pcStore.getCache;
-                const found = cache.find(e => e.says[0].authorId === userSerial);
-                if (found) {
-                    resolve(found.says);
-                } else {
-                    resolve([]);
-                }
+            const cache = caches.getCaches;
+            const found = cache.find(e => e.says[0].authorId === userSerial);
+            if (found) {
+                resolve(found.says);
             } else {
-                let count = 0;
-                const timer = setInterval(() => {
-                    if (count > 5) {
-                        console.log('findUsersay time out');
-                        clearInterval(timer);
-                        resolve([]);
-                    }
-                    if (this.pcStore) {
-                        const cache = this.pcStore.getCache;
-                        const found = cache.find(e => e.says[0].authorId === userSerial);
-                        if (found) {
-                            clearInterval(timer);
-                            resolve(found.says);
-                        } else {
-                            clearInterval(timer);
-                            resolve([]);
-                        }
-                    }
-                    count += 1;
-                }, 1000);
+                resolve([]);
             }
         });
         
     }
 
     findSay(sayId: string): SayType | undefined {
-        const says: Array<SayType> = this.pcStore!.getCache.reduce<SayType[]>((acc, e) => {
+        const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
            acc.push(...e.says);
            return acc;
         }, []);
@@ -355,7 +308,7 @@ export default class MyStore {
     @action
     login(email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
-            const found = this.userList.find(e => e.email === email);
+            const found = users.getUsers.find(e => e.email === email);
             if (found && bcrypt.compareSync(password, found.password)) {
                 this.currentUser = {
                     serial: found.serial,
@@ -384,7 +337,7 @@ export default class MyStore {
             this.setLogged(false);
             if (this.currentUser) {
                 const serial = this.currentUser.serial;
-                const found = this.userList.find(e => e.serial === serial);
+                const found = users.getUsers.find(e => e.serial === serial);
                 if (found) {
                     found.clientId = 'no id';
                     found.update = Date.now();
@@ -403,7 +356,7 @@ export default class MyStore {
     @action
     registration(name: string, email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
-            const filtered = this.userList.filter(e => e.email === email);
+            const filtered = users.getUsers.filter(e => e.email === email);
             const pass = encodeURI(password);
             if (filtered.length > 0 || pass !== password) {
                 resolve(false);
@@ -422,7 +375,7 @@ export default class MyStore {
                     clientId: clientId,
                     update: Date.now()
                 };
-                this.userList.push(user);
+                users.add(user);
                 resolve(true);
             }
         });
@@ -480,25 +433,18 @@ export default class MyStore {
     };
 
     constructor() {
-        (async () => {
-            try {
-                this.userList = await localForage.getItem<Array<UserType>>('user_list') || [];
-            } catch (error) {
-                console.error(error);
-            }
-            this.pcStore = new PcStore(
-            () => {
-                return this.getUserList;
-            }, () => {
-                return this.say;
-            }, () => {
-                return this.hear;
-            }, () => {
-                return this.getUser;
-            }, () => {
-                return [this.pcAState, this.pcBState, this.pcCState];
-            });
-        })();
+        console.log(users.getUsers);
+        console.log(caches.getCaches);
+        new PcStore(
+        () => {
+            return this.say;
+        }, () => {
+            return this.hear;
+        }, () => {
+            return this.getUser;
+        }, () => {
+            return [this.pcAState, this.pcBState, this.pcCState];
+        });
     }
 
 }

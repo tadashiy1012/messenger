@@ -24,7 +24,7 @@ export default class GlobalTL extends React.Component<GlobalProps> {
         });
         const child1 = timeline.map(e => {
             const dt = new Date(e.date);
-            const name = store!.findAuthorname(e.authorId);
+            const name = store!.findAuthorName(e.authorId);
             const alike = user && e.like.find(ee => ee === user!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.props.unLikeClickHandler(e)}}>favorite</i> :

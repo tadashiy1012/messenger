@@ -1,5 +1,7 @@
 import clientId from './clientId';
 import { CacheType, UserType } from "../types";
+import users from './users';
+import caches from './caches';
 
 export default class Senders {
 
@@ -8,14 +10,9 @@ export default class Senders {
     private prevCache: Array<CacheType> = [];
     private prevUsers: Array<UserType> = [];
 
-    constructor(
-        private getCache: () => Array<CacheType>,
-        private getUsers: () => Array<UserType>
-    ) {}
-
     cacheSender(dc: RTCDataChannel): Promise<Boolean> {
         return new Promise((resolve, reject) => {
-            const cache = this.getCache();
+            const cache = caches.getCaches;
             this.prevCache = JSON.parse(JSON.stringify(cache));
             const dts = cache.map(e => e.timestamp).sort();
             if (this.beforeCacheSend < dts[dts.length - 1] 
@@ -40,18 +37,18 @@ export default class Senders {
 
     userListSender(dc: RTCDataChannel): Promise<Boolean> {
         return new Promise((resolve, reject) => {
-            const users = this.getUsers();
-            const dts = users.map(e => e.update).sort();
+            const list = users.getUsers;
+            const dts = list.map(e => e.update).sort();
             if (this.beforeListSend < dts[dts.length - 1] 
-                || JSON.stringify(users) !== JSON.stringify(this.prevUsers)) {
+                || JSON.stringify(list) !== JSON.stringify(this.prevUsers)) {
                 console.log(dts, this.beforeListSend);
-                this.prevUsers = JSON.parse(JSON.stringify(users));
+                this.prevUsers = JSON.parse(JSON.stringify(list));
                 this.beforeListSend = Date.now();
                 const json = {
                     from: clientId,
                     sendTime: this.beforeListSend,
                     payload: {
-                        userList: users
+                        userList: list
                     }
                 };
                 dc.send(JSON.stringify(json));

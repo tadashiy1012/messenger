@@ -8,13 +8,12 @@ export default interface MyStoreType {
     updateUserUnFollow(tgtSerial: string): Promise<Boolean>
     updateUserLike(tgtSay: SayType): Promise<Boolean>
     updateUserUnLike(tgtSay: SayType): Promise<Boolean>
-    getUserList: Array<UserType>
     logged: Boolean
     setLogged(logged: Boolean): void
     addSay(say: SayType): Promise<Boolean>
     timeLine: Array<SayType>
     findAuthorIcon(authorId: string): string
-    findAuthorname(authorId: string): string
+    findAuthorName(authorId: string): string
     findUser(userSerial: string): UserType | null
     findUserAsync(userSerial: string): Promise<UserType | null>
     findUserSay(userSerial: string): Promise<Array<SayType>>
