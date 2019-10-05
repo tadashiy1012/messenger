@@ -1,13 +1,17 @@
-import MyStore from './store';
+import userStore from './userStore';
 import history from './history';
 import clientId from './clientId';
-import SettingStore from './settingStore';
+import settingStore from './settingStore';
 import connStateStore from './connStateStore';
+import pcStore from './pcStore';
+import sayStore from './sayStore';
 
 export {
-    MyStore,
+    userStore,
     history,
     clientId,
-    SettingStore,
+    settingStore,
     connStateStore,
+    pcStore,
+    sayStore,
 };

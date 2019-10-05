@@ -1,4 +1,3 @@
-import * as localForage from 'localforage';
 import { setupDC, makePCBC, makePreOffer, makePCA, MyWebSocket, makeWS } from "../utils";
 import { UserType, CacheType, SayType, PcStateType } from "../types";
 import Senders from "./pcSenders";
@@ -8,9 +7,11 @@ import Transceivers from "./pcTransceivers";
 import clientId from './clientId';
 import users from './users';
 import caches from './caches';
+import userStore from './userStore';
+import sayStore from './sayStore';
 import connStateStore from './connStateStore';
 
-export default class PcStore {
+class PcStore {
     
     private pcA: RTCPeerConnection | null = null;
     private pcB: RTCPeerConnection | null = null;
@@ -146,11 +147,11 @@ export default class PcStore {
     private timerTask = () => {
         const tasks = [
             this.watchers!.sayWatcher(() => {
-                const say = this.getSay();
+                const say = sayStore.getSay;
                 say.splice(0, say.length, ...[]);
             }),
             this.watchers!.cacheWatcher((result) => {
-                const hear = this.getHear();
+                const hear = sayStore.getHear;
                 hear.splice(0, hear.length, ...result);
             }),
             this.watchers!.userListWatcher()
@@ -164,13 +165,7 @@ export default class PcStore {
         }).catch((err) => console.error(err));
     };
 
-    constructor(
-        private getSay: () => Array<SayType>,
-        private getHear: () => Array<SayType>,
-        private getUser: () => UserType | null
-    ) {
-        console.log(users.getUsers);
-        console.log(caches.getCaches);
+    constructor() {
         (async() => {
             this.senders = new Senders();
             this.receivers = new Receivers();
@@ -201,13 +196,7 @@ export default class PcStore {
             }, () => {
                 this.preOffer = null;
             });
-            this.watchers = new Watchers(
-                () => {
-                    return this.getUser();
-                }, () => {
-                    return this.getSay();
-                }
-            );
+            this.watchers = new Watchers();
             this.timerTask();
             makeWS(
                 this.transceivers.preOfferTransceiver.bind(this.transceivers),
@@ -228,5 +217,6 @@ export default class PcStore {
         })();
     }
 
-
 }
+
+export default new PcStore();

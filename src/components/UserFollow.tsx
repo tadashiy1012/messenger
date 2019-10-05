@@ -2,20 +2,20 @@
 import React from "react";
 import {css, jsx} from '@emotion/core';
 import { inject, observer } from "mobx-react";
-import { MyStoreType, UserType } from "../types";
+import { UserStoreType, UserType } from "../types";
 
 interface FollowProps {
-    store?: MyStoreType
-    user: UserType
+    user?: UserStoreType
+    tgtUser: UserType
 }
 
-@inject('store')
+@inject('user')
 @observer
 class Follow extends React.Component<FollowProps> {
     render() {
-        const {store, user} = this.props;
-        const child = user.follow.map(e => {
-            const follow = store!.findUser(e);
+        const {user, tgtUser} = this.props;
+        const child = tgtUser.follow.map(e => {
+            const follow = user!.findUser(e);
             return <li key={e}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follow!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />
@@ -31,17 +31,17 @@ class Follow extends React.Component<FollowProps> {
 }
 
 interface FollowerProps {
-    store?: MyStoreType
-    user: UserType
+    user?: UserStoreType
+    tgtUser: UserType
 }
 
-@inject('store')
+@inject('user')
 @observer
 class Follower extends React.Component<FollowerProps> {
     render() {
-        const {store, user} = this.props;
-        const child = user.follower.map(e => {
-            const follower = store!.findUser(e);
+        const {user, tgtUser} = this.props;
+        const child = tgtUser.follower.map(e => {
+            const follower = user!.findUser(e);
             return <li key={e}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follower!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />

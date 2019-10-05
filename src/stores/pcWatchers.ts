@@ -1,19 +1,13 @@
-import * as localForage from 'localforage';
 import { SayType, UserType, CacheType } from "../types";
-import uuid = require('uuid');
 import users from './users';
 import caches from './caches';
+import userStore from './userStore';
+import sayStore from './sayStore';
 
 export default class Watchers {
 
     private prevList: Array<UserType> = [];
     private prevCache: Array<CacheType> = [];
-
-    constructor(
-        private getUser: () => UserType | null,
-        private getSay: () => Array<SayType>,
-    ) {
-    }
 
     cacheWatcher(
         hearCb: (result: Array<SayType>) => void
@@ -55,8 +49,8 @@ export default class Watchers {
         sayCb: (result: Array<CacheType>) => void
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
-            const currentUser = this.getUser();
-            const say = this.getSay();
+            const currentUser = userStore.getUser;
+            const say = sayStore.getSay;
             if (say.length > 0 && currentUser) {
                 console.log('!say changed!');
                 const tgt = caches.getCaches.find(e => {
@@ -90,11 +84,11 @@ export default class Watchers {
 
     userListWatcher(): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
-            if (JSON.stringify(users) !== JSON.stringify(this.prevList)) {
+            if (!users.compare(this.prevList)) {
                 users.save().then((result) => {
                     if (result) {
                         console.log('user list saved!');
-                        this.prevList = JSON.parse(JSON.stringify(users));
+                        this.prevList = JSON.parse(JSON.stringify(users.getUsers));
                         resolve([true, {}]);
                     } else {
                         resolve([false, {}]);

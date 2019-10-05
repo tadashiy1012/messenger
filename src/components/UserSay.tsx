@@ -1,26 +1,26 @@
 /** @jsx jsx */
 import React from "react";
 import {css, jsx} from '@emotion/core';
-import { MyStoreType, SayType } from "../types";
+import { UserStoreType, SayType } from "../types";
 import { inject, observer } from "mobx-react";
 import escape_html from "../utils/escapeHtml";
 
 interface SayProps {
-    store?: MyStoreType
+    user?: UserStoreType
     say: SayType[]
 }
 
-@inject('store')
+@inject('user')
 @observer
 export default class UserSay extends React.Component<SayProps> {
     render() {
-        const {store} = this.props;
+        const {user} = this.props;
         const child = this.props.say.map((e) => {
             const dt = new Date(e.date);
-            const name = store!.findAuthorName(e.authorId);
+            const name = user!.findAuthorName(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <img src={store!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                    <img src={user!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                         borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>

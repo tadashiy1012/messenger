@@ -3,15 +3,16 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import * as uuid from 'uuid';
-import { SayType, MyStoreType } from '../types';
+import { SayType, UserStoreType, SayStoreType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import { Link } from 'react-router-dom';
 
 interface WriterProps {
-    store?: MyStoreType
+    user?: UserStoreType
+    say?: SayStoreType
 }
 
-@inject('store')
+@inject('user', 'say')
 @observer
 export default class Writer extends React.Component<WriterProps> {
     private _inSayRef: React.RefObject<HTMLTextAreaElement>;
@@ -21,10 +22,10 @@ export default class Writer extends React.Component<WriterProps> {
     }
     sendClickHandler(ev: React.MouseEvent) {
         console.log(this._inSayRef.current!.value);
-        const {store} = this.props;
-        if (store && store.currentUser) {
-            const {serial, name} = store.currentUser;
-            const say: SayType = {
+        const {user, say} = this.props;
+        if (user && user.currentUser) {
+            const {serial, name} = user.currentUser;
+            const newSay: SayType = {
                 id: uuid.v1(),
                 date: Date.now(),
                 author: name,
@@ -33,7 +34,7 @@ export default class Writer extends React.Component<WriterProps> {
                 reply: [],
                 say: this._inSayRef.current!.value
             };
-            store!.addSay(say).catch((err) => {
+            say!.addSay(newSay).catch((err) => {
                 console.error(err);
                 alert('say send fail!!');
             });
@@ -42,19 +43,19 @@ export default class Writer extends React.Component<WriterProps> {
         }
     }
     render() {
-        const {store} = this.props;
+        const {user} = this.props;
         return <div className="pure-form" css={{display:'flex', alignItems:'center', margin:'14px 0px'}}>
-            <Link to={{pathname:'/user', search: '?tgt=' + store!.getUser!.serial}}>
-                <img src={store!.currentUser ? store!.currentUser.icon : noImage} width="32" height="32" css={{
+            <Link to={{pathname:'/user', search: '?tgt=' + user!.getUser!.serial}}>
+                <img src={user!.currentUser ? user!.currentUser.icon : noImage} width="32" height="32" css={{
                     borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
             </Link>
-            <span>{store!.currentUser ? store!.currentUser.name : 'no_name'}'s say: </span>
+            <span>{user!.currentUser ? user!.currentUser.name : 'no_name'}'s say: </span>
             <textarea className="pure-input pure-input-1-3"
                 css={{margin:'0px 4px'}}
-                ref={this._inSayRef} disabled={store!.logged ? false:true}></textarea>
+                ref={this._inSayRef} disabled={user!.logged ? false:true}></textarea>
             <button className="pure-button" 
                 onClick={(ev) => {this.sendClickHandler(ev)}} 
-                disabled={store!.logged ? false : true}>send</button>
+                disabled={user!.logged ? false : true}>send</button>
         </div>
     }
 }

@@ -2,17 +2,17 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType } from '../types';
+import { UserStoreType } from '../types';
 
 interface LogoutProps {
-    store?: MyStoreType
+    user?: UserStoreType
 }
 
-@inject('store')
+@inject('user')
 @observer
 export default class Logout extends React.Component<LogoutProps> {
     logoutClickHandler() {
-        this.props.store!.logout().catch((err) => console.error(err));
+        this.props.user!.logout().catch((err) => console.error(err));
     }
     render() {
         return <button className="pure-button" onClick={() => {this.logoutClickHandler()}}>logout</button>

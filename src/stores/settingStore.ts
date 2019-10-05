@@ -1,6 +1,6 @@
 import { observable, action } from "mobx";
 
-export default class SettingStore {
+class SettingStore {
 
     @observable
     showDetail: Boolean = false;
@@ -35,3 +35,5 @@ export default class SettingStore {
     }
 
 }
+
+export default new SettingStore();

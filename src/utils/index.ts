@@ -7,6 +7,7 @@ import makePCA from './makePCA';
 import makePreOffer from './makePreOffer';
 import makePCBC from './makePCBC';
 import escapeHtml from './escapeHtml';
+import createImage from './createImage';
 
 export {
     makePC, PCBuilder,
@@ -16,4 +17,5 @@ export {
     makePCBC,
     setupDC,
     escapeHtml,
+    createImage,
 }

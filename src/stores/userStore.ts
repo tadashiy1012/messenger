@@ -3,12 +3,11 @@ import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
 import { SayType, UserType } from '../types';
 import { noImage } from '../utils/noImageIcon';
-import PcStore from './pcStore';
 import clientId from './clientId';
 import users from './users';
 import caches from './caches';
 
-export default class MyStore {
+class UserStore {
 
     @observable
     currentUser: UserType | null = null;
@@ -196,38 +195,6 @@ export default class MyStore {
         });
     }
 
-    private say: Array<SayType> = [];
-    @observable private hear: Array<SayType> = [];
-
-    addSay(say: SayType): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            console.log('$say:', say);
-            if (this.currentUser) {
-                const currentSerial = this.currentUser.serial;
-                const found = users.getUsers.find(e => e.serial === currentSerial);
-                if (found && found.clientId === clientId) {
-                    this.say.push(say);
-                    resolve(true);
-                } else {
-                    reject(new Error('login state error!!'));
-                }
-            } else {
-                reject(new Error('login state error!!'));
-            }
-        });
-    }
-
-    @computed
-    get timeLine(): Array<SayType> {
-        const says = this.hear.filter((e, idx, self) => {
-            const len = self.filter(ee => ee.id === e.id).length;
-            return len > 0;
-        });
-        return says.sort((a, b) => {
-            return a.date - b.date
-        });
-    }
-
     findAuthorIcon(authorId: string): string {
         const found = users.getUsers.find(e => e.serial === authorId);
         if (found && found.icon) {
@@ -380,17 +347,6 @@ export default class MyStore {
         });
     }
 
-    constructor() {
-        console.log(users.getUsers);
-        console.log(caches.getCaches);
-        new PcStore(
-        () => {
-            return this.say;
-        }, () => {
-            return this.hear;
-        }, () => {
-            return this.getUser;
-        });
-    }
-
 }
+
+export default new UserStore();

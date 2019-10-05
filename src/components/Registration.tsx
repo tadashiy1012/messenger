@@ -2,13 +2,13 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType } from '../types';
+import { UserStoreType } from '../types';
 
 interface RegistrationProps {
-    store?: MyStoreType
+    user?: UserStoreType
 }
 
-@inject('store')
+@inject('user')
 @observer
 export default class Registration extends React.Component<RegistrationProps> {
     private emailRef: React.RefObject<HTMLInputElement>;
@@ -21,11 +21,11 @@ export default class Registration extends React.Component<RegistrationProps> {
         this.nameRef = React.createRef();
     }
     registrationClickHandler(ev: React.MouseEvent) {
-        const {store} = this.props;
+        const {user} = this.props;
         const email = this.emailRef.current!.value;
         const password = this.passRef.current!.value;
         const name = this.nameRef.current!.value;
-        store!.registration(name, email, password).then((result) => {
+        user!.registration(name, email, password).then((result) => {
             if (result) {
                 alert('registration success!');
             } else {

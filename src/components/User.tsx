@@ -3,24 +3,24 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { history } from '../stores';
-import { MyStoreType, SayType, UserType, SettingStoreType } from '../types';
+import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
 import UserSay from './UserSay';
 import { Follow, Follower } from './UserFollow';
 
-const FollowButton = (props: {store?: MyStoreType, tgtUser: UserType}) => (
+const FollowButton = (props: {user?: UserStoreType, tgtUser: UserType}) => (
     <button className="pure-button" onClick={() => {
-        props.store!.updateUserFollow(props.tgtUser.serial).catch(err => console.error(err));
+        props.user!.updateUserFollow(props.tgtUser.serial).catch(err => console.error(err));
     }}>to follow</button>
 );
 
-const UnFollowButton = (props: {store?: MyStoreType, tgtUser: UserType}) => (
+const UnFollowButton = (props: {user?: UserStoreType, tgtUser: UserType}) => (
     <button className="pure-button" onClick={() => {
-        props.store!.updateUserUnFollow(props.tgtUser.serial).catch(err => console.error(err));
+        props.user!.updateUserUnFollow(props.tgtUser.serial).catch(err => console.error(err));
     }}>to unfollow</button>
 );
 
 interface UserProps {
-    store?: MyStoreType
+    user?: UserStoreType
     setting?: SettingStoreType
 }
 
@@ -30,7 +30,7 @@ interface UserState {
     mode: number
 }
 
-@inject('store', 'setting')
+@inject('user', 'setting')
 @observer
 export default class User extends React.Component<UserProps, UserState> {
     constructor(props: Readonly<UserProps>) {
@@ -42,25 +42,27 @@ export default class User extends React.Component<UserProps, UserState> {
         };
     }
     render() {
-        const {store, setting} = this.props;
-        const tgtUser = store!.findUser(setting!.showUserTarget!);
+        const {user, setting} = this.props;
+        const tgt = setting!.showUserTarget;
+        const tgtUser = user!.findUser(tgt!);
+        console.log(tgt, tgtUser);
         if (tgtUser) {
-            const currentUser = store!.getUser;
+            const currentUser = user!.getUser;
             let followBtn = null;
             let unfollowBtn = null;
-            if (store!.logged && currentUser && currentUser.serial !== tgtUser.serial) {
+            if (user!.logged && currentUser && currentUser.serial !== tgtUser.serial) {
                 const found1 = currentUser.follow.find(e => e === tgtUser.serial);
                 const found2 = tgtUser.follower.find(e => e === currentUser.serial);
-                followBtn = found1 ? null : <FollowButton store={store} tgtUser={tgtUser} />;
-                unfollowBtn = found2 ? <UnFollowButton store={store} tgtUser={tgtUser} /> : null;
+                followBtn = found1 ? null : <FollowButton user={user} tgtUser={tgtUser} />;
+                unfollowBtn = found2 ? <UnFollowButton user={user} tgtUser={tgtUser} /> : null;
             }
             let contents = null;
             if (this.state.mode === 0) {
                 contents = <UserSay say={this.state.say} />
             } else if (this.state.mode === 1) {
-                contents = <Follow user={tgtUser} />
+                contents = <Follow tgtUser={tgtUser} />
             } else if (this.state.mode === 2) {
-                contents = <Follower user={tgtUser} />
+                contents = <Follower tgtUser={tgtUser} />
             }
             return <React.Fragment>
                 <div css={{display:'flex', alignItems:'center'}}>
@@ -99,15 +101,15 @@ export default class User extends React.Component<UserProps, UserState> {
         }
     }
     componentDidMount() {
-        const {store, setting} = this.props;
+        const {user, setting} = this.props;
         if (history) {
             const params = history.location.search.substring(1).split('&');
             if (params.length > 0) {
                 const tgtSerial = params[0].split('=')[1];
                 setting!.setShowUserTarget(tgtSerial);
-                store!.findUserAsync(tgtSerial).then((resp) => {
+                user!.findUserAsync(tgtSerial).then((resp) => {
                     if (resp) {
-                        store!.findUserSay(resp.serial).then((resp2) => {
+                        user!.findUserSay(resp.serial).then((resp2) => {
                             this.setState({sayLen: resp2.length, say: resp2});
                         });
                     }

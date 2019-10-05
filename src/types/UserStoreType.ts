@@ -1,6 +1,6 @@
 import { UserType, SayType, PcStateType } from ".";
 
-export default interface MyStoreType {
+export default interface UserStoreType {
     currentUser: UserType
     getUser: UserType | null
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean>
@@ -10,8 +10,6 @@ export default interface MyStoreType {
     updateUserUnLike(tgtSay: SayType): Promise<Boolean>
     logged: Boolean
     setLogged(logged: Boolean): void
-    addSay(say: SayType): Promise<Boolean>
-    timeLine: Array<SayType>
     findAuthorIcon(authorId: string): string
     findAuthorName(authorId: string): string
     findUser(userSerial: string): UserType | null

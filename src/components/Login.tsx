@@ -2,14 +2,14 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType } from '../types';
+import { UserStoreType } from '../types';
 import { history } from '../stores';
 
 interface LoginProps {
-    store?: MyStoreType
+    user?: UserStoreType
 }
 
-@inject('store')
+@inject('user')
 @observer
 export default class Login extends React.Component<LoginProps> {
     emailRef: React.RefObject<HTMLInputElement>;
@@ -20,12 +20,12 @@ export default class Login extends React.Component<LoginProps> {
         this.passRef = React.createRef();
     }
     loginClickHandler(ev: React.MouseEvent) {
-        const {store} = this.props;
+        const {user} = this.props;
         const email = this.emailRef.current!.value;
         const password = this.passRef.current!.value;
-        store!.login(email, password).then((result) => {
+        user!.login(email, password).then((result) => {
             if (result) {
-                store!.setLogged(true);
+                user!.setLogged(true);
                 history.push('/');
             } else {
                 alert('login fail!');

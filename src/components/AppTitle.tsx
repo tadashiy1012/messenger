@@ -2,15 +2,14 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType, SettingStoreType, ConnStateStoreType } from '../types';
+import { SettingStoreType, ConnStateStoreType } from '../types';
 
 interface AppTitleProps {
-    store?: MyStoreType
     setting?: SettingStoreType
     conn?: ConnStateStoreType
 }
 
-@inject('store', 'setting', 'conn')
+@inject('setting', 'conn')
 @observer
 export default class AppTitle extends React.Component<AppTitleProps> {
     render() {

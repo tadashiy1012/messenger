@@ -3,10 +3,9 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { clientId } from '../stores'
-import { MyStoreType, SettingStoreType, ConnStateStoreType } from '../types';
+import { SettingStoreType, ConnStateStoreType } from '../types';
 
 interface PcStatusProps {
-    store?: MyStoreType
     conn?: ConnStateStoreType
 }
 
@@ -24,7 +23,6 @@ class PcStatus extends React.Component<PcStatusProps> {
 }
 
 interface StatusProps {
-    store?: MyStoreType
     setting?: SettingStoreType
 }
 

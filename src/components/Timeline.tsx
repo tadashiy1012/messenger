@@ -2,34 +2,34 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType, SayType, SettingStoreType } from '../types';
+import { UserStoreType, SayType, SettingStoreType } from '../types';
 import Writer from './Writer';
 import GlobalTL from './TimelineGlobal';
 import LocalTL from './TimelineLocal';
 
 interface TimeLineProps {
-    store?: MyStoreType
+    user?: UserStoreType
     setting?: SettingStoreType
 }
 
-@inject('store', 'setting')
+@inject('user', 'setting')
 @observer
 export default class TimeLine extends React.Component<TimeLineProps> {
     likeClickHandler(tgt: SayType) {
-        const {store} = this.props;
-        store!.updateUserLike(tgt).catch(err => console.error(err));
+        const {user} = this.props;
+        user!.updateUserLike(tgt).catch(err => console.error(err));
     }
     unLikeClickHandler(tgt: SayType) {
-        const {store} = this.props;
-        store!.updateUserUnLike(tgt).catch(err => console.error(err));
+        const {user} = this.props;
+        user!.updateUserUnLike(tgt).catch(err => console.error(err));
     }
     messageClickHandler(tgt: SayType) {
         const {setting} = this.props;
         setting!.setShowMessageTarget(tgt.id);
     }
     render() {
-        const {store} = this.props;
-        const writer = store!.logged ? <Writer /> : null;
+        const {user} = this.props;
+        const writer = user!.logged ? <Writer /> : null;
         return <React.Fragment>
             {writer}
             <div css={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>

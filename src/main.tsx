@@ -4,18 +4,16 @@ import * as ReactDOM from 'react-dom';
 import {Router, Switch, Route, Link} from 'react-router-dom';
 import { Provider, observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { MyStore, history, SettingStore, connStateStore } from './stores';
+import { 
+    history, userStore, sayStore, pcStore, settingStore, connStateStore
+} from './stores';
 import { 
     AppTitle, Status, LoginContainer, TimeLine, 
     Setting as MySetting, User as MyUser
 } from './components';
+import { UserStoreType } from './types';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
-import { MyStoreType } from './types';
-
-const store = new MyStore();
-const setting = new SettingStore();
-
 
 const Main = () => (
     <React.Fragment>
@@ -45,13 +43,13 @@ const Setting = () => (
     </React.Fragment>
 );
 
-@inject('store')
+@inject('user')
 @observer
-class Navi extends React.Component<{store?: MyStoreType}> {
+class Navi extends React.Component<{user?: UserStoreType}> {
     render() {
-        const {store} = this.props;
+        const {user} = this.props;
         const loggedMenu = <React.Fragment>
-            <Link to={{pathname:'/user', search: store!.getUser ? '?tgt=' + store!.getUser.serial : ''}}
+            <Link to={{pathname:'/user', search: user!.getUser ? '?tgt=' + user!.getUser.serial : ''}}
                 className="pure-button" css={{margin:'0px 4px'}}>User</Link>
             <Link to="/setting" className="pure-button" css={{margin:'0px 4px'}}>Setting</Link>
         </React.Fragment>
@@ -59,7 +57,7 @@ class Navi extends React.Component<{store?: MyStoreType}> {
             <div css={{display:'flex'}}>
                 <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>Main</Link>
                 <Link to="/login" className="pure-button" css={{margin:'0px 4px'}}>Login</Link>
-                {store!.logged ? loggedMenu : null}
+                {user!.logged ? loggedMenu : null}
             </div>
         </React.Fragment>
     }
@@ -67,7 +65,7 @@ class Navi extends React.Component<{store?: MyStoreType}> {
 
 const App = () => (
     <Router history={history}>
-        <Provider store={store} setting={setting} conn={connStateStore}>
+        <Provider user={userStore} say={sayStore} pc={pcStore} setting={settingStore} conn={connStateStore}>
             <div css={{width: '800px', margin: '0px auto'}}>
                 <AppTitle />
                 <Status />

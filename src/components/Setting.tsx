@@ -3,17 +3,15 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { history } from '../stores';
-import { MyStoreType } from '../types';
+import { UserStoreType } from '../types';
 import { noImage } from '../utils/noImageIcon';
-
-const ICON_MAX_WIDTH = 256;
-const ICON_MAX_HEIGHT = 256;
+import { createImage } from '../utils';
 
 interface SettingProps {
-    store?: MyStoreType
+    user?: UserStoreType
 }
 
-@inject('store')
+@inject('user')
 @observer
 export default class Setting extends React.Component<SettingProps> {
     nameRef: React.RefObject<HTMLInputElement>;
@@ -26,7 +24,7 @@ export default class Setting extends React.Component<SettingProps> {
         this.passRef = React.createRef();
     }
     saveClickHandler() {
-        const {store} = this.props;
+        const {user} = this.props;
         const newName = this.nameRef.current!.value;
         const newPass = this.passRef.current!.value;
         const files = this.iconRef.current!.files;
@@ -38,59 +36,37 @@ export default class Setting extends React.Component<SettingProps> {
             fr.onload = (ev) => {
                 const result = fr.result;
                 if (result && typeof result === 'string') {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const image = new Image();
-                    image.onload = (ev) => {
-                        let width = image.width;
-                        let height = image.height;
-                        if (width > ICON_MAX_WIDTH && height > ICON_MAX_HEIGHT) {
-                            if (image.width > image.height) {
-                                const ratio = image.height / image.width;
-                                width = ICON_MAX_WIDTH;
-                                height = ICON_MAX_WIDTH * ratio;
-                            } else {
-                                const ratio = image.width / image.height;
-                                width = ICON_MAX_HEIGHT * ratio;
-                                height = ICON_MAX_HEIGHT;
-                            }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx!.clearRect(0, 0, width, height);
-                        ctx!.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-                        const b64 = canvas.toDataURL('image/jpeg');
+                    createImage(result, (b64) => {
                         if (newPass.length !== 0) {
-                            store!.updateUser(newName, b64, newPass).then(() => {
+                            user!.updateUser(newName, b64, newPass).then(() => {
                                 alert('setting save success!');
                             }).catch((err) => {
                                 console.error(err);
                                 alert('setting save fail!');
                             });
                         } else {
-                            store!.updateUser(newName, b64).then(() => {
+                            user!.updateUser(newName, b64).then(() => {
                                 alert('setting save success!');
                             }).catch((err) => {
                                 console.error(err);
                                 alert('setting save fail!');
                             });
                         }
-                    };
-                    image.src = result;
+                    });
                 } else {
                     alert('setting save fail!');
                 }
             };
             fr.readAsDataURL(file);
         } else if (newName.length !== 0 && newPass.length !== 0) {
-            store!.updateUser(newName, noImage, newPass).then(() => {
+            user!.updateUser(newName, noImage, newPass).then(() => {
                 alert('setting save success!');
             }).catch((err) => {
                 console.error(err);
                 alert('setting save fail!');
             });
         } else if (newName.length !== 0) {
-            store!.updateUser(newName).then(() => {
+            user!.updateUser(newName).then(() => {
                 alert('setting save success!');
             }).catch((err) => {
                 console.error(err);
@@ -99,11 +75,11 @@ export default class Setting extends React.Component<SettingProps> {
         }
     }
     render() {
-        const {store} = this.props;
-        if (!store!.logged) {
+        const {user} = this.props;
+        if (!user!.logged) {
             return null;
         } else {
-            const icon = store!.currentUser ? store!.currentUser.icon : noImage;
+            const icon = user!.currentUser ? user!.currentUser.icon : noImage;
             return <React.Fragment>
                 <div className="pure-form pure-form-stacked">
                     <span>screen name</span>
@@ -122,12 +98,12 @@ export default class Setting extends React.Component<SettingProps> {
         }
     }
     componentDidMount() {
-        const {store} = this.props;
-        if (!store!.logged) {
+        const {user} = this.props;
+        if (!user!.logged) {
             history.push('/');
         }
-        if (this.nameRef.current && store!.currentUser) {
-            this.nameRef.current!.value = store!.currentUser!.name
+        if (this.nameRef.current && user!.currentUser) {
+            this.nameRef.current!.value = user!.currentUser!.name
         }
     }
 }
