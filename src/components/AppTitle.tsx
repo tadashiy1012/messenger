@@ -2,17 +2,18 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType } from '../types';
+import { MyStoreType, SettingStoreType } from '../types';
 
 interface AppTitleProps {
     store?: MyStoreType
+    setting?: SettingStoreType
 }
 
-@inject('store')
+@inject('store', 'setting')
 @observer
 export default class AppTitle extends React.Component<AppTitleProps> {
     render() {
-        const {store} = this.props;
+        const {store, setting} = this.props;
         const status = (store!.pcAState.connection === 'connected' && store!.pcAState.dataChannel === 'open') 
             || (store!.pcBState.connection === 'connected' && store!.pcBState.dataChannel === 'open') 
             || (store!.pcCState.connection === 'connected' && store!.pcCState.dataChannel === 'open');
@@ -23,7 +24,7 @@ export default class AppTitle extends React.Component<AppTitleProps> {
             <span css={{paddingLeft:'22px'}}></span>
             <a href="#" onClick={(ev) => {
                 ev.preventDefault();
-                store!.setShowDetail(!store!.showDetail);
+                setting!.setShowDetail(!setting!.showDetail);
             }}>show/hide status detail</a>
         </div>
     }

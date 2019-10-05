@@ -89,14 +89,21 @@ class Caches {
         });
     }
 
+    public load(): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            (async() => {
+                try {
+                    this.caches = await localForage.getItem('user_message_cache') || [];   
+                    resolve(true);
+                } catch (error) {
+                    reject(error);
+                }
+            })();
+        });
+    }
+
     constructor() {
-        (async() => {
-            try {
-                this.caches = await localForage.getItem('user_message_cache') || [];   
-            } catch (error) {
-                console.error(error);
-            }
-        })();
+        this.load().catch(err => console.error(err));
     }
 
 }

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { clientId } from '../stores'
-import { MyStoreType } from '../types';
+import { MyStoreType, SettingStoreType } from '../types';
 
 interface PcStatusProps {
     store?: MyStoreType
@@ -24,15 +24,16 @@ class PcStatus extends React.Component<PcStatusProps> {
 
 interface StatusProps {
     store?: MyStoreType
+    setting?: SettingStoreType
 }
 
-@inject('store')
+@inject('store', 'setting')
 @observer
 export default class Status extends React.Component<StatusProps> {
     render() {
-        const {store} = this.props;
+        const {store, setting} = this.props;
         return <React.Fragment>
-            <div css={{display:store!.showDetail ? 'block':'none'}}>
+            <div css={{display:setting!.showDetail ? 'block':'none'}}>
                 <h2 css={{margin:'2px 0px'}}>status</h2>
                 <h4 css={{margin:'4px 0px'}}>id:{clientId || 'no id'}</h4>
                 <PcStatus />

@@ -189,17 +189,11 @@ export default class PcStore {
                 }
             }, (category: string) => {
                 if (category === 'A') {
-                    const queue = [...this.cdQueueA];
-                    this.cdQueueA = [];
-                    return queue;
+                    return this.cdQueueA;
                 } else if (category === 'B') {
-                    const queue = [...this.cdQueueB];
-                    this.cdQueueB = [];
-                    return queue;
+                    return this.cdQueueB;
                 } else if (category === 'C') {
-                    const queue = [...this.cdQueueC];
-                    this.cdQueueC = [];
-                    return queue;
+                    return this.cdQueueC;
                 } else {
                     return [];
                 }

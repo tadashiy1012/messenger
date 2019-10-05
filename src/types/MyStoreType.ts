@@ -21,14 +21,6 @@ export default interface MyStoreType {
     login(email: string, password: string): Promise<Boolean>
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
-    showDetail: Boolean
-    setShowDetail(show: Boolean): void
-    showSetting: Boolean
-    setShowSetting(show: Boolean): void
-    showUserTarget: string
-    setShowUserTarget(targetSerial: string | null): void
-    showMessageTarget: string
-    setShowMessageTarget(targetId: string | null): void
     pcAState: PcStateType
     pcBState: PcStateType
     pcCState: PcStateType

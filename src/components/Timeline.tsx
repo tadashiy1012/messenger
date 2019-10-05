@@ -2,16 +2,17 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { MyStoreType, SayType } from '../types';
+import { MyStoreType, SayType, SettingStoreType } from '../types';
 import Writer from './Writer';
 import GlobalTL from './TimelineGlobal';
 import LocalTL from './TimelineLocal';
 
 interface TimeLineProps {
     store?: MyStoreType
+    setting?: SettingStoreType
 }
 
-@inject('store')
+@inject('store', 'setting')
 @observer
 export default class TimeLine extends React.Component<TimeLineProps> {
     likeClickHandler(tgt: SayType) {
@@ -23,8 +24,8 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         store!.updateUserUnLike(tgt).catch(err => console.error(err));
     }
     messageClickHandler(tgt: SayType) {
-        const {store} = this.props;
-        store!.setShowMessageTarget(tgt.id);
+        const {setting} = this.props;
+        setting!.setShowMessageTarget(tgt.id);
     }
     render() {
         const {store} = this.props;

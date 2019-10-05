@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { history } from '../stores';
-import { MyStoreType, SayType, UserType } from '../types';
+import { MyStoreType, SayType, UserType, SettingStoreType } from '../types';
 import UserSay from './UserSay';
 import { Follow, Follower } from './UserFollow';
 
@@ -21,6 +21,7 @@ const UnFollowButton = (props: {store?: MyStoreType, tgtUser: UserType}) => (
 
 interface UserProps {
     store?: MyStoreType
+    setting?: SettingStoreType
 }
 
 interface UserState {
@@ -29,7 +30,7 @@ interface UserState {
     mode: number
 }
 
-@inject('store')
+@inject('store', 'setting')
 @observer
 export default class User extends React.Component<UserProps, UserState> {
     constructor(props: Readonly<UserProps>) {
@@ -41,8 +42,8 @@ export default class User extends React.Component<UserProps, UserState> {
         };
     }
     render() {
-        const {store} = this.props;
-        const tgtUser = store!.findUser(store!.showUserTarget);
+        const {store, setting} = this.props;
+        const tgtUser = store!.findUser(setting!.showUserTarget!);
         if (tgtUser) {
             const currentUser = store!.getUser;
             let followBtn = null;
@@ -98,13 +99,12 @@ export default class User extends React.Component<UserProps, UserState> {
         }
     }
     componentDidMount() {
-        const {store} = this.props;
+        const {store, setting} = this.props;
         if (history) {
             const params = history.location.search.substring(1).split('&');
             if (params.length > 0) {
                 const tgtSerial = params[0].split('=')[1];
-                console.log(tgtSerial);
-                store!.setShowUserTarget(tgtSerial);
+                setting!.setShowUserTarget(tgtSerial);
                 store!.findUserAsync(tgtSerial).then((resp) => {
                     if (resp) {
                         store!.findUserSay(resp.serial).then((resp2) => {

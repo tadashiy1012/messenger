@@ -78,15 +78,22 @@ class Users {
         });
     }
 
+    public load(): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            (async () => {
+                try {
+                    this.list = await localForage.getItem<UserType[]>('user_list') || [];
+                    resolve(true);
+                } catch (error) {
+                    reject(error);
+                }
+            })();
+        });
+    }
+
     constructor() {
-        (async () => {
-            try {
-                this.list = await localForage.getItem<UserType[]>('user_list') || [];
-            } catch (error) {
-                console.error(error);
-            }
-        })();
-    }    
+        this.load().catch(err => console.error(err));
+    }
 
 }
 

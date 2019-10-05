@@ -94,6 +94,7 @@ export default class Transceivers {
                             console.log('send pcA candidate');
                         }).catch(err => console.error(err));
                     });
+                    cdQueueA.splice(0, cdQueueA.length);
                     resolve(true);
                 } else {
                     resolve(false);
@@ -181,6 +182,7 @@ export default class Transceivers {
                             console.log('send pcB candidate');
                         }).catch(err => console.error(err));
                     });
+                    cdQueueB.splice(0, cdQueueB.length);
                     resolve(true);
                 }).catch((err) => console.error(err));
             } else if (id !== clientId && to === clientId && offer 
@@ -219,6 +221,7 @@ export default class Transceivers {
                             console.log('send pcC candidate');
                         }).catch(err => console.error(err));
                     });
+                    cdQueueC.splice(0, cdQueueC.length);
                     resolve(true);
                 }).catch((err) => console.error(err));
             } else {

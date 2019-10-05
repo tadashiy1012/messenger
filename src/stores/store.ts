@@ -382,38 +382,6 @@ export default class MyStore {
     }
 
     @observable
-    showDetail: Boolean = false;
-
-    @action
-    setShowDetail(show: Boolean) {
-        this.showDetail = show;
-    }
-
-    @observable
-    showSetting: Boolean = false;
-
-    @action
-    setShowSetting(show: Boolean) {
-        this.showSetting = show;
-    }
-
-    @observable
-    showUserTarget: string | null = null;
-
-    @action
-    setShowUserTarget(targetSerial: string | null) {
-        this.showUserTarget = targetSerial;
-    }
-
-    @observable
-    showMessageTarget: string | null = null;
-
-    @action
-    setShowMessageTarget(targetId: string | null) {
-        this.showMessageTarget = targetId;
-    }
-
-    @observable
     pcAState: PcStateType = {
         target: null,
         connection: 'n/a',
