@@ -2,20 +2,13 @@ import clientId from './clientId';
 import { WsPayloadType, PcStateType } from "../types";
 import { MyWebSocket } from "../utils";
 import connStateStore from './connStateStore';
+import pcStore from './pcStore';
 
 export default class Transceivers {
 
-    constructor(
-        private getWs: () => MyWebSocket | null,
-        private getPc: (category: string) => RTCPeerConnection | null,
-        private getCdQueue: (category: string) => RTCIceCandidate[],
-        private getPOffer: () => string | null,
-        private resetPOffer: () => void,
-    ) {}
-
     preOfferTransceiver(payload: WsPayloadType) {
         return new Promise<Boolean>((resolve) => {
-            const ws = this.getWs();
+            const ws = pcStore.getWs();
             const {id, to, preOffer} = payload;
             if (id !== clientId && to === 'any') {
                 console.log('# message for all');
@@ -45,9 +38,9 @@ export default class Transceivers {
 
     offerTansceiver(payload: WsPayloadType) {
         return new Promise<Boolean>((resolve) => {
-            const ws = this.getWs();
-            const pc = this.getPc('A');
-            const preOffer = this.getPOffer();
+            const ws = pcStore.getWs();
+            const pc = pcStore.getPc('A');
+            const preOffer = pcStore.getPreOffer();
             const {id, to, preAnswer} = payload;
             if (id !== clientId && to === clientId && preAnswer && preAnswer === preOffer) {
                 console.log('receive pre answer', preOffer);
@@ -57,7 +50,7 @@ export default class Transceivers {
                     offer: pc!.localDescription!.sdp
                 };
                 ws!.send(data).then(() => {
-                    this.resetPOffer();
+                    pcStore.clearPreOffer();
                     console.log('pcA send offer');
                 }).catch(err => console.error(err));
                 resolve(true);
@@ -69,9 +62,9 @@ export default class Transceivers {
 
     answerTransceiver(payload: WsPayloadType) {
         return new Promise<Boolean>((resolve) => {
-            const ws = this.getWs();
-            const pcA = this.getPc('A');
-            const cdQueueA = this.getCdQueue('A');
+            const ws = pcStore.getWs();
+            const pcA = pcStore.getPc('A');
+            const cdQueueA = pcStore.getQueue('A');
             const {id, to, pc, answer} = payload;
             if (id !== clientId && to === clientId && answer) {
                 console.log('pc <<', pc, ':', id);
@@ -83,7 +76,7 @@ export default class Transceivers {
                     connStateStore.pcAState.target = id;
                     pcA.setRemoteDescription(desc).catch((err) => console.error(err));
                     console.log('pcA set answer');
-                    cdQueueA.forEach(e => {
+                    cdQueueA!.forEach(e => {
                         const data = {
                             id: clientId,
                             to: id,
@@ -94,7 +87,7 @@ export default class Transceivers {
                             console.log('send pcA candidate');
                         }).catch(err => console.error(err));
                     });
-                    cdQueueA.splice(0, cdQueueA.length);
+                    pcStore.clearQueue('A');
                     resolve(true);
                 } else {
                     resolve(false);
@@ -107,9 +100,9 @@ export default class Transceivers {
 
     candidateTransceiver(payload: WsPayloadType) {
         return new Promise<Boolean>((resolve) => {
-            const pcA = this.getPc('A');
-            const pcB = this.getPc('B');
-            const pcC = this.getPc('C');
+            const pcA = pcStore.getPc('A');
+            const pcB = pcStore.getPc('B');
+            const pcC = pcStore.getPc('C');
             const {id, to, pc, candidate} = payload;
             if (id !== clientId && to === clientId && candidate && pc) {
                 const cd = new RTCIceCandidate({
@@ -140,11 +133,11 @@ export default class Transceivers {
 
     pcBCTransceiver(payload: WsPayloadType) {
         return new Promise<Boolean>((resolve) => {
-            const ws = this.getWs();
-            const pcB = this.getPc('B');
-            const pcC = this.getPc('C');
-            const cdQueueB = this.getCdQueue('B');
-            const cdQueueC = this.getCdQueue('C');
+            const ws = pcStore.getWs();
+            const pcB = pcStore.getPc('B');
+            const pcC = pcStore.getPc('C');
+            const cdQueueB = pcStore.getQueue('B');
+            const cdQueueC = pcStore.getQueue('C');
             const {id, to, offer} = payload;
             if (id !== clientId && to === clientId && offer 
                     && pcB && pcB.remoteDescription === null) {
@@ -171,7 +164,7 @@ export default class Transceivers {
                     ws!.send(data).then(() => {
                         console.log('send pcB answer');
                     }).catch((err) => console.error(err));
-                    cdQueueB.forEach(e => {
+                    cdQueueB!.forEach(e => {
                         const data = {
                             id: clientId,
                             to: id,
@@ -182,7 +175,7 @@ export default class Transceivers {
                             console.log('send pcB candidate');
                         }).catch(err => console.error(err));
                     });
-                    cdQueueB.splice(0, cdQueueB.length);
+                    pcStore.clearQueue('B')
                     resolve(true);
                 }).catch((err) => console.error(err));
             } else if (id !== clientId && to === clientId && offer 
@@ -210,7 +203,7 @@ export default class Transceivers {
                     ws!.send(data).then(() => {
                         console.log('send pcC answer');
                     }).catch((err) => console.error(err));
-                    cdQueueC.forEach(e => {
+                    cdQueueC!.forEach(e => {
                         const data = {
                             id: clientId,
                             to: id,
@@ -221,7 +214,7 @@ export default class Transceivers {
                             console.log('send pcC candidate');
                         }).catch(err => console.error(err));
                     });
-                    cdQueueC.splice(0, cdQueueC.length);
+                    pcStore.clearQueue('C');
                     resolve(true);
                 }).catch((err) => console.error(err));
             } else {

@@ -31,6 +31,52 @@ class PcStore {
     
     private ws: MyWebSocket | null = null;
 
+    public getWs(): MyWebSocket | null {
+        return this.ws;
+    }
+    
+    public getPc(category: string): RTCPeerConnection | null {
+        if (category === 'A') {
+            return this.pcA;
+        } else if (category === 'B') {
+            return this.pcB;
+        } else if (category === 'C') {
+            return this.pcC;
+        } else {
+            return null;
+        }
+    }
+    
+    public getQueue(category: string): RTCIceCandidate[] | null {
+        if (category === 'A') {
+            return this.cdQueueA;
+        } else if (category === 'B') {
+            return this.cdQueueB;
+        } else if (category === 'C') {
+            return this.cdQueueC;
+        } else {
+            return null;
+        }
+    }
+
+    public clearQueue(category: string): void {
+        if (category === 'A') {
+            this.cdQueueA = [];
+        } else if (category === 'B') {
+            this.cdQueueB = [];
+        } else if (category === 'C') {
+            this.cdQueueC = [];
+        }
+    }
+    
+    public getPreOffer(): string | null {
+        return this.preOffer;
+    }
+    
+    public clearPreOffer(): void {
+        this.preOffer = null;
+    }
+
     private pcACloseFn() {
         if (this.dcA) {this.dcA.close();}
         if(this.pcA) {this.pcA.close();}
@@ -166,55 +212,27 @@ class PcStore {
     };
 
     constructor() {
-        (async() => {
-            this.senders = new Senders();
-            this.receivers = new Receivers();
-            this.transceivers = new Transceivers(() => {
-                return this.ws;
-            }, (category: string) => {
-                if (category === 'A') {
-                    return this.pcA;
-                } else if (category === 'B') {
-                    return this.pcB;
-                } else if (category === 'C') {
-                    return this.pcC;
-                } else {
-                    return null;
-                }
-            }, (category: string) => {
-                if (category === 'A') {
-                    return this.cdQueueA;
-                } else if (category === 'B') {
-                    return this.cdQueueB;
-                } else if (category === 'C') {
-                    return this.cdQueueC;
-                } else {
-                    return [];
-                }
-            }, () => {
-                return this.preOffer;
-            }, () => {
-                this.preOffer = null;
-            });
-            this.watchers = new Watchers();
-            this.timerTask();
-            makeWS(
-                this.transceivers.preOfferTransceiver.bind(this.transceivers),
-                this.transceivers.offerTansceiver.bind(this.transceivers), 
-                this.transceivers.answerTransceiver.bind(this.transceivers), 
-                this.transceivers.candidateTransceiver.bind(this.transceivers), 
-                this.transceivers.pcBCTransceiver.bind(this.transceivers)
-            ).then((ws) => {
-                console.log('websocket create success!');
-                this.ws = ws;
-                this.pcACloseFn();
-                this.pcBCloseFn();
-                this.pcCCloseFn();
-                setInterval(() => {
-                    this.timerTask();
-                }, 2000);
-            }).catch(err => console.error(err));
-        })();
+        this.senders = new Senders();
+        this.receivers = new Receivers();
+        this.transceivers = new Transceivers();
+        this.watchers = new Watchers();
+        this.timerTask();
+        makeWS(
+            this.transceivers.preOfferTransceiver.bind(this.transceivers),
+            this.transceivers.offerTansceiver.bind(this.transceivers), 
+            this.transceivers.answerTransceiver.bind(this.transceivers), 
+            this.transceivers.candidateTransceiver.bind(this.transceivers), 
+            this.transceivers.pcBCTransceiver.bind(this.transceivers)
+        ).then((ws) => {
+            console.log('websocket create success!');
+            this.ws = ws;
+            this.pcACloseFn();
+            this.pcBCloseFn();
+            this.pcCCloseFn();
+            setInterval(() => {
+                this.timerTask();
+            }, 2000);
+        }).catch(err => console.error(err));
     }
 
 }
