@@ -76,7 +76,8 @@
     "globals": {
       "ts-jest": {
         "tsConfig": "tsconfig.json"
-      }
+      },
+      "RTCPeerConnection": null
     },
     "testMatch": [
       "**/tests/**/*.test.ts"

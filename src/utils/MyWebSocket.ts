@@ -5,6 +5,9 @@ export default class MyWebSocket {
     constructor(url: string) {
         this.ws = new WebSocket(url)
     }
+    getCurrentState(): number {
+        return this.ws.readyState;
+    }
     setOnOpenHandler(handler: (ev: Event) => void) {
         this.ws.onopen = (ev) => {
             handler(ev);
