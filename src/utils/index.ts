@@ -9,6 +9,8 @@ import makePCBC from './makePCBC';
 import escapeHtml from './escapeHtml';
 import createImage from './createImage';
 import getFullDateStr from './getFullDateStr';
+import getJsonCopy from './getJsonCopy';
+import compareJson from './compareJson';
 
 export {
     makePC, PCBuilder,
@@ -20,4 +22,6 @@ export {
     escapeHtml,
     createImage,
     getFullDateStr,
+    getJsonCopy,
+    compareJson,
 }

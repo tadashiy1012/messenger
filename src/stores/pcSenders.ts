@@ -2,6 +2,7 @@ import clientId from './clientId';
 import { CacheType, UserType } from "../types";
 import users from './users';
 import caches from './caches';
+import { getJsonCopy } from '#/utils';
 
 export default class Senders {
 
@@ -13,7 +14,7 @@ export default class Senders {
     cacheSender(dc: RTCDataChannel): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             const cache = caches.getCaches;
-            this.prevCache = JSON.parse(JSON.stringify(cache));
+            this.prevCache = getJsonCopy(cache);
             const dts = cache.map(e => e.timestamp).sort();
             if (this.beforeCacheSend < dts[dts.length - 1] 
                 || JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
@@ -42,7 +43,7 @@ export default class Senders {
             if (this.beforeListSend < dts[dts.length - 1] 
                 || JSON.stringify(list) !== JSON.stringify(this.prevUsers)) {
                 console.log(dts, this.beforeListSend);
-                this.prevUsers = JSON.parse(JSON.stringify(list));
+                this.prevUsers = getJsonCopy(list);
                 this.beforeListSend = Date.now();
                 const json = {
                     from: clientId,

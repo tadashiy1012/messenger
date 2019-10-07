@@ -2,13 +2,14 @@ import * as localForage from 'localforage';
 import { CacheType, UserType } from "../types";
 import users from './users';
 import caches from './caches';
+import { getJsonCopy } from '#/utils';
 
 export default class Receivers {
 
     cacheReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
         return new Promise((resolve, reject) => {
             if (payload && payload.cache) {
-                const cache: Array<CacheType> = JSON.parse(JSON.stringify(caches.getCaches));
+                const cache = getJsonCopy(caches.getCaches);
                 console.log('<<received cache>>', cache, payload.cache);
                 payload.cache.forEach((e: CacheType) => {
                     const found = cache.find(ee => ee.id == e.id);
@@ -41,7 +42,7 @@ export default class Receivers {
         return new Promise((resolve, reject) => {
             if (payload && payload.userList) {
                 console.log('<<received userList>>');
-                const list: Array<UserType> = JSON.parse(JSON.stringify(users.getUsers));
+                const list = getJsonCopy(users.getUsers);
                 payload.userList.forEach((e: UserType) => {
                     const found = list.find(ee => ee.serial === e.serial);
                     if (found) {

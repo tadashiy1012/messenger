@@ -3,6 +3,7 @@ import users from './users';
 import caches from './caches';
 import userStore from './userStore';
 import sayStore from './sayStore';
+import { getJsonCopy } from "#/utils";
 
 export default class Watchers {
 
@@ -17,7 +18,7 @@ export default class Watchers {
                 console.log('!cache changed!');
                 caches.save().then((result) => {
                     if (result) {
-                        this.prevCache = JSON.parse(JSON.stringify(caches.getCaches));
+                        this.prevCache = getJsonCopy(caches.getCaches);
                         let ids = new Set(caches.getCaches.map(e => e.id));
                         let newHear: Array<SayType> = [];
                         ids.forEach(e => {
@@ -88,7 +89,7 @@ export default class Watchers {
                 users.save().then((result) => {
                     if (result) {
                         console.log('user list saved!');
-                        this.prevList = JSON.parse(JSON.stringify(users.getUsers));
+                        this.prevList = getJsonCopy(users.getUsers);
                         resolve([true, {}]);
                     } else {
                         resolve([false, {}]);
