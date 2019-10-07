@@ -2,6 +2,7 @@ import { observable, computed } from "mobx";
 import { SayType } from "../types";
 import clientId from './clientId';
 import users from './users';
+import caches from './caches';
 import userStore from './userStore';
 
 class SayStore {
@@ -29,6 +30,24 @@ class SayStore {
                 }
             } else {
                 reject(new Error('login state error!!'));
+            }
+        });
+    }
+
+    public updateSay(say: SayType): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            const tgtCache = caches.getCaches.find(e => e.id === say.authorId);
+            if (tgtCache) {
+                const tgtSay = tgtCache.says.find(e => e.id === say.id);
+                if (tgtSay) {
+                    tgtSay.like = say.like;
+                    tgtSay.reply = say.reply;
+                    resolve(true);
+                } else {
+                    reject(new Error('target say not found'));
+                }
+            } else {
+                reject(new Error('target cache not found'));
             }
         });
     }

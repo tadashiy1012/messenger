@@ -8,8 +8,8 @@ import {
     history, userStore, sayStore, pcStore, settingStore, connStateStore
 } from './stores';
 import { 
-    AppTitle, Status, LoginContainer, TimeLine, 
-    Setting as MySetting, User as MyUser, Navi
+    AppTitle, Status, Navi, LoginContainer, TimeLine, 
+    Setting as MySetting, User as MyUser, Message as MyMessage
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
@@ -35,6 +35,13 @@ const User = () => (
     </React.Fragment>
 );
 
+const Message = () => (
+    <React.Fragment>
+        <h2>Message</h2>
+        <MyMessage />
+    </React.Fragment>
+);
+
 const Setting = () => (
     <React.Fragment>
         <h2>Setting</h2>
@@ -55,6 +62,9 @@ const App = () => (
                     </Route>
                     <Route path="/user">
                         <User />
+                    </Route>
+                    <Route path="/message">
+                        <Message />
                     </Route>
                     <Route path="/setting">
                         <Setting />
