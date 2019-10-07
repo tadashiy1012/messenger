@@ -8,6 +8,7 @@ import makePreOffer from './makePreOffer';
 import makePCBC from './makePCBC';
 import escapeHtml from './escapeHtml';
 import createImage from './createImage';
+import getFullDateStr from './getFullDateStr';
 
 export {
     makePC, PCBuilder,
@@ -18,4 +19,5 @@ export {
     setupDC,
     escapeHtml,
     createImage,
+    getFullDateStr,
 }

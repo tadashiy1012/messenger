@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { UserStoreType, SayType, SayStoreType } from '../types';
-import escape_html from '../utils/escapeHtml';
+import { escapeHtml, getFullDateStr } from '#/utils';
 import { Link } from 'react-router-dom';
 
 interface LocalProps {
@@ -50,12 +50,10 @@ export default class LocalTL extends React.Component<LocalProps> {
                             borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                     </Link>
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
-                    <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
-                        {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
-                    </span>
+                    <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>{getFullDateStr(e.date)}</span>
                 </div>
                 <div css={{marginLeft:'22px', padding:'6px'}}>
-                    <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
+                    <span dangerouslySetInnerHTML={{__html: escapeHtml(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
                     <div css={{display:'flex', alignItems:'center'}}>

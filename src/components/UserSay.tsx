@@ -3,7 +3,7 @@ import React from "react";
 import {css, jsx} from '@emotion/core';
 import { UserStoreType, SayType } from "../types";
 import { inject, observer } from "mobx-react";
-import escape_html from "../utils/escapeHtml";
+import { escapeHtml, getFullDateStr } from '#/utils';
 
 interface SayProps {
     user?: UserStoreType
@@ -16,7 +16,6 @@ export default class UserSay extends React.Component<SayProps> {
     render() {
         const {user} = this.props;
         const child = this.props.say.map((e) => {
-            const dt = new Date(e.date);
             const name = user!.findAuthorName(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
@@ -24,11 +23,11 @@ export default class UserSay extends React.Component<SayProps> {
                         borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                     <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>
-                        {dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate() + ' ' + dt.getHours() + ':' + dt.getMinutes()}
+                        {getFullDateStr(e.date)}
                     </span>
                 </div>
                 <div css={{marginLeft:'22px', padding:'6px'}}>
-                    <span dangerouslySetInnerHTML={{__html: escape_html(e.say).replace('\n', '<br/>')}}></span>
+                    <span dangerouslySetInnerHTML={{__html: escapeHtml(e.say).replace('\n', '<br/>')}}></span>
                 </div>
                 <div css={{display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'}}>
                     <div css={{display:'flex', alignItems:'center'}}>
