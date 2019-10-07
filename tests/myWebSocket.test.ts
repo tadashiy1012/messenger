@@ -1,4 +1,4 @@
-import MyWebSocket from '#/utils/MyWebSocket';
+import MyWebSocket from '../src/utils/MyWebSocket';
 
 describe('MyWebSocket', () => {
     test('MyWebSocketが正常に機能すること', (done) => {

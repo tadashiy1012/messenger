@@ -1,4 +1,4 @@
-import users from '#/stores/users';
+import users from '../src/stores/users';
 
 describe('users', () => {
     test('usersが正常に機能する', () => {

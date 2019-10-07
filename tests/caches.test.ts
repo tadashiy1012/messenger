@@ -1,4 +1,4 @@
-import caches from '#/stores/caches';
+import caches from '../src/stores/caches';
 
 describe('caches', () => {
     test('cachesが正常に機能する', () => {

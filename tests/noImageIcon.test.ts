@@ -1,4 +1,4 @@
-import {noImage} from '#/utils/noImageIcon';
+import {noImage} from '../src/utils/noImageIcon';
 
 describe('noImageIcon', () => {
     test('should noImage exist', () => {

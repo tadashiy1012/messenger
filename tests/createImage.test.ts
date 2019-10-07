@@ -1,5 +1,5 @@
-import createImage from '#/utils/createImage';
-import {noImage} from '#/utils/noImageIcon';
+import createImage from '../src/utils/createImage';
+import {noImage} from '../src/utils/noImageIcon';
 import 'jest-canvas-mock';
 
 describe('createImage', () => {

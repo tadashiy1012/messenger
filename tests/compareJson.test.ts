@@ -1,5 +1,5 @@
-import compareJson from '#/utils/compareJson';
-import getJsonCopy from '#/utils/getJsonCopy';
+import compareJson from '../src/utils/compareJson';
+import getJsonCopy from '../src/utils/getJsonCopy';
 
 describe('compareJson', () => {
     test('compareJsonが正常に機能すること', () => {

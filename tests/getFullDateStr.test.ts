@@ -1,4 +1,4 @@
-import getFullDateStr from '#/utils/getFullDateStr';
+import getFullDateStr from '../src/utils/getFullDateStr';
 
 describe('getFullDateStr', () => {
     test('getFullDateStrが正常に機能すること', () => {

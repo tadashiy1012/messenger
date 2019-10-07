@@ -1,4 +1,4 @@
-import {PCBuilder} from '#/utils/makePC';
+import {PCBuilder} from '../src/utils/makePC';
 
 describe('makePc', () => {
     (RTCPeerConnection as any) = jest.fn();
