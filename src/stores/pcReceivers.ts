@@ -2,7 +2,7 @@ import * as localForage from 'localforage';
 import { CacheType, UserType } from "../types";
 import users from './users';
 import caches from './caches';
-import { getJsonCopy } from '#/utils';
+import { getJsonCopy } from '../utils';
 
 export default class Receivers {
 

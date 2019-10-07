@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { UserStoreType, SayType, SayStoreType } from '../types';
-import { escapeHtml, getFullDateStr } from '#/utils';
+import { escapeHtml, getFullDateStr } from '../utils';
 import { Link } from 'react-router-dom';
 
 interface LocalProps {

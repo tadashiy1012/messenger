@@ -3,7 +3,7 @@ import users from './users';
 import caches from './caches';
 import userStore from './userStore';
 import sayStore from './sayStore';
-import { getJsonCopy } from "#/utils";
+import { getJsonCopy } from "../utils";
 
 export default class Watchers {
 

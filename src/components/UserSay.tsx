@@ -3,7 +3,7 @@ import React from "react";
 import {css, jsx} from '@emotion/core';
 import { UserStoreType, SayType } from "../types";
 import { inject, observer } from "mobx-react";
-import { escapeHtml, getFullDateStr } from '#/utils';
+import { escapeHtml, getFullDateStr } from '../utils';
 
 interface SayProps {
     user?: UserStoreType

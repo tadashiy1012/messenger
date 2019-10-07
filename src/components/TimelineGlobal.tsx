@@ -4,7 +4,7 @@ import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { UserStoreType, SayType, SayStoreType } from '../types';
 import { Link } from 'react-router-dom';
-import { escapeHtml, getFullDateStr } from '#/utils';
+import { escapeHtml, getFullDateStr } from '../utils';
 
 interface GlobalProps {
     user?: UserStoreType

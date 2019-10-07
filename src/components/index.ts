@@ -4,6 +4,7 @@ import Status from "./Status";
 import TimeLine from './Timeline';
 import Setting from './Setting';
 import User from './User';
+import Navi from './Navi';
 
 export {
     AppTitle,
@@ -12,4 +13,5 @@ export {
     TimeLine,
     Setting,
     User,
+    Navi,
 };
