@@ -23,10 +23,6 @@ export default class TimeLine extends React.Component<TimeLineProps> {
         const {user} = this.props;
         user!.updateUserUnLike(tgt).catch(err => console.error(err));
     }
-    messageClickHandler(tgt: SayType) {
-        const {setting} = this.props;
-        setting!.setShowMessageTarget(tgt.id);
-    }
     render() {
         const {user} = this.props;
         const writer = user!.logged ? <Writer /> : null;
@@ -34,11 +30,9 @@ export default class TimeLine extends React.Component<TimeLineProps> {
             {writer}
             <div css={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>
                 <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} 
-                    unLikeClickHandler={this.unLikeClickHandler.bind(this)}
-                    messageClickHandler={this.messageClickHandler.bind(this)} />
+                    unLikeClickHandler={this.unLikeClickHandler.bind(this)} />
                 <LocalTL likeClickHandler={this.likeClickHandler.bind(this)}
-                    unLikeClickHandler={this.unLikeClickHandler.bind(this)}
-                    messageClickHandler={this.messageClickHandler.bind(this)} /> 
+                    unLikeClickHandler={this.unLikeClickHandler.bind(this)} /> 
             </div>
         </React.Fragment>
     }

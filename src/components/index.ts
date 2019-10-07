@@ -4,6 +4,7 @@ import Status from "./Status";
 import TimeLine from './Timeline';
 import Setting from './Setting';
 import User from './User';
+import Message from './Message';
 import Navi from './Navi';
 
 export {
@@ -13,5 +14,6 @@ export {
     TimeLine,
     Setting,
     User,
+    Message,
     Navi,
 };
