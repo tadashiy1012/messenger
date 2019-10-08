@@ -54,6 +54,26 @@ class UserStore {
     }
 
     @action
+    updateUserProfile(prof: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.getUser);
+                user.profile = prof;
+                this.userNormalize(user);
+                user.update = Date.now();
+                const result = users.update(user);
+                if (!result) {
+                    users.add(user);
+                }
+                this.currentUser = user;
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
+
+    @action
     updateUserFollow(tgtSerial: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
@@ -214,6 +234,7 @@ class UserStore {
                     email: found.email,
                     password: found.password,
                     icon: found.icon,
+                    profile: found.profile || '',
                     follow: found.follow,
                     follower: found.follower,
                     like: found.like,
@@ -267,6 +288,7 @@ class UserStore {
                     email: email,
                     password: hash,
                     icon: noImage,
+                    profile: '',
                     follow: [],
                     follower: [],
                     like: [],

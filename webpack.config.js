@@ -10,7 +10,8 @@ module.exports = {
         rules: [
             {
                 test: /\.(tsx|ts)$/,
-                use: 'awesome-typescript-loader'
+                use: 'awesome-typescript-loader',
+                exclude: '/tests/'
             },
             {
                 test: /\.(js)$/,
