@@ -75,4 +75,24 @@ export default class Finder {
         return says.find(e => e.id === sayId);
     }
 
+    public static searchSay(keyword: string): SayType[] {
+        const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
+            acc.push(...e.says);
+            return acc;
+         }, []);
+         return says.filter(e => e.say.indexOf(keyword) > -1);
+    }
+
+    public static searchUser(keyword: string): UserType[] {
+        return users.getUsers.filter(e => {
+            if (e.name.indexOf(keyword) > -1 
+                || (e.email && e.email.indexOf(keyword) > -1) 
+                || (e.profile && e.profile.indexOf(keyword) > -1)) {
+                return true;
+            } else {
+                return false;
+            }
+        })
+    }
+
 }

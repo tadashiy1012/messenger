@@ -38,10 +38,10 @@ export default class LocalTL extends React.Component<LocalProps> {
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.props.unLikeClickHandler(e)}}>favorite</i> :
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
-                    this.props.likeClickHandler(e)}}>favorite_border</i>;
+                    this.props.likeClickHandler(e)}}>favorite_border</i>
             const naLike = crntUser && e.like.find(ee => ee === crntUser!.serial) ? 
                 <i className="material-icons">favorite</i> :
-                <i className="material-icons">favorite_border</i>;
+                <i className="material-icons">favorite_border</i>
             return <li key={e.id} css={{
                 borderBottom:'solid 1px #ddd', padding:'6px', cursor:'pointer', '&:hover':{backgroundColor: '#eee'}
             }} onClick={(ev) => {

@@ -9,7 +9,8 @@ import {
 } from './stores';
 import { 
     AppTitle, Status, Navi, LoginContainer, TimeLine, 
-    Setting as MySetting, User as MyUser, Message as MyMessage
+    Setting as MySetting, User as MyUser, 
+    Message as MyMessage, Search as MySearch
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
@@ -45,6 +46,7 @@ const Message = () => (
 const Search = () => (
     <React.Fragment>
         <h2>Search</h2>
+        <MySearch />
     </React.Fragment>
 );
 

@@ -14,6 +14,12 @@ class SettingStore {
     @observable
     showMessageTarget: string | null = null;
 
+    @observable
+    showSearchTarget: string | null = null;
+
+    @observable
+    showSearchMode: number = 0;
+
     @action
     setShowDetail(show: Boolean) {
         this.showDetail = show;
@@ -32,6 +38,16 @@ class SettingStore {
     @action
     setShowMessageTarget(targetId: string | null) {
         this.showMessageTarget = targetId;
+    }
+
+    @action
+    setShowSearchTarget(targetWord: string | null) {
+        this.showSearchTarget = targetWord;
+    }
+
+    @action
+    setShowSearchMode(mode: number) {
+        this.showSearchMode = mode;
     }
 
 }
