@@ -35,7 +35,7 @@ class Follow extends React.Component<FollowProps, {follows:{id:string, sayLen:nu
                                 <span css={{margin:'4px'}}>{follow.name}</span>
                             </Link>
                         </div>
-                        <div><span css={{margin:'6px'}}>sample profile sample profile<br />sample profile sample profile</span></div>
+                        <div css={{display:'flex', alignItems:'center'}}><span css={{margin:'6px'}}>{follow.profile || ''}</span></div>
                         <div css={{display:'flex', alignItems:'center'}}> 
                             <span css={{margin:'4px'}}>say:{sayCount}</span>
                             <span css={{margin:'4px'}}>follow:{follow.follow.length}</span>
@@ -90,7 +90,7 @@ class Follower extends React.Component<FollowerProps, {followers:{id:string, say
                                 <span css={{margin:'4px'}}>{follower.name}</span>
                             </Link>
                         </div>
-                        <div><span css={{margin:'6px'}}>sample profile sample profile<br />sample profile sample profile</span></div>
+                        <div css={{display:'flex', alignItems:'center'}}><span css={{margin:'6px'}}>{follower.profile || ''}</span></div>
                         <div css={{display:'flex', alignItems:'center'}}> 
                             <span css={{margin:'4px'}}>say:{sayCount}</span>
                             <span css={{margin:'4px'}}>follow:{follower.follow.length}</span>

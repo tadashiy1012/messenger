@@ -5,6 +5,7 @@ export default interface UserType {
     password: string
     clientId: string
     icon: string
+    profile: string
     update: number
     follow: string[]
     follower: string[]

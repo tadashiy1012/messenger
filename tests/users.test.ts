@@ -14,6 +14,7 @@ describe('users', () => {
             email: 'hoge@hogemail.com',
             password: 'hoge',
             icon: 'hoge',
+            profile: 'hoge',
             like: [],
             follow: [],
             follower: [],

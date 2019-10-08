@@ -35,6 +35,7 @@ interface UserState {
 @observer
 export default class User extends React.Component<UserProps, UserState> {
     private prevQuery: string[];
+    private unlisten: any;
     constructor(props: Readonly<UserProps>) {
         super(props);
         this.state = {
@@ -43,7 +44,7 @@ export default class User extends React.Component<UserProps, UserState> {
             mode: 0
         };
         this.prevQuery = [];
-        history.listen((location) => {
+        this.unlisten = history.listen((location) => {
             const {setting} = this.props;
             if (location.pathname === '/user' && location.search) {
                 const query = location.search.substring(1).split('&');
@@ -96,7 +97,7 @@ export default class User extends React.Component<UserProps, UserState> {
                     {unfollowBtn}
                 </div>
                 <div>
-                    <p css={{padding:'8px'}}>sample profile sample profile<br />sample profile sample profile</p>
+                    <p css={{padding:'8px'}}>{tgtUser.profile || ''}</p>
                 </div>
                 <div css={{display:'flex', marginTop:'14px'}}>
                     <div css={{margin:'0px 4px'}}>
@@ -139,6 +140,8 @@ export default class User extends React.Component<UserProps, UserState> {
                 });
             }
         }
-        
+    }
+    componentWillUnmount() {
+        this.unlisten();
     }
 }
