@@ -11,6 +11,7 @@ import createImage from './createImage';
 import getFullDateStr from './getFullDateStr';
 import getJsonCopy from './getJsonCopy';
 import compareJson from './compareJson';
+import Finder from './finder';
 
 export {
     makePC, PCBuilder,
@@ -24,4 +25,5 @@ export {
     getFullDateStr,
     getJsonCopy,
     compareJson,
+    Finder,
 }

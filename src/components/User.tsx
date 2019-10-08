@@ -1,9 +1,10 @@
 /** @jsx jsx */
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
-import {css, jsx} from '@emotion/core';
+import { css, jsx } from '@emotion/core';
 import { history } from '../stores';
 import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
+import { Finder } from '../utils';
 import UserSay from './UserSay';
 import { Follow, Follower } from './UserFollow';
 
@@ -44,7 +45,7 @@ export default class User extends React.Component<UserProps, UserState> {
     render() {
         const {user, setting} = this.props;
         const tgt = setting!.showUserTarget;
-        const tgtUser = user!.findUser(tgt!);
+        const tgtUser = Finder.findUser(tgt!);
         console.log(tgt, tgtUser);
         if (tgtUser) {
             const currentUser = user!.getUser;
@@ -107,9 +108,9 @@ export default class User extends React.Component<UserProps, UserState> {
             if (params.length > 0) {
                 const tgtSerial = params[0].split('=')[1];
                 setting!.setShowUserTarget(tgtSerial);
-                user!.findUserAsync(tgtSerial).then((resp) => {
+                Finder.findUserAsync(tgtSerial).then((resp) => {
                     if (resp) {
-                        user!.findUserSay(resp.serial).then((resp2) => {
+                        Finder.findUserSay(resp.serial).then((resp2) => {
                             this.setState({sayLen: resp2.length, say: resp2});
                         });
                     }

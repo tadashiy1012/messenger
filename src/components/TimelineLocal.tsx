@@ -4,7 +4,7 @@ import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
 import { history } from '../stores';
 import { UserStoreType, SayType, SayStoreType } from '../types';
-import { escapeHtml, getFullDateStr } from '../utils';
+import { escapeHtml, getFullDateStr, Finder } from '../utils';
 import { Link } from 'react-router-dom';
 
 interface LocalProps {
@@ -33,7 +33,7 @@ export default class LocalTL extends React.Component<LocalProps> {
             const found = ids.find(ee => ee === e.authorId);
             return found ? true:false;
         }).map(e => {
-            const name = user!.findAuthorName(e.authorId);
+            const name = Finder.findAuthorName(e.authorId);
             const alike = crntUser && e.like.find(ee => ee === crntUser!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.props.unLikeClickHandler(e)}}>favorite</i> :
@@ -54,7 +54,7 @@ export default class LocalTL extends React.Component<LocalProps> {
                     }} onClick={(ev) => {
                         ev.stopPropagation();
                     }}>
-                        <img src={user!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                        <img src={Finder.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                             borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                         <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     </Link>

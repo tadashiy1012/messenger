@@ -5,7 +5,7 @@ import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
 import { history } from '../stores';
 import { UserStoreType, SayType, SayStoreType, SettingStoreType } from '../types';
-import { escapeHtml, getFullDateStr, noImage } from '../utils';
+import { escapeHtml, getFullDateStr, noImage, Finder } from '../utils';
 import uuid = require('uuid');
 
 interface ReplyWriterProps {
@@ -87,7 +87,7 @@ export default class Message extends React.Component<MessageProps> {
     render() {
         const {user, setting} = this.props;
         const tgt = setting!.showMessageTarget;
-        const tgtSay = user!.findSay(tgt!);
+        const tgtSay = Finder.findSay(tgt!);
         const crntUser = user!.getUser;
         let contents = null;
         if (tgtSay) {
@@ -95,7 +95,7 @@ export default class Message extends React.Component<MessageProps> {
             if (user!.logged) {
                 reply = <ReplyWriter tgtSay={tgtSay} />
             }
-            const name = user!.findAuthorName(tgtSay.authorId);
+            const name = Finder.findAuthorName(tgtSay.authorId);
             const alike = crntUser && tgtSay.like.find(ee => ee === crntUser!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.unLikeClickHandler(tgtSay)}}>favorite</i> :
@@ -105,15 +105,15 @@ export default class Message extends React.Component<MessageProps> {
                 <i className="material-icons">favorite</i> :
                 <i className="material-icons">favorite_border</i>;
             const child = tgtSay.reply.map(e => {
-                const s = user!.findSay(e);
+                const s = Finder.findSay(e);
                 if (s) {
-                    const sname = user!.findAuthorName(s.authorId);
+                    const sname = Finder.findAuthorName(s.authorId);
                     return <li key={s.id} css={{margin:'12px 0px', borderBottom:'solid 1px #ddd', padding:'6px'}}>
                         <div css={{display:'flex', alignItems:'center'}}>
                             <Link to={{pathname:'/user', search: '?tgt=' + s.authorId}} css={{
                                 display:'flex', alignItems:'center'
                             }}>
-                                <img src={user!.findAuthorIcon(s.authorId)} width="24" height="24" css={{
+                                <img src={Finder.findAuthorIcon(s.authorId)} width="24" height="24" css={{
                                     borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                                 <span css={{margin:'0px 4px'}}>{sname !== 'no_name' ? sname : s.author}</span>
                             </Link>
@@ -142,7 +142,7 @@ export default class Message extends React.Component<MessageProps> {
                         <Link to={{pathname:'/user', search: '?tgt=' + tgtSay.authorId}} css={{
                             display:'flex', alignItems:'center'
                         }}>
-                            <img src={user!.findAuthorIcon(tgtSay.authorId)} width="24" height="24" css={{
+                            <img src={Finder.findAuthorIcon(tgtSay.authorId)} width="24" height="24" css={{
                                 borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                             <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : tgtSay.author}</span>
                         </Link>

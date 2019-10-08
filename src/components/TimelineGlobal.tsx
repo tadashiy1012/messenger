@@ -1,11 +1,11 @@
 /** @jsx jsx */
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
-import {css, jsx} from '@emotion/core';
+import { css, jsx } from '@emotion/core';
 import { UserStoreType, SayType, SayStoreType } from '../types';
 import { Link } from 'react-router-dom';
 import { history } from '../stores';
-import { escapeHtml, getFullDateStr } from '../utils';
+import { escapeHtml, getFullDateStr, Finder } from '../utils';
 
 interface GlobalProps {
     user?: UserStoreType
@@ -24,7 +24,7 @@ export default class GlobalTL extends React.Component<GlobalProps> {
             return b.date - a.date;
         });
         const child1 = timeline.map(e => {
-            const name = user!.findAuthorName(e.authorId);
+            const name = Finder.findAuthorName(e.authorId);
             const alike = crntUser && e.like.find(ee => ee === crntUser!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.props.unLikeClickHandler(e)}}>favorite</i> :
@@ -45,7 +45,7 @@ export default class GlobalTL extends React.Component<GlobalProps> {
                     }} onClick={(ev) => {
                         ev.stopPropagation();
                     }}>
-                        <img src={user!.findAuthorIcon(e.authorId)} width="24" height="24" css={{
+                        <img src={Finder.findAuthorIcon(e.authorId)} width="24" height="24" css={{
                             borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
                         <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : e.author}</span>
                     </Link>

@@ -1,8 +1,9 @@
 /** @jsx jsx */
 import React from "react";
-import {css, jsx} from '@emotion/core';
+import { css, jsx } from '@emotion/core';
 import { inject, observer } from "mobx-react";
 import { UserStoreType, UserType } from "../types";
+import { Finder } from '../utils'
 
 interface FollowProps {
     user?: UserStoreType
@@ -15,7 +16,7 @@ class Follow extends React.Component<FollowProps> {
     render() {
         const {user, tgtUser} = this.props;
         const child = tgtUser.follow.map(e => {
-            const follow = user!.findUser(e);
+            const follow = Finder.findUser(e);
             return <li key={e}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follow!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />
@@ -41,7 +42,7 @@ class Follower extends React.Component<FollowerProps> {
     render() {
         const {user, tgtUser} = this.props;
         const child = tgtUser.follower.map(e => {
-            const follower = user!.findUser(e);
+            const follower = Finder.findUser(e);
             return <li key={e}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     <img src={follower!.icon} alt="icon" width="36" height="36" css={{borderRadius:'36px', border:'solid 1px gray'}} />

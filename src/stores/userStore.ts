@@ -12,6 +12,9 @@ class UserStore {
     @observable
     currentUser: UserType | null = null;
 
+    @observable
+    logged: Boolean = false;
+
     @computed
     get getUser(): UserType | null {
         return this.currentUser;
@@ -194,78 +197,7 @@ class UserStore {
             }
         });
     }
-
-    findAuthorIcon(authorId: string): string {
-        const found = users.getUsers.find(e => e.serial === authorId);
-        if (found && found.icon) {
-            return found.icon === '' ? noImage : found.icon;
-        } else {
-            return noImage;
-        }
-    }
-
-    findAuthorName(authorId: string): string {
-        const found = users.getUsers.find(e => e.serial === authorId);
-        if (found && found.name) {
-            return found.name
-        } else {
-            return 'no_name';
-        }
-    }
-
-    findUser(userSerial: string): UserType | null {
-        const found = users.getUsers.find(e => e.serial === userSerial);
-        return found || null
-    }
-
-    findUserAsync(userSerial: string): Promise<UserType | null> {
-        return new Promise((resolve) => {
-            if (users.getUsers.length > 0) {
-                const found = users.getUsers.find(e => e.serial === userSerial);
-                resolve(found);
-            } else {
-                let count = 0;
-                const timer = setInterval(() => {
-                    if (count > 5) {
-                        console.log('findUserAsync time out');
-                        clearInterval(timer);
-                        resolve(null);
-                    }
-                    if (users.getUsers.length > 0) {
-                        const found = users.getUsers.find(e => e.serial === userSerial);
-                        clearInterval(timer);
-                        resolve(found);
-                    }
-                    count += 1;
-                }, 1000)
-            }
-        });
-    }
-
-    findUserSay(userSerial: string): Promise<Array<SayType>> {
-        return new Promise((resolve) => {
-            const cache = caches.getCaches;
-            const found = cache.find(e => e.says[0].authorId === userSerial);
-            if (found) {
-                resolve(found.says);
-            } else {
-                resolve([]);
-            }
-        });
-        
-    }
-
-    findSay(sayId: string): SayType | undefined {
-        const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
-           acc.push(...e.says);
-           return acc;
-        }, []);
-        return says.find(e => e.id === sayId);
-    }
-
-    @observable
-    logged: Boolean = false;
-
+    
     @action
     setLogged(logged: Boolean) {
         this.logged = logged;
