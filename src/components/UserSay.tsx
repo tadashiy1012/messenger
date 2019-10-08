@@ -1,20 +1,17 @@
 /** @jsx jsx */
 import React from "react";
 import { css, jsx } from '@emotion/core';
-import { UserStoreType, SayType } from "../types";
-import { inject, observer } from "mobx-react";
+import { SayType } from "../types";
+import { observer } from "mobx-react";
 import { escapeHtml, getFullDateStr, Finder } from '../utils';
 
 interface SayProps {
-    user?: UserStoreType
     say: SayType[]
 }
 
-@inject('user')
 @observer
 export default class UserSay extends React.Component<SayProps> {
     render() {
-        const {user} = this.props;
         const child = this.props.say.map((e) => {
             const name = Finder.findAuthorName(e.authorId);
             return <li key={e.id} css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
@@ -40,7 +37,7 @@ export default class UserSay extends React.Component<SayProps> {
                     </div>
                 </div>
             </li>
-        });
+        }).reverse();
         return <ul css={{listStyleType:'none', paddingLeft:'0px'}}>{child}</ul>
     }
 }

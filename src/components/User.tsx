@@ -4,7 +4,7 @@ import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
 import { history } from '../stores';
 import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
-import { Finder } from '../utils';
+import { Finder, compareJson } from '../utils';
 import UserSay from './UserSay';
 import { Follow, Follower } from './UserFollow';
 
@@ -34,6 +34,7 @@ interface UserState {
 @inject('user', 'setting')
 @observer
 export default class User extends React.Component<UserProps, UserState> {
+    private prevQuery: string[];
     constructor(props: Readonly<UserProps>) {
         super(props);
         this.state = {
@@ -41,12 +42,30 @@ export default class User extends React.Component<UserProps, UserState> {
             sayLen: -1,
             mode: 0
         };
+        this.prevQuery = [];
+        history.listen((location) => {
+            const {setting} = this.props;
+            if (location.pathname === '/user' && location.search) {
+                const query = location.search.substring(1).split('&');
+                if (!compareJson(query, this.prevQuery)) {
+                    this.prevQuery = [...query];
+                    const tgtSerial = query[0].split('=')[1];
+                    setting!.setShowUserTarget(tgtSerial);
+                    Finder.findUserAsync(tgtSerial).then((resp) => {
+                        if (resp) {
+                            Finder.findUserSay(resp.serial).then((resp2) => {
+                                this.setState({sayLen: resp2.length, say: resp2});
+                            });
+                        }
+                    });
+                }
+            }
+        });
     }
     render() {
         const {user, setting} = this.props;
         const tgt = setting!.showUserTarget;
         const tgtUser = Finder.findUser(tgt!);
-        console.log(tgt, tgtUser);
         if (tgtUser) {
             const currentUser = user!.getUser;
             let followBtn = null;
@@ -67,7 +86,7 @@ export default class User extends React.Component<UserProps, UserState> {
             }
             return <React.Fragment>
                 <div css={{display:'flex', alignItems:'center'}}>
-                    <img src={tgtUser.icon} alt="icon" width="42" height="42" css={{borderRadius:'42px', border:'solid 1px gray'}}/>
+                    <img src={tgtUser.icon} alt="icon" width="50" height="50" css={{borderRadius:'50px', border:'solid 1px gray'}}/>
                     <span css={{margin:'4px'}}>{tgtUser.name}</span>
                     <span css={{margin:'4px'}}> </span>
                     <span css={{margin:'4px'}}>say:{this.state.sayLen}</span>
@@ -75,6 +94,9 @@ export default class User extends React.Component<UserProps, UserState> {
                     <span css={{margin:'4px'}}>follower:{tgtUser.follower.length}</span>
                     {followBtn}
                     {unfollowBtn}
+                </div>
+                <div>
+                    <p css={{padding:'8px'}}>sample profile sample profile<br />sample profile sample profile</p>
                 </div>
                 <div css={{display:'flex', marginTop:'14px'}}>
                     <div css={{margin:'0px 4px'}}>
@@ -115,7 +137,6 @@ export default class User extends React.Component<UserProps, UserState> {
                         });
                     }
                 });
-                
             }
         }
         
