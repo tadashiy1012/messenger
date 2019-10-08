@@ -42,6 +42,12 @@ const Message = () => (
     </React.Fragment>
 );
 
+const Search = () => (
+    <React.Fragment>
+        <h2>Search</h2>
+    </React.Fragment>
+);
+
 const Setting = () => (
     <React.Fragment>
         <h2>Setting</h2>
@@ -65,6 +71,9 @@ const App = () => (
                     </Route>
                     <Route path="/message">
                         <Message />
+                    </Route>
+                    <Route path="/search">
+                        <Search />
                     </Route>
                     <Route path="/setting">
                         <Setting />
