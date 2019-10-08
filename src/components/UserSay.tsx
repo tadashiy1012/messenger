@@ -32,7 +32,7 @@ export default class UserSay extends React.Component<SayProps> {
                         <span>reply:{e.reply.length}</span>
                     </div>
                     <div css={{display:'flex', alignItems:'center'}}>
-                        <i className="material-icons">favorite</i>;
+                        <i className="material-icons">favorite</i>
                         <span>like:{e.like.length}</span>
                     </div>
                 </div>

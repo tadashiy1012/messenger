@@ -5,6 +5,7 @@ import TimeLine from './Timeline';
 import Setting from './Setting';
 import User from './User';
 import Message from './Message';
+import Search from './Search';
 import Navi from './Navi';
 
 export {
@@ -15,5 +16,6 @@ export {
     Setting,
     User,
     Message,
+    Search,
     Navi,
 };
