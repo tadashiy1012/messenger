@@ -193,12 +193,11 @@ class PcStore {
     private timerTask = () => {
         const tasks = [
             this.watchers!.sayWatcher(() => {
-                const say = sayStore.getSay;
+                const say = sayStore.getSays;
                 say.splice(0, say.length, ...[]);
             }),
             this.watchers!.cacheWatcher((result) => {
-                const hear = sayStore.getHear;
-                hear.splice(0, hear.length, ...result);
+                sayStore.setHear([...result]);
             }),
             this.watchers!.userListWatcher()
         ];

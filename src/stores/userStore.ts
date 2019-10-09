@@ -20,13 +20,6 @@ class UserStore {
         return this.currentUser;
     }
 
-    private userNormalize(user: UserType): UserType {
-        user.follow = [...user.follow];
-        user.follower = [...user.follower];
-        user.like = [...user.like];
-        return user;
-    }
-
     @action
     updateUser(name: string, icon?: string, password?: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
@@ -39,7 +32,6 @@ class UserStore {
                     const hash = bcrypt.hashSync(password, salt);
                     user.password = hash;
                 }
-                this.userNormalize(user);
                 user.update = Date.now();
                 const result = users.update(user);
                 if (!result) {
@@ -59,7 +51,6 @@ class UserStore {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
                 user.profile = prof;
-                this.userNormalize(user);
                 user.update = Date.now();
                 const result = users.update(user);
                 if (!result) {
@@ -79,7 +70,6 @@ class UserStore {
             if (this.currentUser) {
                 const userA = Object.assign({}, this.getUser);
                 userA.follow = [...userA.follow, tgtSerial];
-                this.userNormalize(userA);
                 userA.update = Date.now();
                 this.currentUser = userA;
                 const found = users.find(this.currentUser);
@@ -92,7 +82,6 @@ class UserStore {
                 if (found2) {
                     const userB = Object.assign({}, found2);
                     userB.follower = [...userB.follower, userA.serial];
-                    this.userNormalize(userB);
                     userB.update = Date.now();
                     users.update(userB);
                 } else {
@@ -111,7 +100,6 @@ class UserStore {
             if (this.currentUser) {
                 const userA = Object.assign({}, this.getUser);
                 userA.follow = [...userA.follow.filter(e => e !== tgtSerial)];
-                this.userNormalize(userA);
                 userA.update = Date.now();
                 this.currentUser = userA;
                 const found = users.find(this.currentUser);
@@ -124,7 +112,6 @@ class UserStore {
                 if (found2) {
                     const userB = Object.assign({}, found2);
                     userB.follower = [...userB.follower.filter(e => e !== userA.serial)];
-                    this.userNormalize(userB);
                     userB.update = Date.now();
                     users.update(userB);
                 } else {
@@ -139,7 +126,6 @@ class UserStore {
 
     @action
     updateUserLike(tgtSay: SayType): Promise<Boolean> {
-        console.log(tgtSay);
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
                 const copySay = Object.assign({}, tgtSay);
@@ -150,7 +136,6 @@ class UserStore {
                     resolve(false);
                 }
                 copyUser.like = [...copyUser.like, copySay.id];
-                this.userNormalize(copyUser);
                 copyUser.update = Date.now();
                 copySay.like = [...copySay.like, copyUser.serial];
                 copySay.reply = [...copySay.reply];
@@ -190,7 +175,6 @@ class UserStore {
                 }
                 copyUser.like.splice(copyUser.like.indexOf(foundLike!), 1);
                 copyUser.like = [...copyUser.like];
-                this.userNormalize(copyUser);
                 copyUser.update = Date.now();
                 copySay.like.splice(copySay.like.indexOf(foundLiker!), 1);
                 copySay.like = [...copySay.like];
@@ -243,6 +227,7 @@ class UserStore {
                 };
                 found.clientId = this.currentUser.clientId;
                 found.update = this.currentUser.update;
+                this.logged = true;
                 resolve(true);
             } else {
                 resolve(false);
@@ -253,7 +238,7 @@ class UserStore {
     @action
     logout(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
-            this.setLogged(false);
+            this.logged = false;
             if (this.currentUser) {
                 const serial = this.currentUser.serial;
                 const found = users.getUsers.find(e => e.serial === serial);
@@ -261,7 +246,6 @@ class UserStore {
                     found.clientId = 'no id';
                     found.update = Date.now();
                     this.currentUser = null;
-                    this.logged = false;
                     resolve(true);
                 } else {
                     reject(new Error('user not found'));

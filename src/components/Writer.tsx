@@ -34,10 +34,7 @@ export default class Writer extends React.Component<WriterProps> {
                 reply: [],
                 say: this._inSayRef.current!.value
             };
-            say!.addSay(newSay).catch((err) => {
-                console.error(err);
-                alert('say send fail!!');
-            });
+            say!.addSay(newSay);
         } else {
             alert('say send fail!!');
         }

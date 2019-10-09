@@ -1,9 +1,10 @@
 import SayType from "./SayType";
 
 export default interface SayStoreType {
-    getSay: SayType[]
-    addSay(say: SayType): Promise<Boolean>
+    getSays: SayType[]
+    addSay(say: SayType): void
     updateSay(say: SayType): Promise<Boolean>
     getHear: SayType[]
+    setHear(hear: SayType[]): void
     timeLine: Array<SayType>
 }

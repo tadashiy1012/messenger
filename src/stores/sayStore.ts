@@ -1,37 +1,21 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import { SayType } from "../types";
-import clientId from './clientId';
-import users from './users';
 import caches from './caches';
-import userStore from './userStore';
 
 class SayStore {
 
-    private say: Array<SayType> = [];
+    private says: Array<SayType> = [];
     
     @observable 
     private hear: Array<SayType> = [];
 
-    public get getSay(): SayType[] {
-        return this.say;
+    public get getSays(): SayType[] {
+        return this.says;
     }
 
-    public addSay(say: SayType): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
-            console.log('$say:', say);
-            if (userStore.currentUser) {
-                const currentSerial = userStore.currentUser.serial;
-                const found = users.getUsers.find(e => e.serial === currentSerial);
-                if (found && found.clientId === clientId) {
-                    this.say.push(say);
-                    resolve(true);
-                } else {
-                    reject(new Error('login state error!!'));
-                }
-            } else {
-                reject(new Error('login state error!!'));
-            }
-        });
+    public addSay(say: SayType) {
+        console.log('$say:', say);
+        this.says.push(say);
     }
 
     public updateSay(say: SayType): Promise<Boolean> {
@@ -57,13 +41,18 @@ class SayStore {
         return this.hear;
     }
 
+    @action
+    public setHear(hear: SayType[]) {
+        this.hear = hear;
+    }
+
     @computed
     public get timeLine(): Array<SayType> {
-        const says = this.hear.filter((e, idx, self) => {
+        const filtered = this.hear.filter((e, idx, self) => {
             const len = self.filter(ee => ee.id === e.id).length;
             return len > 0;
         });
-        return says.sort((a, b) => {
+        return filtered.sort((a, b) => {
             return a.date - b.date
         });
     }

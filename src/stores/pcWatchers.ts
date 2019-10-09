@@ -51,7 +51,7 @@ export default class Watchers {
     ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
         return new Promise((resolve, reject) => {
             const currentUser = userStore.getUser;
-            const say = sayStore.getSay;
+            const say = sayStore.getSays;
             if (say.length > 0 && currentUser) {
                 console.log('!say changed!');
                 const tgt = caches.getCaches.find(e => {

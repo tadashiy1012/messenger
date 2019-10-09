@@ -36,10 +36,7 @@ class ReplyWriter extends React.Component<ReplyWriterProps> {
                 reply: [],
                 say: this._inSayRef.current!.value
             };
-            say.addSay(newSay).catch((err) => {
-                console.error(err);
-                alert('say send fail!!');
-            });
+            say.addSay(newSay);
             tgtSay.reply.push(newSay.id);
             say.updateSay(tgtSay).catch((err) => {
                 console.error(err);
