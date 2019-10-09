@@ -7,6 +7,8 @@ import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
 import { Finder, compareJson } from '../utils';
 import UserSay from './UserSay';
 import { Follow, Follower } from './UserFollow';
+import UserLike from './UserLike';
+import UserReply from './UserReply';
 
 const FollowButton = (props: {user?: UserStoreType, tgtUser: UserType}) => (
     <button className="pure-button" onClick={() => {
@@ -84,6 +86,10 @@ export default class User extends React.Component<UserProps, UserState> {
                 contents = <Follow tgtUser={tgtUser} />
             } else if (this.state.mode === 2) {
                 contents = <Follower tgtUser={tgtUser} />
+            } else if (this.state.mode === 3) {
+                contents = <UserLike like={tgtUser.like} />
+            } else if (this.state.mode === 4) {
+                contents = <UserReply tgtUser={tgtUser} />
             }
             return <React.Fragment>
                 <div css={{display:'flex', alignItems:'center'}}>
@@ -114,6 +120,16 @@ export default class User extends React.Component<UserProps, UserState> {
                         <button className="pure-button" onClick={() => {
                             this.setState({mode: 2});
                         }}>follower</button>
+                    </div>
+                    <div css={{margin:'0px 4px'}}>
+                        <button className="pure-button" onClick={() => {
+                            this.setState({mode: 3});
+                        }}>like</button>
+                    </div>
+                    <div css={{margin:'0px 4px'}}>
+                        <button className="pure-button" onClick={() => {
+                            this.setState({mode: 4});
+                        }}>reply</button>
                     </div>
                 </div>
                 <div>

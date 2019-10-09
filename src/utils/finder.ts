@@ -64,7 +64,14 @@ export default class Finder {
                 resolve([]);
             }
         });
-        
+    }
+
+    public static findUserSaySync(userSerial: string): SayType[] {
+        const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
+            acc.push(...e.says);
+            return acc;
+         }, []);
+         return says.filter(e => e.authorId === userSerial);
     }
 
     public static findSay(sayId: string): SayType | undefined {
@@ -79,8 +86,21 @@ export default class Finder {
         const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
             acc.push(...e.says);
             return acc;
-         }, []);
-         return says.filter(e => e.say.indexOf(keyword) > -1);
+        }, []);
+        return says.filter(e => e.say.indexOf(keyword) > -1);
+    }
+
+    public static searchReply(userSerial: string): SayType[] {
+        const says: Array<SayType> = caches.getCaches.reduce<SayType[]>((acc, e) => {
+            acc.push(...e.says);
+            return acc;
+        }, []);
+        const ids = says.filter(e => e.authorId === userSerial).map(e => e.id);
+        return says.filter(e => {
+            return e.reply.find(ee => {
+                return ids.find(eee => eee === ee) !== undefined;
+            }) !== undefined;
+        });
     }
 
     public static searchUser(keyword: string): UserType[] {
@@ -92,7 +112,7 @@ export default class Finder {
             } else {
                 return false;
             }
-        })
+        });
     }
 
 }
