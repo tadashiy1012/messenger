@@ -21,17 +21,34 @@ class UserStore {
     }
 
     @action
-    updateUser(name: string, icon?: string, password?: string): Promise<Boolean> {
+    updateUser(password: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
                 const user = Object.assign({}, this.getUser);
-                user.name = name;
-                user.icon = icon || noImage;
                 if (password) {
                     const salt = bcrypt.genSaltSync(10);
                     const hash = bcrypt.hashSync(password, salt);
                     user.password = hash;
                 }
+                user.update = Date.now();
+                const result = users.update(user);
+                if (!result) {
+                    users.add(user);
+                }
+                this.currentUser = user;
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
+
+    @action
+    updateUserIcon(icon: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const user = Object.assign({}, this.getUser);
+                user.icon = icon;
                 user.update = Date.now();
                 const result = users.update(user);
                 if (!result) {
@@ -259,7 +276,7 @@ class UserStore {
     @action
     registration(name: string, email: string, password: string): Promise<Boolean> {
         return new Promise((resolve) => {
-            const filtered = users.getUsers.filter(e => e.email === email);
+            const filtered = users.getUsers.filter(e => (e.email === email || e.name === name));
             const pass = encodeURI(password);
             if (filtered.length > 0 || pass !== password) {
                 resolve(false);

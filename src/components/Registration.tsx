@@ -42,10 +42,10 @@ export default class Registration extends React.Component<RegistrationProps> {
                 <h3 css={{marginBottom:'2px'}}>registration</h3>
                 <span>email</span>
                 <input type="email" className="pure-input-1-3" ref={this.emailRef} />
+                <span>name</span>
+                <input type="text" className="pure-input-1-3" ref={this.nameRef} />
                 <span>password</span>
                 <input type="password" className="pure-input-1-3" ref={this.passRef} />
-                <span>screen name</span>
-                <input type="text" className="pure-input-1-3" ref={this.nameRef} />
                 <button className="pure-button" onClick={(ev) => {
                     this.registrationClickHandler(ev)
                 }}>
