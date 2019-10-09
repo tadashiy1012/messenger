@@ -56,6 +56,10 @@ class Caches {
         return JSON.stringify(this.caches) === JSON.stringify(target);
     }
 
+    public getIdSet(): Set<string> {
+        return new Set(this.caches.map(e => e.id));
+    }
+
     public save(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             (async () => {
@@ -94,6 +98,7 @@ class Caches {
             (async() => {
                 try {
                     this.caches = await localForage.getItem('user_message_cache') || [];   
+                    console.log('cache loaded!');
                     resolve(true);
                 } catch (error) {
                     reject(error);

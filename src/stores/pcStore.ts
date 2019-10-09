@@ -7,8 +7,6 @@ import Transceivers from "./pcTransceivers";
 import clientId from './clientId';
 import users from './users';
 import caches from './caches';
-import userStore from './userStore';
-import sayStore from './sayStore';
 import connStateStore from './connStateStore';
 
 class PcStore {
@@ -192,22 +190,11 @@ class PcStore {
 
     private timerTask = () => {
         const tasks = [
-            this.watchers!.sayWatcher(() => {
-                const say = sayStore.getSays;
-                say.splice(0, say.length, ...[]);
-            }),
-            this.watchers!.cacheWatcher((result) => {
-                sayStore.setHear([...result]);
-            }),
+            this.watchers!.sayWatcher(),
+            this.watchers!.cacheWatcher(),
             this.watchers!.userListWatcher()
         ];
-        Promise.all(tasks).then((results) => {
-            results.forEach(e => {
-                if (e[0] && e[1].resultCb && e[1].resultValue) {
-                    e[1].resultCb(e[1].resultValue);
-                }
-            });
-        }).catch((err) => console.error(err));
+        Promise.all(tasks).catch(err => console.error(err));
     };
 
     constructor() {
@@ -215,7 +202,9 @@ class PcStore {
         this.receivers = new Receivers();
         this.transceivers = new Transceivers();
         this.watchers = new Watchers();
-        this.timerTask();
+        setTimeout(() => {
+            this.timerTask();
+        }, 200);
         makeWS(
             this.transceivers.preOfferTransceiver.bind(this.transceivers),
             this.transceivers.offerTansceiver.bind(this.transceivers), 

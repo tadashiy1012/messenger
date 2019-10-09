@@ -2,7 +2,7 @@ import * as localForage from 'localforage';
 import { CacheType, UserType } from "../types";
 import users from './users';
 import caches from './caches';
-import { getJsonCopy } from '../utils';
+import { getJsonCopy, compareJson } from '../utils';
 
 export default class Receivers {
 
@@ -15,20 +15,18 @@ export default class Receivers {
                     const found = cache.find(ee => ee.id == e.id);
                     if (found) {
                         if (found.timestamp <= e.timestamp) {
+                            const newCache = Object.assign({}, found, e);
+                            const newSays = new Set([...newCache.says]);
+                            newCache.says = Array.from(newSays);
                             const idx = cache.indexOf(found);
-                            const newCache = Object.assign({}, cache[idx], e);
-                            if (JSON.stringify(newCache.says) !== JSON.stringify(found.says) && newCache.says.length > found.says.length) {
-                                const newSays = new Set([...found.says, ...newCache.says]);
-                                newCache.says = Array.from(newSays);
-                            }
                             cache.splice(idx, 1, newCache);
                             console.log('(( cache update! ))');
                         } else {
-                            console.log('(( cache not update! ))')
+                            console.log('(( cache not update! ))');
                         }
                     } else {
                         cache.push(e);
-                        console.log('(( new cache added! ))')
+                        console.log('(( new cache added! ))');
                     }
                 });
                 resolve([true, [cache, null]]);

@@ -19,7 +19,7 @@ export default class Login extends React.Component<LoginProps> {
         this.emailRef = React.createRef();
         this.passRef = React.createRef();
     }
-    loginClickHandler(ev: React.MouseEvent) {
+    loginClickHandler() {
         const {user} = this.props;
         const email = this.emailRef.current!.value;
         const password = this.passRef.current!.value;
@@ -42,9 +42,13 @@ export default class Login extends React.Component<LoginProps> {
                 <span>email</span>
                 <input type="email" className="pure-input-1-3" ref={this.emailRef} />
                 <span>password</span>
-                <input type="password" className="pure-input-1-3" ref={this.passRef} />
+                <input type="password" className="pure-input-1-3" ref={this.passRef} onKeyUp={(ev) => {
+                    if (ev.keyCode === 13) {
+                        this.loginClickHandler();
+                    }
+                }} />
                 <button className="pure-button" onClick={(ev) => {
-                    this.loginClickHandler(ev)
+                    this.loginClickHandler();
                 }}>login</button>
             </div>
         </React.Fragment>

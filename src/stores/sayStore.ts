@@ -13,6 +13,10 @@ class SayStore {
         return this.says;
     }
 
+    public setSays(says: SayType[]) {
+        this.says = says;
+    }
+
     public addSay(say: SayType) {
         console.log('$say:', say);
         this.says.push(say);

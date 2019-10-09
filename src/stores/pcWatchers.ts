@@ -10,61 +10,44 @@ export default class Watchers {
     private prevList: Array<UserType> = [];
     private prevCache: Array<CacheType> = [];
 
-    cacheWatcher(
-        hearCb: (result: Array<SayType>) => void
-    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
+    cacheWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (!caches.compare(this.prevCache)) {
                 console.log('!cache changed!');
                 caches.save().then((result) => {
                     if (result) {
                         this.prevCache = getJsonCopy(caches.getCaches);
-                        let ids = new Set(caches.getCaches.map(e => e.id));
                         let newHear: Array<SayType> = [];
-                        ids.forEach(e => {
-                            let filtered = caches.getCaches.filter(ee => ee.id === e);
-                            if (filtered && filtered.length > 0) {
-                                if (filtered.length >= 2) {
-                                    filtered = filtered.sort((a, b) => {
-                                        return b.timestamp - a.timestamp;
-                                    });
-                                }
-                                if (filtered[0].says) {
-                                    newHear = [...filtered[0].says, ...newHear];
-                                }
+                        caches.getIdSet().forEach(e => {
+                            const found = caches.getCaches.find(ee => ee.id === e);
+                            if (found && found.says) {
+                                newHear = [...found.says, ...newHear];
                             }
                         });
-                        resolve([true, {resultCb: hearCb, resultValue: newHear}]);
+                        sayStore.setHear(newHear);
+                        resolve(true);
                     } else {
-                        resolve([false, {}]);
+                        resolve(false);
                     }
                 }).catch(err => reject(err));
                 
             } else {
-                resolve([false, {}]);
+                resolve(false);
             }
         });
     }
 
-    sayWatcher(
-        sayCb: (result: Array<CacheType>) => void
-    ): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
+    sayWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             const currentUser = userStore.getUser;
-            const say = sayStore.getSays;
-            if (say.length > 0 && currentUser) {
+            const says = sayStore.getSays;
+            if (says.length > 0 && currentUser) {
                 console.log('!say changed!');
-                const tgt = caches.getCaches.find(e => {
-                    if (e.id) {
-                        return e.id === currentUser.serial;
-                    } else {
-                        return false;
-                    }
-                });
+                const tgt = caches.getCaches.find(e => e.id === currentUser.serial);
                 if (tgt && tgt.says) {
                     console.log('cache update', tgt);
                     tgt.timestamp = Date.now();
-                    say.forEach((say: SayType) => {
+                    says.forEach((say: SayType) => {
                         const foundId = tgt.says.find(e => e.id === say.id);
                         if (!foundId) {
                             tgt.says.push(say);
@@ -73,32 +56,33 @@ export default class Watchers {
                 } else {
                     console.log('cache new');
                     caches.add({
-                        id: currentUser.serial, timestamp: Date.now(), says: [...say]
+                        id: currentUser.serial, timestamp: Date.now(), says: [...says]
                     });
                 }
-                resolve([true, {resultCb: sayCb, resultValue: []}]);
+                sayStore.setSays([]);
+                resolve(true);
             } else {
-                resolve([false, {}]);
+                resolve(false);
             }
         });
     }
 
-    userListWatcher(): Promise<[Boolean, {resultCb?:(resultArg: any) => void, resultValue?: any}]> {
+    userListWatcher(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (!users.compare(this.prevList)) {
                 users.save().then((result) => {
                     if (result) {
                         console.log('user list saved!');
                         this.prevList = getJsonCopy(users.getUsers);
-                        resolve([true, {}]);
+                        resolve(true);
                     } else {
-                        resolve([false, {}]);
+                        resolve(false);
                     }
                 }).catch(err => {
                     reject(err);
                 });
             } else {
-                resolve([false, {}]);
+                resolve(false);
             }
         });
     }

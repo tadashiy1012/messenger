@@ -56,6 +56,10 @@ class Users {
         return JSON.stringify(this.list) === JSON.stringify(target);
     }
 
+    public getIdSet(): Set<string> {
+        return new Set(this.list.map(e => e.serial));
+    }
+
     public save(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             (async () => {
@@ -83,6 +87,7 @@ class Users {
             (async () => {
                 try {
                     this.list = await localForage.getItem<UserType[]>('user_list') || [];
+                    console.log('users loaded!');
                     resolve(true);
                 } catch (error) {
                     reject(error);

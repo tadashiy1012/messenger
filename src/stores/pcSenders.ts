@@ -2,7 +2,7 @@ import clientId from './clientId';
 import { CacheType, UserType } from "../types";
 import users from './users';
 import caches from './caches';
-import { getJsonCopy } from '../utils';
+import { getJsonCopy, compareJson } from '../utils';
 
 export default class Senders {
 
@@ -16,8 +16,7 @@ export default class Senders {
             const cache = caches.getCaches;
             this.prevCache = getJsonCopy(cache);
             const dts = cache.map(e => e.timestamp).sort();
-            if (this.beforeCacheSend < dts[dts.length - 1] 
-                || JSON.stringify(cache) !== JSON.stringify(this.prevCache)) {
+            if (this.beforeCacheSend < dts[dts.length - 1] || !compareJson(cache, this.prevCache)) {
                 console.log(dts, this.beforeCacheSend);
                 this.beforeCacheSend = Date.now();
                 const json = {
@@ -40,8 +39,7 @@ export default class Senders {
         return new Promise((resolve, reject) => {
             const list = users.getUsers;
             const dts = list.map(e => e.update).sort();
-            if (this.beforeListSend < dts[dts.length - 1] 
-                || JSON.stringify(list) !== JSON.stringify(this.prevUsers)) {
+            if (this.beforeListSend < dts[dts.length - 1] || !compareJson(list, this.prevUsers)) {
                 console.log(dts, this.beforeListSend);
                 this.prevUsers = getJsonCopy(list);
                 this.beforeListSend = Date.now();

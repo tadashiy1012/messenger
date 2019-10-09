@@ -4,6 +4,7 @@ import { css, jsx } from '@emotion/core';
 import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
 import { UserStoreType, SettingStoreType } from '../types';
+import { history } from '../stores';
 
 @inject('user', 'setting')
 @observer
@@ -30,6 +31,10 @@ export default class Navi extends React.Component<{user?: UserStoreType, setting
                     <input type="text" className="pure-input-rounded" ref={this.searchRef} onChange={(ev) => {
                         if (this.searchRef.current && this.searchRef.current.value.length > 0) {
                             this.setState({word: this.searchRef.current.value});
+                        }
+                    }} onKeyUp={(ev) => {
+                        if (ev.keyCode === 13) {
+                            history.push({pathname:'/search', search:'?word=' + this.state.word});
                         }
                     }} />
                     <Link to={{pathname:'/search', search:'?word=' + this.state.word}}
