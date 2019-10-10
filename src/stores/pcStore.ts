@@ -98,12 +98,6 @@ class PcStore {
         }, (channel: RTCDataChannel) => {
             this.dcA = setupDC(channel, (state) => {
                 connStateStore.pcAState.dataChannel = state;
-            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
-                if (result[0] !== null && result[1] === null) {
-                    caches.replaceAll(result[0]);
-                } else if (result[0] === null && result[1] !== null) {
-                    users.replaceAll(result[1]);
-                }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
                 this.senders!.userListSender.bind(this.senders)
@@ -136,12 +130,6 @@ class PcStore {
         }, (channel: RTCDataChannel) => {
             this.dcB = setupDC(channel, (state) => {
                 connStateStore.pcBState.dataChannel = state;
-            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
-                if (result[0] !== null && result[1] === null) {
-                    caches.replaceAll(result[0]);
-                } else if (result[0] === null && result[1] !== null) {
-                    users.replaceAll(result[1]);
-                }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
                 this.senders!.userListSender.bind(this.senders)
@@ -171,12 +159,6 @@ class PcStore {
         }, (channel: RTCDataChannel) => {
             this.dcC = setupDC(channel, (state) => {
                 connStateStore.pcCState.dataChannel = state;
-            }, (result: [Array<CacheType> | null, Array<UserType> | null]) => {
-                if (result[0] !== null && result[1] === null) {
-                    caches.replaceAll(result[0]);
-                } else if (result[0] === null && result[1] !== null) {
-                    users.replaceAll(result[1]);
-                }
             }, [
                 this.senders!.cacheSender.bind(this.senders),
                 this.senders!.userListSender.bind(this.senders)

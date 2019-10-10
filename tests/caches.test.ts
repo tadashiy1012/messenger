@@ -14,7 +14,7 @@ describe('caches', () => {
         };
         caches.add(newCache);
         expect(cache).toHaveLength(1);
-        const found = caches.find(newCache);
+        const found = caches.find(newCache.id);
         expect(found).not.toBeUndefined;
         const idx = caches.indexOf(found!);
         expect(idx).not.toBe(-1);

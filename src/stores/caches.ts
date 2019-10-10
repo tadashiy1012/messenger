@@ -48,8 +48,8 @@ class Caches {
         return this.caches.indexOf(cache);
     }
 
-    public find(cache: CacheType): CacheType | undefined {
-        return this.caches.find(e => e.id === cache.id);
+    public find(cacheId: string): CacheType | undefined {
+        return this.caches.find(e => e.id === cacheId);
     }
 
     public compare(target: CacheType[]): Boolean {

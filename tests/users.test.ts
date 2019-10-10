@@ -22,7 +22,7 @@ describe('users', () => {
         };
         users.add(newUser);
         expect(list).toHaveLength(1);
-        const found = users.find(newUser);
+        const found = users.find(newUser.serial);
         expect(found).not.toBeUndefined();
         const idx = users.indexOf(found!);
         expect(idx).not.toBe(-1);

@@ -48,8 +48,8 @@ class Users {
         return this.list.indexOf(user);
     }
 
-    public find(user: UserType): UserType | undefined {
-        return this.list.find(e => e.serial === user.serial);
+    public find(userSerial: string): UserType | undefined {
+        return this.list.find(e => e.serial === userSerial);
     }
 
     public compare(target: UserType[]): Boolean {

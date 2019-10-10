@@ -1,62 +1,54 @@
-import * as localForage from 'localforage';
-import { CacheType, UserType } from "../types";
+import { CacheType, UserType, DcPayloadType } from "../types";
 import users from './users';
 import caches from './caches';
-import { getJsonCopy, compareJson } from '../utils';
 
 export default class Receivers {
 
-    cacheReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
+    cacheReceiver(payload: DcPayloadType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (payload && payload.cache) {
-                const cache = getJsonCopy(caches.getCaches);
-                console.log('<<received cache>>', cache, payload.cache);
+                console.log('<<received cache>>', payload.cache);
                 payload.cache.forEach((e: CacheType) => {
-                    const found = cache.find(ee => ee.id == e.id);
+                    const found = caches.find(e.id);
                     if (found) {
                         if (found.timestamp <= e.timestamp) {
-                            const newCache = Object.assign({}, found, e);
-                            const newSays = new Set([...newCache.says]);
-                            newCache.says = Array.from(newSays);
-                            const idx = cache.indexOf(found);
-                            cache.splice(idx, 1, newCache);
+                            const copyCache = Object.assign({}, found, e);
+                            const newSays = new Set([...copyCache.says]);
+                            copyCache.says = Array.from(newSays);
+                            caches.update(copyCache);
                             console.log('(( cache update! ))');
-                        } else {
-                            console.log('(( cache not update! ))');
                         }
                     } else {
-                        cache.push(e);
+                        caches.add(e);
                         console.log('(( new cache added! ))');
                     }
                 });
-                resolve([true, [cache, null]]);
+                resolve(true);
             } else {
-                resolve([false, [null, null]]);
+                resolve(false);
             }
         });
     }
 
-    usersReceiver(payload: any): Promise<[Boolean, [Array<CacheType> | null, Array<UserType> | null]]> {
+    usersReceiver(payload: DcPayloadType): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (payload && payload.userList) {
-                console.log('<<received userList>>');
-                const list = getJsonCopy(users.getUsers);
+                console.log('<<received userList>>', payload.userList);
                 payload.userList.forEach((e: UserType) => {
-                    const found = list.find(ee => ee.serial === e.serial);
+                    const found = users.find(e.serial);
                     if (found) {
                         if (found.update < e.update) {
-                            const idx = list.indexOf(found);
-                            list.splice(idx, 1, e);
+                            users.update(e);
                             console.log('(( user list update! ))');
                         }
                     } else {
-                        list.push(e);
+                        users.add(e);
                         console.log('(( new user added! ))');
                     }
                 });
-                resolve([true, [null, list]]);
+                resolve(true);
             } else {
-                resolve([false, [null, null]]);
+                resolve(false);
             }
         });
     }
