@@ -89,7 +89,7 @@ class UserStore {
                 userA.follow = [...userA.follow, tgtSerial];
                 userA.update = Date.now();
                 this.currentUser = userA;
-                const found = users.find(this.currentUser);
+                const found = users.find(this.currentUser.serial);
                 if (found) {
                     users.update(userA);
                 } else {
@@ -119,7 +119,7 @@ class UserStore {
                 userA.follow = [...userA.follow.filter(e => e !== tgtSerial)];
                 userA.update = Date.now();
                 this.currentUser = userA;
-                const found = users.find(this.currentUser);
+                const found = users.find(this.currentUser.serial);
                 if (found) {
                     users.update(userA);
                 } else {
@@ -156,7 +156,7 @@ class UserStore {
                 copyUser.update = Date.now();
                 copySay.like = [...copySay.like, copyUser.serial];
                 copySay.reply = [...copySay.reply];
-                const foundUser = users.find(copyUser);
+                const foundUser = users.find(copyUser.serial);
                 if (foundUser) {
                     users.update(copyUser);
                 } else {
@@ -196,7 +196,7 @@ class UserStore {
                 copySay.like.splice(copySay.like.indexOf(foundLiker!), 1);
                 copySay.like = [...copySay.like];
                 copySay.reply = [...copySay.reply];
-                const foundUser = users.find(copyUser);
+                const foundUser = users.find(copyUser.serial);
                 if (foundUser) {
                     users.update(copyUser);
                 } else {
