@@ -67,11 +67,18 @@ class Users {
                     const inner = Object.assign({}, e);
                     (Object.keys(inner) as Array<keyof typeof inner>).forEach((key) => {
                         if (inner[key] instanceof Array) {
-                            (inner[key] as Array<any>) = [...(inner[key] as Array<any>)];
+                            if (key === 'notify') {
+                                (inner[key] as [string, Boolean][]) = [...inner[key].map(ee => {
+                                    return Object.assign({}, ee);
+                                })];
+                            } else {
+                                (inner[key] as Array<any>) = [...(inner[key] as Array<any>)];
+                            }
                         }
                     });
                     return inner;
                 })];
+                console.log(copy);
                 try {
                     await localForage.setItem('user_list', copy);
                 } catch (error) {

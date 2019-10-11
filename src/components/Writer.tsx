@@ -4,8 +4,10 @@ import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import * as uuid from 'uuid';
 import { SayType, UserStoreType, SayStoreType } from '../types';
+import { Finder } from '../utils';
 import { noImage } from '../utils/noImageIcon';
 import { Link } from 'react-router-dom';
+import users from 'stores/users';
 
 interface WriterProps {
     user?: UserStoreType
@@ -25,6 +27,7 @@ export default class Writer extends React.Component<WriterProps> {
         const {user, say} = this.props;
         if (user && user.currentUser) {
             const {serial, name} = user.currentUser;
+            const value = this._inSayRef.current!.value;
             const newSay: SayType = {
                 id: uuid.v1(),
                 date: Date.now(),
@@ -32,9 +35,20 @@ export default class Writer extends React.Component<WriterProps> {
                 authorId: serial,
                 like: [],
                 reply: [],
-                say: this._inSayRef.current!.value
+                say: value
             };
             say!.addSay(newSay);
+            const result = value.match(/^@[A-Za-z].+(\s|\n)/);
+            if (result) {
+                const tgtName = result[0].substring(1, result[0].length - 1);
+                const tgtUser = Finder.findUserByName(tgtName);
+                if (tgtUser) {
+                    const copy = Object.assign({}, tgtUser);
+                    if (!copy.notify) copy.notify = [];
+                    copy.notify.push([newSay.id, true]);
+                    users.update(copy);
+                }
+            }
         } else {
             alert('say send fail!!');
         }

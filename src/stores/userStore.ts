@@ -239,6 +239,7 @@ class UserStore {
                     follow: found.follow,
                     follower: found.follower,
                     like: found.like,
+                    notify: found.notify || [],
                     clientId: clientId,
                     update: Date.now()
                 };
@@ -293,6 +294,7 @@ class UserStore {
                     follow: [],
                     follower: [],
                     like: [],
+                    notify: [],
                     clientId: clientId,
                     update: Date.now()
                 };

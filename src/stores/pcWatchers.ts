@@ -29,8 +29,10 @@ export default class Watchers {
                     } else {
                         resolve(false);
                     }
-                }).catch(err => reject(err));
-                
+                }).catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
             } else {
                 resolve(false);
             }
@@ -79,6 +81,7 @@ export default class Watchers {
                         resolve(false);
                     }
                 }).catch(err => {
+                    console.error(err);
                     reject(err);
                 });
             } else {

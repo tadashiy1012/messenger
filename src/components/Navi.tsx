@@ -17,20 +17,28 @@ export default class Navi extends React.Component<{user?: UserStoreType, setting
     }
     render() {
         const {user, setting} = this.props;
+        let notifyIcon = null
+        if (user!.currentUser) {
+            const notify = user!.currentUser.notify || [];
+            notifyIcon = notify.length > 0 ? 
+                <i className="material-icons" css={{fontSize:'26px'}}>notifications_active</i>
+                : <i className="material-icons" css={{fontSize:'26px'}}>notifications</i>
+        }
         const loggedMenu = <React.Fragment>
             <Link to={{pathname:'/user', search: user!.getUser ? '?tgt=' + user!.getUser.serial : ''}}
                 className="pure-button" css={{margin:'0px 4px'}}>User</Link>
+            <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>
+                <div css={{display:'flex', alignItems:'center'}}>
+                    {notifyIcon}
+                </div>
+            </Link>
             <Link to="/setting" className="pure-button" css={{margin:'0px 4px'}}>Setting</Link>
-        </React.Fragment>
-        const debugMenu = <React.Fragment>
-            <Link to="/debug" className="pure-button" css={{margin:'0px 4px'}}>Debug</Link>
         </React.Fragment>
         return <React.Fragment>
             <div css={{display:'flex'}}>
                 <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>Main</Link>
                 <Link to="/login" className="pure-button" css={{margin:'0px 4px'}}>Login</Link>
                 {user!.logged ? loggedMenu : null}
-                {setting!.showDebugMenu ? debugMenu : null}
                 <div className="pure-form" css={{paddingLeft:'8px'}}>
                     <input type="text" className="pure-input-rounded" ref={this.searchRef} onChange={(ev) => {
                         if (this.searchRef.current && this.searchRef.current.value.length > 0) {
@@ -44,7 +52,7 @@ export default class Navi extends React.Component<{user?: UserStoreType, setting
                     <Link to={{pathname:'/search', search:'?word=' + this.state.word}}
                         className="pure-button" css={{margin:'0px 4px'}} onClick={() => {
                         setting!.setShowSearchMode(0);
-                    }}>search</Link>
+                    }}>Search</Link>
                 </div>
             </div>
         </React.Fragment>

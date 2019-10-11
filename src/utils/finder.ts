@@ -54,6 +54,10 @@ export default class Finder {
         });
     }
 
+    public static findUserByName(userName: string): UserType | undefined {
+        return users.getUsers.find(e => e.name === userName);
+    }
+
     public static findUserSay(userSerial: string): Promise<Array<SayType>> {
         return new Promise((resolve) => {
             const cache = caches.getCaches;

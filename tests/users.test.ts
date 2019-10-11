@@ -1,4 +1,5 @@
 import users from '../src/stores/users';
+import { UserType } from 'types';
 
 describe('users', () => {
     test('usersが正常に機能する', () => {
@@ -7,7 +8,7 @@ describe('users', () => {
         const list = users.getUsers;
         expect(list).not.toBeNull;
         expect(list).toHaveLength(0);
-        const newUser = {
+        const newUser: UserType = {
             clientId: 'hoge',
             serial: 'hoge',
             name: 'hoge',
@@ -18,6 +19,7 @@ describe('users', () => {
             like: [],
             follow: [],
             follower: [],
+            notify: [],
             update: Date.now()
         };
         users.add(newUser);

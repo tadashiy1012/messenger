@@ -10,4 +10,5 @@ export default interface UserType {
     follow: string[]
     follower: string[]
     like: string[]
+    notify: [string, Boolean][]
 };
