@@ -6,6 +6,7 @@ import Setting from './Setting';
 import User from './User';
 import Message from './Message';
 import Search from './Search';
+import Debug from './Debug';
 import Navi from './Navi';
 
 export {
@@ -17,5 +18,6 @@ export {
     User,
     Message,
     Search,
+    Debug,
     Navi,
 };

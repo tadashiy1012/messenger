@@ -5,6 +5,7 @@ export default interface SettingStoreType {
     showMessageTarget: string | null
     showSearchTarget: string | null
     showSearchMode: number
+    showDebugMenu: Boolean
     setShowDetail(show: Boolean): void
     setShowSetting(show: Boolean): void
     setShowUserTarget(targetSerial: string | null): void

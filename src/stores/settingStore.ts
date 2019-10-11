@@ -20,6 +20,9 @@ class SettingStore {
     @observable
     showSearchMode: number = 0;
 
+    @observable
+    showDebugMenu: Boolean = true;
+
     @action
     setShowDetail(show: Boolean) {
         this.showDetail = show;
