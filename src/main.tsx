@@ -10,7 +10,8 @@ import {
 import { 
     AppTitle, Status, Navi, LoginContainer, TimeLine, 
     Setting as MySetting, User as MyUser, 
-    Message as MyMessage, Search as MySearch
+    Message as MyMessage, Search as MySearch,
+    Debug as MyDebug
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
@@ -57,6 +58,13 @@ const Setting = () => (
     </React.Fragment>
 );
 
+const Debug = () => (
+    <React.Fragment>
+        <h2>Debug</h2>
+        <MyDebug />
+    </React.Fragment>
+);
+
 const App = () => (
     <Router history={history}>
         <Provider user={userStore} say={sayStore} pc={pcStore} setting={settingStore} conn={connStateStore}>
@@ -79,6 +87,9 @@ const App = () => (
                     </Route>
                     <Route path="/setting">
                         <Setting />
+                    </Route>
+                    <Route path="/debug">
+                        <Debug />
                     </Route>
                     <Route path="/main">
                         <Main />

@@ -22,11 +22,15 @@ export default class Navi extends React.Component<{user?: UserStoreType, setting
                 className="pure-button" css={{margin:'0px 4px'}}>User</Link>
             <Link to="/setting" className="pure-button" css={{margin:'0px 4px'}}>Setting</Link>
         </React.Fragment>
+        const debugMenu = <React.Fragment>
+            <Link to="/debug" className="pure-button" css={{margin:'0px 4px'}}>Debug</Link>
+        </React.Fragment>
         return <React.Fragment>
             <div css={{display:'flex'}}>
                 <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>Main</Link>
                 <Link to="/login" className="pure-button" css={{margin:'0px 4px'}}>Login</Link>
                 {user!.logged ? loggedMenu : null}
+                {setting!.showDebugMenu ? debugMenu : null}
                 <div className="pure-form" css={{paddingLeft:'8px'}}>
                     <input type="text" className="pure-input-rounded" ref={this.searchRef} onChange={(ev) => {
                         if (this.searchRef.current && this.searchRef.current.value.length > 0) {

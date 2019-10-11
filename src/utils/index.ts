@@ -12,6 +12,8 @@ import getFullDateStr from './getFullDateStr';
 import getJsonCopy from './getJsonCopy';
 import compareJson from './compareJson';
 import Finder from './finder';
+import exportData from './exportData';
+import importData from './importData';
 
 export {
     makePC, PCBuilder,
@@ -26,4 +28,6 @@ export {
     getJsonCopy,
     compareJson,
     Finder,
+    exportData,
+    importData,
 }
