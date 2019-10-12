@@ -20,14 +20,14 @@ export default class Navi extends React.Component<{user?: UserStoreType, setting
         let notifyIcon = null
         if (user!.currentUser) {
             const notify = user!.currentUser.notify || [];
-            notifyIcon = notify.length > 0 ? 
+            notifyIcon = notify.filter(e => e[1] === true).length > 0 ? 
                 <i className="material-icons" css={{fontSize:'26px'}}>notifications_active</i>
                 : <i className="material-icons" css={{fontSize:'26px'}}>notifications</i>
         }
         const loggedMenu = <React.Fragment>
             <Link to={{pathname:'/user', search: user!.getUser ? '?tgt=' + user!.getUser.serial : ''}}
                 className="pure-button" css={{margin:'0px 4px'}}>User</Link>
-            <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>
+            <Link to="/notification" className="pure-button" css={{margin:'0px 4px'}}>
                 <div css={{display:'flex', alignItems:'center'}}>
                     {notifyIcon}
                 </div>

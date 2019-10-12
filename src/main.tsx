@@ -1,6 +1,6 @@
 /** @jsx jsx */
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { Router, Switch, Route } from 'react-router-dom';
 import { Provider } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
@@ -8,62 +8,11 @@ import {
     history, userStore, sayStore, pcStore, settingStore, connStateStore
 } from './stores';
 import { 
-    AppTitle, Status, Navi, LoginContainer, TimeLine, 
-    Setting as MySetting, User as MyUser, 
-    Message as MyMessage, Search as MySearch,
-    Debug as MyDebug
+    AppTitle, Status, Navi, Container
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
 
-const Main = () => (
-    <React.Fragment>
-        <h2 css={{margin:'8px 0px'}}>Main</h2>
-        <TimeLine />
-    </React.Fragment>
-);
-
-const Login = () => (
-    <React.Fragment>
-        <h2>Login/Registration</h2>
-        <LoginContainer />
-    </React.Fragment>
-);
-
-const User = () => (
-    <React.Fragment>
-        <h2>User</h2>
-        <MyUser />
-    </React.Fragment>
-);
-
-const Message = () => (
-    <React.Fragment>
-        <h2>Message</h2>
-        <MyMessage />
-    </React.Fragment>
-);
-
-const Search = () => (
-    <React.Fragment>
-        <h2>Search</h2>
-        <MySearch />
-    </React.Fragment>
-);
-
-const Setting = () => (
-    <React.Fragment>
-        <h2>Setting</h2>
-        <MySetting />
-    </React.Fragment>
-);
-
-const Debug = () => (
-    <React.Fragment>
-        <h2>Debug</h2>
-        <MyDebug />
-    </React.Fragment>
-);
 
 const App = () => (
     <Router history={history}>
@@ -74,28 +23,31 @@ const App = () => (
                 <Navi />
                 <Switch>
                     <Route path="/login">
-                        <Login />
+                        <Container.Login />
                     </Route>
                     <Route path="/user">
-                        <User />
+                        <Container.User />
+                    </Route>
+                    <Route path="/notification">
+                        <Container.Notification />
                     </Route>
                     <Route path="/message">
-                        <Message />
+                        <Container.Message />
                     </Route>
                     <Route path="/search">
-                        <Search />
+                        <Container.Search />
                     </Route>
                     <Route path="/setting">
-                        <Setting />
+                        <Container.Setting />
                     </Route>
                     <Route path="/debug">
-                        <Debug />
+                        <Container.Debug />
                     </Route>
                     <Route path="/main">
-                        <Main />
+                        <Container.Main />
                     </Route>
                     <Route path="/">
-                        <Main />
+                        <Container.Main />
                     </Route>
                 </Switch>
             </div>
