@@ -1,6 +1,7 @@
 import { observable, computed, action } from 'mobx';
 import * as uuid from 'uuid';
 import * as bcrypt from 'bcryptjs';
+import * as localForage from 'localforage';
 import { SayType, UserType } from '../types';
 import { noImage } from '../utils/noImageIcon';
 import clientId from './clientId';
@@ -246,6 +247,7 @@ class UserStore {
                 found.clientId = this.currentUser.clientId;
                 found.update = this.currentUser.update;
                 this.logged = true;
+                this.saveSession();
                 resolve(true);
             } else {
                 resolve(false);
@@ -257,6 +259,7 @@ class UserStore {
     logout(): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             this.logged = false;
+            this.disposeSession();
             if (this.currentUser) {
                 const serial = this.currentUser.serial;
                 const found = users.getUsers.find(e => e.serial === serial);
@@ -302,6 +305,48 @@ class UserStore {
                 resolve(true);
             }
         });
+    }
+
+    private saveSession() {
+        const copy = Object.assign({}, this.currentUser);
+        (Object.keys(copy) as Array<keyof typeof copy>).forEach((key) => {
+            if (copy[key] instanceof Array) {
+                if (key === 'notify') {
+                    (copy[key] as [string, Boolean][]) = [...copy[key].map(ee => {
+                        return Object.assign({}, ee);
+                    })];
+                } else {
+                    (copy[key] as Array<any>) = [...(copy[key] as Array<any>)];
+                }
+            }
+        });
+        const session = {obj: copy, expire: Date.now() + (7 * 24 * 60 * 60)};
+        localForage.setItem('user_session', session).catch(err => console.error(err));
+    }
+
+    private loadSession() {
+        localForage.getItem<{obj: UserType, expire: number}>('user_session').then((result) => {
+            console.log(result);
+            if (result) {
+                if (result.expire > Date.now()) {
+                    this.currentUser = result.obj;
+                    this.logged = true;
+                    console.log('session loaded!');
+                } else {
+                    this.disposeSession();
+                }
+            }
+        }).catch(err => console.error(err));
+    }
+
+    private disposeSession() {
+        localForage.removeItem('user_session').catch(err => console.error(err));
+        console.log('session disposed!');
+    }
+
+    constructor() {
+        console.log('userStore init');
+        this.loadSession();
     }
 
 }
