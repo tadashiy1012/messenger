@@ -21,7 +21,7 @@ class SettingStore {
     showSearchMode: number = 0;
 
     @observable
-    showDebugMenu: Boolean = true;
+    showDebugMenu: Boolean = JSON.parse(process.env.DEBUG || 'false');
 
     @action
     setShowDetail(show: Boolean) {

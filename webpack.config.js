@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 module.exports = {
     mode: 'development',
     entry: './src/main.tsx',
@@ -10,7 +11,7 @@ module.exports = {
         rules: [
             {
                 test: /\.(tsx|ts)$/,
-                use: 'awesome-typescript-loader',
+                use: 'ts-loader',
                 exclude: '/tests/'
             },
             {
@@ -49,9 +50,12 @@ module.exports = {
             'node_modules',
             path.resolve('./src')
         ],
-        extensions: ['.ts', '.tsx', '.js', 'json']
+        extensions: ['.ts', '.tsx', '.js']
     },
-    devtool: 'source-map',
+    plugins: [new webpack.EnvironmentPlugin({
+        DEBUG: true
+    })],
+    devtool: 'inline-source-map',
     devServer: {
         contentBase: path.join(__dirname, 'public'),
         watchContentBase: true,
