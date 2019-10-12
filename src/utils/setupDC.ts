@@ -1,4 +1,4 @@
-import { DcPayloadType } from "types";
+import { DcPayloadType } from "../types";
 
 export default function setupDC(
     dc: RTCDataChannel, 

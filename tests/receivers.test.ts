@@ -1,5 +1,5 @@
 import Receivers from '../src/stores/pcReceivers';
-import { DcPayloadType } from 'types';
+import { DcPayloadType } from '../src/types';
 
 describe('Receivers', () => {
     test('Receiversが正常に機能すること', () => {

@@ -1,5 +1,5 @@
 import users from '../src/stores/users';
-import { UserType } from 'types';
+import { UserType } from '../src/types';
 
 describe('users', () => {
     test('usersが正常に機能する', () => {
