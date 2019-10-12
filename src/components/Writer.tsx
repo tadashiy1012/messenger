@@ -38,7 +38,7 @@ export default class Writer extends React.Component<WriterProps> {
                 say: value
             };
             say!.addSay(newSay);
-            const result = value.match(/^@[A-Za-z].+(\s|\n)/);
+            const result = value.match(/^@[A-Za-z][A-Za-z0-9]+(\s|\n)/);
             if (result) {
                 const tgtName = result[0].substring(1, result[0].length - 1);
                 const tgtUser = Finder.findUserByName(tgtName);
@@ -47,6 +47,11 @@ export default class Writer extends React.Component<WriterProps> {
                     if (!copy.notify) copy.notify = [];
                     copy.notify.push([newSay.id, true]);
                     users.update(copy);
+                    console.log('notify added!');
+                    if (tgtUser.serial === user!.currentUser.serial) {
+                        user!.setUser(copy);
+                        console.log('current user update!');
+                    }
                 }
             }
         } else {

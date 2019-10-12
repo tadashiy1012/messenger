@@ -22,6 +22,11 @@ class UserStore {
     }
 
     @action
+    setUser(user: UserType) {
+        this.currentUser = user;
+    }
+
+    @action
     updateUser(password: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
@@ -37,6 +42,7 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
+                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -56,6 +62,7 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
+                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -75,6 +82,7 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
+                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -105,6 +113,7 @@ class UserStore {
                 } else {
                     reject(new Error('follow target user not found'));
                 }
+                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -135,6 +144,7 @@ class UserStore {
                 } else {
                     reject(new Error('follow target user not found'));
                 }
+                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -173,6 +183,7 @@ class UserStore {
                         resolve(true);
                     }
                 });
+                this.saveSession();
                 resolve(false);
             } else {
                 reject(new Error('login state error!'));
@@ -213,6 +224,7 @@ class UserStore {
                         resolve(true);
                     }
                 });
+                this.saveSession();
                 resolve(false);
             } else {
                 reject(new Error('login state error!'));
@@ -220,6 +232,25 @@ class UserStore {
         });
     }
     
+    @action
+    updateUserNotify(): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.currentUser) {
+                const copy = Object.assign({}, this.currentUser);
+                copy.notify = [...copy.notify.map(e => {
+                    e[1] = false;
+                    return e;
+                })];
+                this.currentUser = copy;
+                users.update(copy);
+                this.saveSession();
+                resolve(true);
+            } else {
+                reject(new Error('login state error!'));
+            }
+        });
+    }
+
     @action
     setLogged(logged: Boolean) {
         this.logged = logged;
@@ -320,8 +351,9 @@ class UserStore {
                 }
             }
         });
-        const session = {obj: copy, expire: Date.now() + (7 * 24 * 60 * 60)};
+        const session = {obj: copy, expire: Date.now() + (7 * 24 * 60 * 60 * 1000)};
         localForage.setItem('user_session', session).catch(err => console.error(err));
+        console.log('session saved!');
     }
 
     private loadSession() {
@@ -329,9 +361,14 @@ class UserStore {
             console.log(result);
             if (result) {
                 if (result.expire > Date.now()) {
-                    this.currentUser = result.obj;
-                    this.logged = true;
-                    console.log('session loaded!');
+                    const found = users.find(result.obj.serial);
+                    if (found) {
+                        this.currentUser = found;
+                        this.logged = true;
+                        console.log('session loaded!');
+                    } else {
+                        this.disposeSession();
+                    }
                 } else {
                     this.disposeSession();
                 }

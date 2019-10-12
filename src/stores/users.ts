@@ -69,7 +69,7 @@ class Users {
                         if (inner[key] instanceof Array) {
                             if (key === 'notify') {
                                 (inner[key] as [string, Boolean][]) = [...inner[key].map(ee => {
-                                    return Object.assign({}, ee);
+                                    return Object.assign([], ee);
                                 })];
                             } else {
                                 (inner[key] as Array<any>) = [...(inner[key] as Array<any>)];

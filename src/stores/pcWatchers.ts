@@ -3,7 +3,7 @@ import users from './users';
 import caches from './caches';
 import userStore from './userStore';
 import sayStore from './sayStore';
-import { getJsonCopy } from "../utils";
+import { getJsonCopy, compareJson } from "../utils";
 
 export default class Watchers {
 
@@ -75,6 +75,15 @@ export default class Watchers {
                 users.save().then((result) => {
                     if (result) {
                         console.log('user list saved!');
+                        const currentUser = userStore.currentUser;
+                        if (currentUser) {
+                            const found = users.find(currentUser.serial);
+                            if (found && (found.update > currentUser.update || !compareJson(found, currentUser))) {
+                                const copy = Object.assign({}, found);
+                                userStore.setUser(copy);
+                                console.log('current user update');
+                            }
+                        }
                         this.prevList = getJsonCopy(users.getUsers);
                         resolve(true);
                     } else {

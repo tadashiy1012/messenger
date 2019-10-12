@@ -1,6 +1,7 @@
 import { CacheType, UserType, DcPayloadType } from "../types";
 import users from './users';
 import caches from './caches';
+import { compareJson } from "../utils";
 
 export default class Receivers {
 
@@ -37,7 +38,7 @@ export default class Receivers {
                 payload.userList.forEach((e: UserType) => {
                     const found = users.find(e.serial);
                     if (found) {
-                        if (found.update < e.update) {
+                        if (found.update < e.update || !compareJson(found, e)) {
                             users.update(e);
                             console.log('(( user list update! ))');
                         }

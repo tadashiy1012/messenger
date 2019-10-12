@@ -8,6 +8,7 @@ export default interface UserStoreType {
     logout(): Promise<Boolean>
     registration(name: string, email: string, password: string): Promise<Boolean>
     getUser: UserType | null
+    setUser(user: UserType): void
     updateUser(password: string): Promise<Boolean>
     updateUserIcon(icon: string): Promise<Boolean>
     updateUserProfile(prof: string): Promise<Boolean>
@@ -15,4 +16,5 @@ export default interface UserStoreType {
     updateUserUnFollow(tgtSerial: string): Promise<Boolean>
     updateUserLike(tgtSay: SayType): Promise<Boolean>
     updateUserUnLike(tgtSay: SayType): Promise<Boolean>
+    updateUserNotify(): Promise<Boolean>
 }
