@@ -6,6 +6,7 @@ import { observer, inject } from 'mobx-react';
 import { UserStoreType, SayType } from "../types";
 import { history } from '../stores';
 import { Finder, getFullDateStr, escapeHtml } from '../utils';
+import Line from "./Line";
 
 interface NotificationProps {
     user?: UserStoreType
@@ -24,6 +25,14 @@ export default class Notification extends React.Component<NotificationProps> {
             }
         });
     }
+    likeClickHandler(tgt: SayType) {
+        const {user} = this.props;
+        user!.updateUserLike(tgt).catch(err => console.error(err));
+    }
+    unLikeClickHandler(tgt: SayType) {
+        const {user} = this.props;
+        user!.updateUserUnLike(tgt).catch(err => console.error(err));
+    }
     render() {
         const {user} = this.props;
         if (!user!.logged) {
@@ -31,40 +40,23 @@ export default class Notification extends React.Component<NotificationProps> {
         }
         let content = null;
         if (user!.currentUser) {
+            const crntUser = user!.currentUser;
             const makeLi = (say: SayType | undefined, newLs?: Boolean) => {
                 if (say) {
                     const author = Finder.findAuthorName(say.authorId);
-                    return <li key={say.id} css={{
-                        margin:'12px 0px', borderBottom:'solid 1px #ddd', padding:'6px', cursor:'pointer', 
-                        '&:hover':{backgroundColor: '#eee'}
-                    }} onClick={() => {
-                        history.push({pathname:'/message', search:'?tgt=' + say.id});
-                    }}>
-                        {newLs && <div>
-                            <i className="material-icons" css={{color:'#777'}}>fiber_new</i>
-                        </div>}
-                        <div css={{display:'flex', alignItems:'center'}}>
-                            <Link to={{pathname:'/user', search: '?tgt=' + say.authorId}} css={{
-                                display:'flex', alignItems:'center'
-                            }} onClick={(ev) => { ev.stopPropagation(); }}>
-                                <img src={Finder.findAuthorIcon(say.authorId)} width="24" height="24" css={{
-                                    borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                                <span css={{margin:'0px 4px'}}>{author}</span>
-                            </Link>
-                            <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>{getFullDateStr(say.date)}</span>
-                            <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999', margin:'0px 14px'}}>
-                                <i className="material-icons">message</i>
-                                <span>reply:{say.reply.length}</span>
-                            </div>
-                            <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999'}}>
-                                <i className="material-icons">favorite</i>
-                                <span>like:{say.like.length}</span>
-                            </div>
-                        </div>
-                        <div css={{marginLeft:'22px', padding:'6px'}}>
-                            <span dangerouslySetInnerHTML={{__html: escapeHtml(say.say).replace('\n', '<br/>')}}></span>
-                        </div>
-                    </li>
+                    const icon = Finder.findAuthorIcon(say.authorId);
+                    const alike = crntUser && say.like.find(ee => ee === crntUser!.serial) ? 
+                        <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
+                            this.unLikeClickHandler(say);
+                        }}>favorite</i> :
+                        <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
+                            this.likeClickHandler(say);
+                        }}>favorite_border</i>
+                    const naLike = crntUser && say.like.find(ee => ee === crntUser!.serial) ? 
+                        <i className="material-icons">favorite</i> :
+                        <i className="material-icons">favorite_border</i>
+                    const like = user!.logged && crntUser && crntUser.serial !== say.authorId ? alike : naLike;
+                    return <Line key={say.id} name={author} authorIcon={icon} say={say} likeIcon={like} />
                 } else {
                     return null;
                 }

@@ -1,6 +1,5 @@
 /** @jsx jsx */
 import * as React from 'react';
-import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { UserStoreType } from '../types';
 
@@ -8,23 +7,14 @@ interface RegistrationProps {
     user?: UserStoreType
 }
 
-@inject('user')
-@observer
-export default class Registration extends React.Component<RegistrationProps> {
-    private emailRef: React.RefObject<HTMLInputElement>;
-    private passRef: React.RefObject<HTMLInputElement>;
-    private nameRef: React.RefObject<HTMLInputElement>;
-    constructor(props: Readonly<RegistrationProps>) {
-        super(props);
-        this.emailRef = React.createRef();
-        this.passRef = React.createRef();
-        this.nameRef = React.createRef();
-    }
-    registrationClickHandler(ev: React.MouseEvent) {
-        const {user} = this.props;
-        const email = this.emailRef.current!.value;
-        const password = this.passRef.current!.value;
-        const name = this.nameRef.current!.value;
+export default function Registration({user}: RegistrationProps) {
+    const emailRef: React.RefObject<HTMLInputElement> = React.createRef();
+    const passRef: React.RefObject<HTMLInputElement> = React.createRef();
+    const nameRef: React.RefObject<HTMLInputElement> = React.createRef();
+    const registrationClickHandler = () => {
+        const email = emailRef.current!.value;
+        const password = passRef.current!.value;
+        const name = nameRef.current!.value;
         user!.registration(name, email, password).then((result) => {
             if (result) {
                 alert('registration success!');
@@ -36,22 +26,20 @@ export default class Registration extends React.Component<RegistrationProps> {
             alert('registration fail');
         });
     };
-    render() {
-        return <React.Fragment>
-            <div className="pure-form pure-form-stacked" css={{margin:'12px 0px'}}>
-                <h3 css={{marginBottom:'2px'}}>registration</h3>
-                <span>email</span>
-                <input type="email" className="pure-input-1-3" ref={this.emailRef} />
-                <span>name</span>
-                <input type="text" className="pure-input-1-3" ref={this.nameRef} />
-                <span>password</span>
-                <input type="password" className="pure-input-1-3" ref={this.passRef} />
-                <button className="pure-button" onClick={(ev) => {
-                    this.registrationClickHandler(ev)
-                }}>
-                    registration
-                </button>
-            </div>
-        </React.Fragment>
-    }
+    return <React.Fragment>
+        <div className="pure-form pure-form-stacked" css={{margin:'12px 0px'}}>
+            <h3 css={{marginBottom:'2px'}}>registration</h3>
+            <span>email</span>
+            <input type="email" className="pure-input-1-3" ref={emailRef} />
+            <span>name</span>
+            <input type="text" className="pure-input-1-3" ref={nameRef} />
+            <span>password</span>
+            <input type="password" className="pure-input-1-3" ref={passRef} />
+            <button className="pure-button" onClick={() => {
+                registrationClickHandler()
+            }}>
+                registration
+            </button>
+        </div>
+    </React.Fragment>
 }

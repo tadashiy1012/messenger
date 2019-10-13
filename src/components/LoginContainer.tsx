@@ -22,23 +22,24 @@ export default class LoginContainer extends React.Component<LoginContainerProps,
     }
     render() {
         const {user} = this.props;
+        const login = <React.Fragment>
+            <div css={{display:this.state.login ? 'block':'none', margin:'12px 0px'}}>
+                <Login user={user} />
+                <a href="#" onClick={(ev) => {
+                    ev.preventDefault();
+                    this.setState({login: false});
+                }}>registration</a>
+            </div>
+            <div css={{display:this.state.login ? 'none':'block', margin:'12px 0px'}}>
+                <Registration user={user} />
+                <a href="#" onClick={(ev) => {
+                    ev.preventDefault();
+                    this.setState({login: true});
+                }}>login</a>
+            </div>
+        </React.Fragment>
         return <React.Fragment>
-            {user!.logged ? <Logout /> : <React.Fragment>
-                <div css={{display:this.state.login ? 'block':'none', margin:'12px 0px'}}>
-                    <Login />
-                    <a href="#" onClick={(ev) => {
-                        ev.preventDefault();
-                        this.setState({login: false});
-                    }}>registration</a>
-                </div>
-                <div css={{display:this.state.login ? 'none':'block', margin:'12px 0px'}}>
-                    <Registration />
-                    <a href="#" onClick={(ev) => {
-                        ev.preventDefault();
-                        this.setState({login: true});
-                    }}>login</a>
-                </div>
-            </React.Fragment>}
+            {user!.logged ? <Logout user={user} /> : login}
         </React.Fragment>
     }
 }

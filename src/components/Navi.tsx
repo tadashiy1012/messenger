@@ -6,11 +6,16 @@ import { observer, inject } from 'mobx-react';
 import { UserStoreType, SettingStoreType } from '../types';
 import { history } from '../stores';
 
+interface NaviProps {
+    user?: UserStoreType
+    setting?: SettingStoreType
+}
+
 @inject('user', 'setting')
 @observer
-export default class Navi extends React.Component<{user?: UserStoreType, setting?: SettingStoreType}, {word: string}> {
+export default class Navi extends React.Component<NaviProps, {word: string}> {
     private searchRef: React.RefObject<HTMLInputElement>;
-    constructor(props: Readonly<{ user?: UserStoreType | undefined; }>) {
+    constructor(props: Readonly<NaviProps>) {
         super(props);
         this.searchRef = React.createRef();
         this.state = {word: ''};
