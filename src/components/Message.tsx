@@ -1,12 +1,12 @@
 /** @jsx jsx */
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
-import { css, jsx } from '@emotion/core';
+import { jsx } from '@emotion/core';
 import { history } from '../stores';
 import { UserStoreType, SayType, SayStoreType, SettingStoreType } from '../types';
-import { escapeHtml, getFullDateStr, noImage, Finder } from '../utils';
+import { noImage, Finder } from '../utils';
 import uuid = require('uuid');
+import Line from './Line';
 
 interface ReplyWriterProps {
     user?: UserStoreType
@@ -14,17 +14,10 @@ interface ReplyWriterProps {
     tgtSay?: SayType
 }
 
-@inject('user', 'say')
-@observer
-class ReplyWriter extends React.Component<ReplyWriterProps> {
-    private _inSayRef: React.RefObject<HTMLTextAreaElement>;
-    constructor(props: Readonly<ReplyWriterProps>) {
-        super(props);
-        this._inSayRef = React.createRef();
-    }
-    sendClickHandler(ev: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-        console.log(this._inSayRef.current!.value);
-        const {user, say, tgtSay} = this.props;
+function ReplyWriter({user, say, tgtSay}: ReplyWriterProps) {
+    const _inSayRef: React.RefObject<HTMLTextAreaElement> = React.createRef();
+    const sendClickHandler = () => {
+        console.log(_inSayRef.current!.value);
         if (user && user.currentUser && say && tgtSay) {
             const {serial, name} = user.currentUser;
             const newSay: SayType = {
@@ -34,7 +27,7 @@ class ReplyWriter extends React.Component<ReplyWriterProps> {
                 authorId: serial,
                 like: [],
                 reply: [],
-                say: this._inSayRef.current!.value
+                say: _inSayRef.current!.value
             };
             say.addSay(newSay);
             tgtSay.reply.push(newSay.id);
@@ -46,22 +39,19 @@ class ReplyWriter extends React.Component<ReplyWriterProps> {
             alert('say send fail!!');
         }
     }
-    render() {
-        const {user} = this.props;
-        return <React.Fragment>
-            <div className="pure-form" css={{display:'flex', alignItems:'center', margin:'14px 0px'}}>
-                <img src={user!.currentUser ? user!.currentUser.icon : noImage} width="32" height="32" css={{
-                    borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
-                <span>{user!.currentUser ? user!.currentUser.name : 'no_name'}'s reply: </span>
-                <textarea className="pure-input pure-input-1-3"
-                    css={{margin:'0px 4px'}}
-                    ref={this._inSayRef} disabled={user!.logged ? false:true}></textarea>
-                <button className="pure-button" 
-                    onClick={(ev) => {this.sendClickHandler(ev)}} 
-                    disabled={user!.logged ? false : true}>send</button>
-            </div>
-        </React.Fragment>
-    }
+    return <React.Fragment>
+        <div className="pure-form" css={{display:'flex', alignItems:'center', margin:'14px 0px'}}>
+            <img src={user!.currentUser ? user!.currentUser.icon : noImage} width="32" height="32" css={{
+                borderRadius:'20px', border:'solid 1px gray', margin:'0px 4px'}} />
+            <span>{user!.currentUser ? user!.currentUser.name : 'no_name'}'s reply: </span>
+            <textarea className="pure-input pure-input-1-3"
+                css={{margin:'0px 4px'}}
+                ref={_inSayRef} disabled={user!.logged ? false:true}></textarea>
+            <button className="pure-button" 
+                onClick={() => {sendClickHandler()}} 
+                disabled={user!.logged ? false : true}>send</button>
+        </div>
+    </React.Fragment>
 }
 
 interface MessageProps {
@@ -82,7 +72,7 @@ export default class Message extends React.Component<MessageProps> {
         user!.updateUserUnLike(tgt).catch(err => console.error(err));
     }
     render() {
-        const {user, setting} = this.props;
+        const {user, setting, say} = this.props;
         const tgt = setting!.showMessageTarget;
         const tgtSay = Finder.findSay(tgt!);
         const crntUser = user!.getUser;
@@ -90,9 +80,8 @@ export default class Message extends React.Component<MessageProps> {
         if (tgtSay) {
             let reply = null;
             if (user!.logged) {
-                reply = <ReplyWriter tgtSay={tgtSay} />
+                reply = <ReplyWriter tgtSay={tgtSay} user={user} say={say} />
             }
-            const name = Finder.findAuthorName(tgtSay.authorId);
             const alike = crntUser && tgtSay.like.find(ee => ee === crntUser!.serial) ? 
                 <i className="material-icons" css={{cursor:'pointer'}} onClick={() => {
                     this.unLikeClickHandler(tgtSay)}}>favorite</i> :
@@ -105,58 +94,21 @@ export default class Message extends React.Component<MessageProps> {
                 const s = Finder.findSay(e);
                 if (s) {
                     const sname = Finder.findAuthorName(s.authorId);
-                    return <li key={s.id} css={{margin:'12px 0px', borderBottom:'solid 1px #ddd', padding:'6px'}}>
-                        <div css={{display:'flex', alignItems:'center'}}>
-                            <Link to={{pathname:'/user', search: '?tgt=' + s.authorId}} css={{
-                                display:'flex', alignItems:'center'
-                            }}>
-                                <img src={Finder.findAuthorIcon(s.authorId)} width="24" height="24" css={{
-                                    borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                                <span css={{margin:'0px 4px'}}>{sname !== 'no_name' ? sname : s.author}</span>
-                            </Link>
-                            <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>{getFullDateStr(s.date)}</span>
-                            <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999', margin:'0px 14px'}}>
-                                <i className="material-icons">message</i>
-                                <span>reply:{s.reply.length}</span>
-                            </div>
-                            <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999'}}>
-                                {user!.logged && crntUser && crntUser.serial !== s.authorId ? alike : naLike}
-                                <span>like:{s.like.length}</span>
-                            </div>
-                        </div>
-                        <div css={{marginLeft:'22px', padding:'6px'}}>
-                            <span dangerouslySetInnerHTML={{__html: escapeHtml(s.say).replace('\n', '<br/>')}}></span>
-                        </div>
-                    </li>
+                    const sicon = Finder.findAuthorIcon(s.authorId);
+                    const slike = user!.logged && crntUser && crntUser.serial !== s.authorId ? alike : naLike;
+                    return <Line key={s.id} name={sname} authorIcon={sicon} say={s} likeIcon={slike} />
                 } else {
                     return null;
                 }
             })
+            const name = Finder.findAuthorName(tgtSay.authorId);
+            const icon = Finder.findAuthorIcon(tgtSay.authorId);
+            const like = user!.logged && crntUser && crntUser.serial !== tgtSay.authorId ? alike : naLike;
             contents = <React.Fragment>
                 {reply}
-                <div css={{borderBottom:'solid 1px #ddd', padding:'6px'}}>
-                    <div css={{display:'flex', alignItems:'center'}}>
-                        <Link to={{pathname:'/user', search: '?tgt=' + tgtSay.authorId}} css={{
-                            display:'flex', alignItems:'center'
-                        }}>
-                            <img src={Finder.findAuthorIcon(tgtSay.authorId)} width="24" height="24" css={{
-                                borderRadius:'20px', border:'solid 1px gray', margin: '4px'}}  />
-                            <span css={{margin:'0px 4px'}}>{name !== 'no_name' ? name : tgtSay.author}</span>
-                        </Link>
-                        <span css={{color:'#999', fontSize:'13px', margin:'0px 4px'}}>{getFullDateStr(tgtSay.date)}</span>
-                        <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999', margin:'0px 14px'}}>
-                            <i className="material-icons">message</i>
-                            <span>reply:{tgtSay.reply.length}</span>
-                        </div>
-                        <div css={{display:'flex', alignItems:'center', fontSize:'11px', color:'#999'}}>
-                            {user!.logged && crntUser && crntUser.serial !== tgtSay.authorId ? alike : naLike}
-                            <span>like:{tgtSay.like.length}</span>
-                        </div>
-                    </div>
-                    <div css={{marginLeft:'22px', padding:'6px'}}>
-                        <span dangerouslySetInnerHTML={{__html: escapeHtml(tgtSay.say).replace('\n', '<br/>')}}></span>
-                    </div>
-                </div>
+                <ul css={{listStyleType:'none', paddingLeft:0}}>
+                    <Line name={name} authorIcon={icon} say={tgtSay} likeIcon={like} />
+                </ul>
                 <ul css={{listStyleType:'none', paddingLeft:'12px'}}>
                     {child}
                 </ul>
@@ -169,7 +121,7 @@ export default class Message extends React.Component<MessageProps> {
         </React.Fragment>
     }
     componentDidMount() {
-        const {user, setting} = this.props;
+        const {setting} = this.props;
         if (history) {
             const params = history.location.search.substring(1).split('&');
             if (params.length > 0) {
@@ -177,6 +129,5 @@ export default class Message extends React.Component<MessageProps> {
                 setting!.setShowMessageTarget(tgtId);
             }
         }
-        
     }
 }

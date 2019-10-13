@@ -89,7 +89,7 @@ export default class User extends React.Component<UserProps, UserState> {
             } else if (this.state.mode === 3) {
                 contents = <UserLike like={tgtUser.like} />
             } else if (this.state.mode === 4) {
-                contents = <UserReply tgtUser={tgtUser} />
+                contents = <UserReply tgtUser={tgtUser} user={user} />
             }
             return <React.Fragment>
                 <div css={{display:'flex', alignItems:'center'}}>
