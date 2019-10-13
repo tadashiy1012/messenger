@@ -42,7 +42,6 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -62,7 +61,6 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -82,7 +80,6 @@ class UserStore {
                     users.add(user);
                 }
                 this.currentUser = user;
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -113,7 +110,6 @@ class UserStore {
                 } else {
                     reject(new Error('follow target user not found'));
                 }
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -144,7 +140,6 @@ class UserStore {
                 } else {
                     reject(new Error('follow target user not found'));
                 }
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));
@@ -183,7 +178,6 @@ class UserStore {
                         resolve(true);
                     }
                 });
-                this.saveSession();
                 resolve(false);
             } else {
                 reject(new Error('login state error!'));
@@ -224,7 +218,6 @@ class UserStore {
                         resolve(true);
                     }
                 });
-                this.saveSession();
                 resolve(false);
             } else {
                 reject(new Error('login state error!'));
@@ -237,13 +230,12 @@ class UserStore {
         return new Promise((resolve, reject) => {
             if (this.currentUser) {
                 const copy = Object.assign({}, this.currentUser);
-                copy.notify = [...copy.notify.map(e => {
-                    e[1] = false;
+                copy.notify = copy.notify.map(e => {
+                    if (e[1] === true) e[1] = false;
                     return e;
-                })];
+                });
                 this.currentUser = copy;
                 users.update(copy);
-                this.saveSession();
                 resolve(true);
             } else {
                 reject(new Error('login state error!'));

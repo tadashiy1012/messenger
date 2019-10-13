@@ -1,6 +1,5 @@
 import clientId from './clientId';
-import { WsPayloadType, PcStateType } from "../types";
-import { MyWebSocket } from "../utils";
+import { WsPayloadType } from "../types";
 import connStateStore from './connStateStore';
 import pcStore from './pcStore';
 

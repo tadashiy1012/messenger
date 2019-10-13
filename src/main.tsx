@@ -8,7 +8,7 @@ import {
     history, userStore, sayStore, pcStore, settingStore, connStateStore
 } from './stores';
 import { 
-    AppTitle, Status, Navi, Container
+    AppTitle, Status, Navi, Container, Footer
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
@@ -50,6 +50,7 @@ const App = () => (
                         <Container.Main />
                     </Route>
                 </Switch>
+                <Footer />
             </div>
         </Provider>
     </Router>

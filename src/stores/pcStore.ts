@@ -1,12 +1,9 @@
 import { setupDC, makePCBC, makePreOffer, makePCA, MyWebSocket, makeWS } from "../utils";
-import { UserType, CacheType, SayType, PcStateType } from "../types";
 import Senders from "./pcSenders";
 import Receivers from "./pcReceivers";
 import Watchers from "./pcWatchers";
 import Transceivers from "./pcTransceivers";
 import clientId from './clientId';
-import users from './users';
-import caches from './caches';
 import connStateStore from './connStateStore';
 
 class PcStore {

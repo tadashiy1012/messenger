@@ -3,10 +3,9 @@ import React from "react";
 import { css, jsx } from '@emotion/core';
 import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
-import { UserStoreType, SayStoreType, SayType } from "types";
+import { UserStoreType, SayType } from "../types";
 import { history } from '../stores';
 import { Finder, getFullDateStr, escapeHtml } from '../utils';
-import users from "stores/users";
 
 interface NotificationProps {
     user?: UserStoreType
@@ -15,6 +14,16 @@ interface NotificationProps {
 @inject('user')
 @observer
 export default class Notification extends React.Component<NotificationProps> {
+    unListen: any;
+    constructor(props: Readonly<NotificationProps>) {
+        super(props)
+        const {user} = this.props;
+        this.unListen = history.listen((location, action) => {
+            if (location.pathname !== '/notification') {
+                user!.updateUserNotify().catch(err => console.error(err));
+            }
+        });
+    }
     render() {
         const {user} = this.props;
         if (!user!.logged) {
@@ -78,10 +87,6 @@ export default class Notification extends React.Component<NotificationProps> {
         return <React.Fragment>{content}</React.Fragment>
     }
     componentWillUnmount() {
-        const {user} = this.props;
-        if (user!.currentUser) {
-            console.log('update notify');
-            user!.updateUserNotify().catch(err => console.error(err));
-        }
+        this.unListen();
     }
 }

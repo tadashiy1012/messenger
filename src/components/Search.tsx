@@ -3,7 +3,7 @@ import * as React from 'react';
 import { css, jsx } from '@emotion/core';
 import { observer, inject } from 'mobx-react';
 import { history } from '../stores';
-import { SettingStoreType } from 'types';
+import { SettingStoreType } from '../types';
 import { Finder, compareJson, getFullDateStr, escapeHtml } from '../utils';
 import { Link } from 'react-router-dom';
 

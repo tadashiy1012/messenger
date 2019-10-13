@@ -7,7 +7,7 @@ import { SayType, UserStoreType, SayStoreType } from '../types';
 import { Finder } from '../utils';
 import { noImage } from '../utils/noImageIcon';
 import { Link } from 'react-router-dom';
-import users from 'stores/users';
+import users from '../stores/users';
 
 interface WriterProps {
     user?: UserStoreType
