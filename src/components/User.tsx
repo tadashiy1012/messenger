@@ -6,7 +6,7 @@ import { history } from '../stores';
 import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
 import { Finder, compareJson } from '../utils';
 import UserSay from './UserSay';
-import { Follow, Follower } from './UserFollow';
+import Follow from './UserFollow';
 import UserLike from './UserLike';
 import UserReply from './UserReply';
 
@@ -31,6 +31,8 @@ interface UserState {
     say: SayType[]
     sayLen: number
     mode: number
+    follows: [string, number][]
+    followers: [string, number][]
 }
 
 @inject('user', 'setting')
@@ -38,12 +40,15 @@ interface UserState {
 export default class User extends React.Component<UserProps, UserState> {
     private prevQuery: string[];
     private unlisten: any;
+    private timer: any | null;
     constructor(props: Readonly<UserProps>) {
         super(props);
         this.state = {
             say: [],
             sayLen: -1,
-            mode: 0
+            mode: 0,
+            follows: [],
+            followers: []
         };
         this.prevQuery = [];
         this.unlisten = history.listen((location) => {
@@ -64,6 +69,7 @@ export default class User extends React.Component<UserProps, UserState> {
                 }
             }
         });
+        this.timer = null;
     }
     render() {
         const {user, setting} = this.props;
@@ -83,9 +89,9 @@ export default class User extends React.Component<UserProps, UserState> {
             if (this.state.mode === 0) {
                 contents = <UserSay say={this.state.say} />
             } else if (this.state.mode === 1) {
-                contents = <Follow tgtUser={tgtUser} />
+                contents = <Follow tgtUsers={this.state.follows} />
             } else if (this.state.mode === 2) {
-                contents = <Follower tgtUser={tgtUser} />
+                contents = <Follow tgtUsers={this.state.followers} />
             } else if (this.state.mode === 3) {
                 contents = <UserLike like={tgtUser.like} />
             } else if (this.state.mode === 4) {
@@ -141,7 +147,7 @@ export default class User extends React.Component<UserProps, UserState> {
         }
     }
     componentDidMount() {
-        const {user, setting} = this.props;
+        const {setting} = this.props;
         if (history) {
             const params = history.location.search.substring(1).split('&');
             if (params.length > 0) {
@@ -156,8 +162,33 @@ export default class User extends React.Component<UserProps, UserState> {
                 });
             }
         }
+        const tgt = setting!.showUserTarget;
+        this.timer = setInterval(() => {
+            const tgtUser = Finder.findUser(tgt!);
+            if (tgtUser) {
+                const followers = [...this.state.followers];
+                tgtUser.follower.forEach(e => {
+                    Finder.findUserSay(e).then((resp) => {
+                        followers.push([e, resp.length]);
+                        this.setState({followers: followers});
+                    });
+                });
+                const follows = [...this.state.followers];
+                tgtUser.follow.forEach(e => {
+                    Finder.findUserSay(e).then((resp) => {
+                        follows.push([e, resp.length]);
+                        this.setState({follows: follows});
+                    });
+                });
+                clearInterval(this.timer!);
+                this.timer = null;
+            }
+        }, 1000);
     }
     componentWillUnmount() {
         this.unlisten();
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
     }
 }
