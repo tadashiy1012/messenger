@@ -1,11 +1,10 @@
 /** @jsx jsx */
 import React from "react";
 import { css, jsx } from '@emotion/core';
-import { Link } from 'react-router-dom';
 import { observer, inject } from 'mobx-react';
 import { UserStoreType, SayType } from "../types";
 import { history } from '../stores';
-import { Finder, getFullDateStr, escapeHtml } from '../utils';
+import { Finder } from '../utils';
 import Line from "./Line";
 
 interface NotificationProps {

@@ -2,17 +2,16 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType, SayType, SettingStoreType } from '../types';
+import { UserStoreType, SayType } from '../types';
 import Writer from './Writer';
 import GlobalTL from './TimelineGlobal';
 import LocalTL from './TimelineLocal';
 
 interface TimeLineProps {
     user?: UserStoreType
-    setting?: SettingStoreType
 }
 
-@inject('user', 'setting')
+@inject('user')
 @observer
 export default class TimeLine extends React.Component<TimeLineProps> {
     likeClickHandler(tgt: SayType) {
