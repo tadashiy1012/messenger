@@ -1,8 +1,8 @@
 /** @jsx jsx */
 import React from "react";
 import { css, jsx } from '@emotion/core';
-import { UserType } from "../types";
-import { Finder } from '../utils'
+import { UserType } from "../../types";
+import { Finder } from '../../utils'
 import { Link } from "react-router-dom";
 
 const ulStyle = css({listStyleType:'none', paddingLeft:0});

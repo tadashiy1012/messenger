@@ -2,9 +2,9 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { exportData, importData } from '../utils';
-import { SettingStoreType } from '../types';
-import { history } from '../stores';
+import { exportData, importData } from '../../utils';
+import { SettingStoreType } from '../../types';
+import { history } from '../../stores';
 
 interface DebugProps {
     setting?: SettingStoreType

@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import * as React from 'react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType } from '../types';
+import { UserStoreType } from '../../types';
 
 interface RegistrationProps {
     user?: UserStoreType

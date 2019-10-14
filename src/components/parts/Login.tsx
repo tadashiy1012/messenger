@@ -1,8 +1,8 @@
 /** @jsx jsx */
 import * as React from 'react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType } from '../types';
-import { history } from '../stores';
+import { UserStoreType } from '../../types';
+import { history } from '../../stores';
 
 interface LoginProps {
     user?: UserStoreType

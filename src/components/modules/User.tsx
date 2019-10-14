@@ -2,13 +2,10 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { history } from '../stores';
-import { UserStoreType, SayType, UserType, SettingStoreType } from '../types';
-import { Finder, compareJson } from '../utils';
-import UserSay from './UserSay';
-import Follow from './UserFollow';
-import UserLike from './UserLike';
-import UserReply from './UserReply';
+import { history } from '../../stores';
+import { UserStoreType, SayType, UserType, SettingStoreType } from '../../types';
+import { Finder, compareJson } from '../../utils';
+import { UserSay, UserFollow, UserLike, UserReply } from '../parts';
 
 const FollowButton = (props: {user?: UserStoreType, tgtUser: UserType}) => (
     <button className="pure-button" onClick={() => {
@@ -89,9 +86,9 @@ export default class User extends React.Component<UserProps, UserState> {
             if (this.state.mode === 0) {
                 contents = <UserSay say={this.state.say} />
             } else if (this.state.mode === 1) {
-                contents = <Follow tgtUsers={this.state.follows} />
+                contents = <UserFollow tgtUsers={this.state.follows} />
             } else if (this.state.mode === 2) {
-                contents = <Follow tgtUsers={this.state.followers} />
+                contents = <UserFollow tgtUsers={this.state.followers} />
             } else if (this.state.mode === 3) {
                 contents = <UserLike like={tgtUser.like} />
             } else if (this.state.mode === 4) {

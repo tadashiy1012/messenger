@@ -2,10 +2,8 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType, SayType } from '../types';
-import Writer from './Writer';
-import GlobalTL from './TimelineGlobal';
-import LocalTL from './TimelineLocal';
+import { UserStoreType, SayType } from '../../types';
+import { Writer, GlobalTL, LocalTL } from '../parts';
 
 interface TimeLineProps {
     user?: UserStoreType

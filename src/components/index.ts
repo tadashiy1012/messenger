@@ -1,13 +1,11 @@
-import AppTitle from "./AppTitle";
-import Status from "./Status";
+import Header from './Header';
 import Navi from './Navi';
-import Container from './Container'
+import Contents from './Contents';
 import Footer from './Footer';
 
 export {
-    AppTitle,
-    Status,
+    Header,
     Navi,
-    Container,
+    Contents,
     Footer,
 };

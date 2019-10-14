@@ -8,7 +8,7 @@ import {
     history, userStore, sayStore, pcStore, settingStore, connStateStore
 } from './stores';
 import { 
-    AppTitle, Status, Navi, Container, Footer
+    Header, Navi, Contents, Footer
 } from './components';
 import 'purecss/build/pure.css';
 import 'material-design-icons/iconfont/material-icons.css';
@@ -18,36 +18,35 @@ const App = () => (
     <Router history={history}>
         <Provider user={userStore} say={sayStore} pc={pcStore} setting={settingStore} conn={connStateStore}>
             <div css={{width: '800px', margin: '0px auto'}}>
-                <AppTitle />
-                <Status />
+                <Header />
                 <Navi />
                 <Switch>
                     <Route path="/login">
-                        <Container.Login />
+                        <Contents.Login />
                     </Route>
                     <Route path="/user">
-                        <Container.User />
+                        <Contents.User />
                     </Route>
                     <Route path="/notification">
-                        <Container.Notification />
+                        <Contents.Notification />
                     </Route>
                     <Route path="/message">
-                        <Container.Message />
+                        <Contents.Message />
                     </Route>
                     <Route path="/search">
-                        <Container.Search />
+                        <Contents.Search />
                     </Route>
                     <Route path="/setting">
-                        <Container.Setting />
+                        <Contents.Setting />
                     </Route>
                     <Route path="/debug">
-                        <Container.Debug />
+                        <Contents.Debug />
                     </Route>
                     <Route path="/main">
-                        <Container.Main />
+                        <Contents.Main />
                     </Route>
                     <Route path="/">
-                        <Container.Main />
+                        <Contents.Main />
                     </Route>
                 </Switch>
                 <Footer />

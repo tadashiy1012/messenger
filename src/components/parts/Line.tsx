@@ -1,10 +1,10 @@
 /** @jsx jsx */
 import * as React from 'react';
 import { css, jsx } from '@emotion/core';
-import { SayType } from '../types';
+import { SayType } from '../../types';
 import { Link } from 'react-router-dom';
-import { history } from '../stores';
-import { escapeHtml, getFullDateStr } from '../utils';
+import { history } from '../../stores';
+import { escapeHtml, getFullDateStr } from '../../utils';
 
 const liStyle = css({
     borderBottom:'solid 1px #ddd', padding:'6px', cursor:'pointer', '&:hover':{backgroundColor: '#eee'}

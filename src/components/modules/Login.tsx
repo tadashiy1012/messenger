@@ -2,10 +2,9 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType } from '../types';
-import Login from './Login';
-import Registration from './Registration';
-import Logout from './Logout';
+import { UserStoreType } from '../../types';
+import { Registration } from './';
+import { Login, Logout } from '../parts';
 
 interface LoginContainerProps {
     user?: UserStoreType

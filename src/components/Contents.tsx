@@ -1,26 +1,21 @@
 /** @jsx jsx */
 import * as React from 'react';
 import { css, jsx } from '@emotion/core';
-import TimeLine from './Timeline';
-import LoginContainer from './LoginContainer';
-import User from './User';
-import Notification from './Notification';
-import Message from './Message';
-import Search from './Search';
-import Setting from './Setting';
-import Debug from './Debug';
+import {
+    Timeline, Login, User, Notification, Message, Search, Setting, Debug
+} from './modules';
 
 const _Main = () => (
     <React.Fragment>
         <h2 css={{margin:'8px 0px'}}>Main</h2>
-        <TimeLine />
+        <Timeline />
     </React.Fragment>
 );
 
 const _Login = () => (
     <React.Fragment>
         <h2>Login/Registration</h2>
-        <LoginContainer />
+        <Login />
     </React.Fragment>
 );
 

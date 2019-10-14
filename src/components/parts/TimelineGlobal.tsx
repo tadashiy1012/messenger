@@ -2,9 +2,9 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { jsx, css } from '@emotion/core';
-import { UserStoreType, SayType, SayStoreType } from '../types';
-import { Finder } from '../utils';
-import Line from './Line';
+import { UserStoreType, SayType, SayStoreType } from '../../types';
+import { Finder } from '../../utils';
+import { Line } from '../parts';
 
 const pointer = css({cursor:'pointer'});
 

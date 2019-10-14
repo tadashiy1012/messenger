@@ -1,9 +1,9 @@
 /** @jsx jsx */
 import React from "react";
 import { jsx } from '@emotion/core';
-import { SayType } from "../types";
-import { Finder } from '../utils';
-import Line from "./Line";
+import { SayType } from "../../types";
+import { Finder } from '../../utils';
+import { Line } from '../parts';
 
 interface SayProps {
     say: SayType[]

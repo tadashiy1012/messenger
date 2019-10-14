@@ -2,10 +2,10 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { history } from '../stores';
-import { UserStoreType } from '../types';
-import { noImage } from '../utils/noImageIcon';
-import { createImage } from '../utils';
+import { history } from '../../stores';
+import { UserStoreType } from '../../types';
+import { noImage } from '../../utils/noImageIcon';
+import { createImage } from '../../utils';
 
 interface SettingProps {
     user?: UserStoreType

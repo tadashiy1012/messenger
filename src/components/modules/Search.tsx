@@ -2,11 +2,11 @@
 import * as React from 'react';
 import { css, jsx } from '@emotion/core';
 import { observer, inject } from 'mobx-react';
-import { history } from '../stores';
-import { SettingStoreType, UserStoreType, SayType, UserType } from '../types';
-import { Finder, compareJson } from '../utils';
+import { history } from '../../stores';
+import { SettingStoreType, UserStoreType, SayType, UserType } from '../../types';
+import { Finder, compareJson } from '../../utils';
 import { Link } from 'react-router-dom';
-import Line from './Line';
+import { Line } from '../parts';
 
 const liStyle = css({borderBottom:'solid 1px #ccc', padding:'16px', cursor:'pointer', '&:hover':{backgroundColor: '#eee'}});
 const bodyStyle = css({display:'grid', gridTemplateColumns:'180px 320px 230px'});

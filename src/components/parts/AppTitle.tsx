@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { SettingStoreType, ConnStateStoreType } from '../types';
+import { SettingStoreType, ConnStateStoreType } from '../../types';
 
 interface AppTitleProps {
     setting?: SettingStoreType

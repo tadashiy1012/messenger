@@ -1,8 +1,8 @@
 /** @jsx jsx */
 import React from "react";
 import { jsx } from '@emotion/core';
-import { Finder } from '../utils';
-import Line from "./Line";
+import { Finder } from '../../utils';
+import { Line } from '../parts';
 
 interface LikeProps {
     like: string[]

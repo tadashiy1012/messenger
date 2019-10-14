@@ -2,11 +2,11 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { jsx } from '@emotion/core';
-import { history } from '../stores';
-import { UserStoreType, SayType, SayStoreType, SettingStoreType } from '../types';
-import { noImage, Finder } from '../utils';
+import { history } from '../../stores';
+import { UserStoreType, SayType, SayStoreType, SettingStoreType } from '../../types';
+import { noImage, Finder } from '../../utils';
 import uuid = require('uuid');
-import Line from './Line';
+import { Line } from '../parts';
 
 interface ReplyWriterProps {
     user?: UserStoreType

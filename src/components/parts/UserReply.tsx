@@ -1,10 +1,10 @@
 /** @jsx jsx */
 import React from "react";
 import { jsx } from '@emotion/core';
-import { UserType, SayType, UserStoreType } from "../types";
-import { Finder } from '../utils';
-import { history } from '../stores';
-import Line from "./Line";
+import { UserType, SayType, UserStoreType } from "../../types";
+import { Finder } from '../../utils';
+import { history } from '../../stores';
+import { Line } from '../parts';
 
 interface ReplyProps {
     tgtUser: UserType

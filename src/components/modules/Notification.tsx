@@ -2,10 +2,10 @@
 import React from "react";
 import { css, jsx } from '@emotion/core';
 import { observer, inject } from 'mobx-react';
-import { UserStoreType, SayType } from "../types";
-import { history } from '../stores';
-import { Finder } from '../utils';
-import Line from "./Line";
+import { UserStoreType, SayType } from "../../types";
+import { history } from '../../stores';
+import { Finder } from '../../utils';
+import { Line } from "../parts";
 
 interface NotificationProps {
     user?: UserStoreType

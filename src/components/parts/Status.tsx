@@ -2,8 +2,8 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { clientId } from '../stores'
-import { SettingStoreType, ConnStateStoreType } from '../types';
+import { clientId } from '../../stores'
+import { SettingStoreType, ConnStateStoreType } from '../../types';
 
 interface PcStatusProps {
     conn?: ConnStateStoreType
