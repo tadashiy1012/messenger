@@ -6,6 +6,56 @@ import { observer, inject } from 'mobx-react';
 import { UserStoreType, SettingStoreType } from '../types';
 import { history } from '../stores';
 
+const flexStyle = css({display:'flex', alignItems:'center'});
+const buttonStyle = css({margin:'0px 4px'});
+const notifyStyle = css({fontSize:26, color:'#aaa'});
+const notifyAStyle = css({fontSize:26});
+const searchBoxStyle = css({paddingLeft:8});
+
+type LoggedMenuType = {user?: UserStoreType, logged: Boolean, notify: [string, Boolean][]};
+
+const LoggedMenu = ({user, logged, notify}: LoggedMenuType) => {
+    const notifyIcon = notify.filter(e => e[1] === true).length > 0 ? 
+        <i className="material-icons" css={notifyAStyle}>notifications_active</i>
+        : <i className="material-icons" css={notifyStyle}>notifications</i>;
+    return logged ? (
+        <React.Fragment>
+            <Link to={{pathname:'/user', search: user!.getUser ? '?tgt=' + user!.getUser.serial : ''}}
+                className="pure-button" css={buttonStyle}>User</Link>
+            <Link to="/notification" className="pure-button" css={buttonStyle}>
+                <div css={flexStyle}>{notifyIcon}</div>
+            </Link>
+            <Link to="/setting" className="pure-button" css={buttonStyle}>Setting</Link>
+        </React.Fragment>
+    ) : null;
+}
+
+const SearchMenu = ({setting}: {setting?: SettingStoreType}) => {
+    let word = '';
+    const searchRef = React.createRef<HTMLInputElement>();
+    const searchClickHandler = () => {
+        setting!.setShowSearchMode(0);
+    }
+    const searchKeyUpHandler = (ev: React.KeyboardEvent) => {
+        if (ev.keyCode === 13) {
+            history.push({pathname:'/search', search:'?word=' + word});
+        }
+    }
+    const searchChangeHandler = () => {
+        if (searchRef.current && searchRef.current.value.length > 0) {
+            word = searchRef.current.value;
+        }
+    }
+    return (
+        <div className="pure-form" css={searchBoxStyle}>
+            <input type="text" className="pure-input-rounded" ref={searchRef}
+                onChange={searchChangeHandler} onKeyUp={searchKeyUpHandler} />
+            <Link to={{pathname:'/search', search:'?word=' + word}}
+                className="pure-button" css={buttonStyle} onClick={searchClickHandler}>Search</Link>
+        </div>
+    );
+};
+
 interface NaviProps {
     user?: UserStoreType
     setting?: SettingStoreType
@@ -13,53 +63,19 @@ interface NaviProps {
 
 @inject('user', 'setting')
 @observer
-export default class Navi extends React.Component<NaviProps, {word: string}> {
-    private searchRef: React.RefObject<HTMLInputElement>;
-    constructor(props: Readonly<NaviProps>) {
-        super(props);
-        this.searchRef = React.createRef();
-        this.state = {word: ''};
-    }
+export default class Navi extends React.Component<NaviProps> {
     render() {
         const {user, setting} = this.props;
-        let notifyIcon = null
-        if (user!.currentUser) {
-            const notify = user!.currentUser.notify || [];
-            notifyIcon = notify.filter(e => e[1] === true).length > 0 ? 
-                <i className="material-icons" css={{fontSize:'26px'}}>notifications_active</i>
-                : <i className="material-icons" css={{fontSize:'26px', color:'#aaa'}}>notifications</i>
+        let notify: [string, Boolean][] = [];
+        const currentUser = user!.currentUser;
+        if (currentUser) {
+            notify = currentUser.notify || [];
         }
-        const loggedMenu = <React.Fragment>
-            <Link to={{pathname:'/user', search: user!.getUser ? '?tgt=' + user!.getUser.serial : ''}}
-                className="pure-button" css={{margin:'0px 4px'}}>User</Link>
-            <Link to="/notification" className="pure-button" css={{margin:'0px 4px'}}>
-                <div css={{display:'flex', alignItems:'center'}}>
-                    {notifyIcon}
-                </div>
-            </Link>
-            <Link to="/setting" className="pure-button" css={{margin:'0px 4px'}}>Setting</Link>
-        </React.Fragment>
-        return <React.Fragment>
-            <div css={{display:'flex'}}>
-                <Link to="/" className="pure-button" css={{margin:'0px 4px'}}>Main</Link>
-                <Link to="/login" className="pure-button" css={{margin:'0px 4px'}}>Login</Link>
-                {user!.logged ? loggedMenu : null}
-                <div className="pure-form" css={{paddingLeft:'8px'}}>
-                    <input type="text" className="pure-input-rounded" ref={this.searchRef} onChange={(ev) => {
-                        if (this.searchRef.current && this.searchRef.current.value.length > 0) {
-                            this.setState({word: this.searchRef.current.value});
-                        }
-                    }} onKeyUp={(ev) => {
-                        if (ev.keyCode === 13) {
-                            history.push({pathname:'/search', search:'?word=' + this.state.word});
-                        }
-                    }} />
-                    <Link to={{pathname:'/search', search:'?word=' + this.state.word}}
-                        className="pure-button" css={{margin:'0px 4px'}} onClick={() => {
-                        setting!.setShowSearchMode(0);
-                    }}>Search</Link>
-                </div>
-            </div>
-        </React.Fragment>
+        return <div css={flexStyle}>
+            <Link to="/" className="pure-button" css={buttonStyle}>Main</Link>
+            <Link to="/login" className="pure-button" css={buttonStyle}>Login</Link>
+            <LoggedMenu user={user} logged={user!.logged} notify={notify} />
+            <SearchMenu setting={setting} />
+        </div>
     }
 }

@@ -2,9 +2,11 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { css, jsx } from '@emotion/core';
-import { exportData, importData } from '../../utils';
+import { exportData, importData, getJsonCopy } from '../../utils';
 import { SettingStoreType } from '../../types';
 import { history } from '../../stores';
+import users from '../../stores/users';
+import caches from '../../stores/caches';
 
 interface DebugProps {
     setting?: SettingStoreType
@@ -32,11 +34,27 @@ export default class Debug extends React.Component<DebugProps> {
             fr.readAsArrayBuffer(file);
         }
     }
+    upgradeClickHandler() {
+        const copy = getJsonCopy(users.getUsers);
+        copy.forEach(e => {
+            e.follow = e.follow ? [...e.follow] : [];
+            e.follower = e.follower ? [...e.follower] : [];
+            e.like = e.like ? [...e.like] : [];
+            e.notify = e.notify ? [...e.notify] : [];
+        });
+        users.replaceAll(copy);
+    }
     render() {
         if (!this.props.setting!.showDebugMenu) {
             history.push('/');
         }
         return <React.Fragment>
+            <p>
+                <button onClick={() => {
+                    this.upgradeClickHandler();
+                }}>data upgrade</button>
+            </p>
+            <hr/>
             <p>
                 <button onClick={() => {
                     exportData();
