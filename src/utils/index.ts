@@ -14,6 +14,7 @@ import compareJson from './compareJson';
 import Finder from './finder';
 import exportData from './exportData';
 import importData from './importData';
+import makeTlChild from './makeTlChild';
 
 export {
     makePC, PCBuilder,
@@ -30,4 +31,5 @@ export {
     Finder,
     exportData,
     importData,
+    makeTlChild,
 }

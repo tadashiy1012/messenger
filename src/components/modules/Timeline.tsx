@@ -2,34 +2,45 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
-import { UserStoreType, SayType } from '../../types';
+import { UserStoreType, SayStoreType } from '../../types';
 import { Writer, GlobalTL, LocalTL } from '../parts';
+
+const divStyle = css({display:'flex', flexDirection:'row', justifyContent:'space-between'});
 
 interface TimeLineProps {
     user?: UserStoreType
+    say?: SayStoreType
 }
 
-@inject('user')
+interface TimeLineState {
+    gtlNum: number
+    ltlNum: number
+}
+
+@inject('user', 'say')
 @observer
-export default class TimeLine extends React.Component<TimeLineProps> {
-    likeClickHandler(tgt: SayType) {
-        const {user} = this.props;
-        user!.updateUserLike(tgt).catch(err => console.error(err));
+export default class TimeLine extends React.Component<TimeLineProps, TimeLineState> {
+    constructor(props: Readonly<TimeLineProps>) {
+        super(props);
+        this.state = {
+            gtlNum: 10,
+            ltlNum: 10
+        };
     }
-    unLikeClickHandler(tgt: SayType) {
-        const {user} = this.props;
-        user!.updateUserUnLike(tgt).catch(err => console.error(err));
+    gtlNumUp() {
+        this.setState({gtlNum: this.state.gtlNum + 10});
+    }
+    ltlNumUp() {
+        this.setState({ltlNum: this.state.ltlNum + 10});
     }
     render() {
-        const {user} = this.props;
+        const {user, say} = this.props;
         const writer = user!.logged ? <Writer /> : null;
         return <React.Fragment>
             {writer}
-            <div css={{display:'flex', flexDirection:'row', justifyContent:'space-between'}}>
-                <GlobalTL likeClickHandler={this.likeClickHandler.bind(this)} 
-                    unLikeClickHandler={this.unLikeClickHandler.bind(this)} />
-                <LocalTL likeClickHandler={this.likeClickHandler.bind(this)}
-                    unLikeClickHandler={this.unLikeClickHandler.bind(this)} /> 
+            <div css={divStyle}>
+                <GlobalTL user={user} timeline={say!.timeLine} num={this.state.gtlNum} numUp={this.gtlNumUp.bind(this)} />
+                <LocalTL user={user} timeline={say!.timeLine} num={this.state.ltlNum} numUp={this.ltlNumUp.bind(this)} /> 
             </div>
         </React.Fragment>
     }
