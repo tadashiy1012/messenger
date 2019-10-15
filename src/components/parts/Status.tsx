@@ -1,42 +1,34 @@
 /** @jsx jsx */
 import * as React from 'react';
-import { observer, inject } from 'mobx-react';
 import {css, jsx} from '@emotion/core';
 import { clientId } from '../../stores'
-import { SettingStoreType, ConnStateStoreType } from '../../types';
+import { ConnStateStoreType } from '../../types';
+
+const ulStyle = css({fontSize:'13px', marginTop:'2px'});
+const h2Style = css({margin:'2px 0px'});
+const h4Style = css({margin:'4px 0px'});
 
 interface PcStatusProps {
     conn?: ConnStateStoreType
 }
 
-@inject('conn')
-@observer
-class PcStatus extends React.Component<PcStatusProps> {
-    render() {
-        const {conn} = this.props;
-        return <ul css={{fontSize:'13px', marginTop:'2px'}}>
-            <li>pcA:{conn!.pcAState.target} [{conn!.pcAState.connection}] [{conn!.pcAState.dataChannel}]</li>
-            <li>pcB:{conn!.pcBState.target} [{conn!.pcBState.connection}] [{conn!.pcBState.dataChannel}]</li>
-            <li>pcC:{conn!.pcCState.target} [{conn!.pcCState.connection}] [{conn!.pcCState.dataChannel}]</li>
-        </ul>
-    }
-}
+const PcStatus = ({conn}: PcStatusProps) => (
+    <ul css={ulStyle}>
+        <li>pcA:{conn!.pcAState.target} [{conn!.pcAState.connection}] [{conn!.pcAState.dataChannel}]</li>
+        <li>pcB:{conn!.pcBState.target} [{conn!.pcBState.connection}] [{conn!.pcBState.dataChannel}]</li>
+        <li>pcC:{conn!.pcCState.target} [{conn!.pcCState.connection}] [{conn!.pcCState.dataChannel}]</li>
+    </ul>
+);
 
 interface StatusProps {
-    setting?: SettingStoreType
+    conn?: ConnStateStoreType
+    showDetail: Boolean
 }
 
-@inject('setting')
-@observer
-export default class Status extends React.Component<StatusProps> {
-    render() {
-        const {setting} = this.props;
-        return <React.Fragment>
-            <div css={{display:setting!.showDetail ? 'block':'none'}}>
-                <h2 css={{margin:'2px 0px'}}>status</h2>
-                <h4 css={{margin:'4px 0px'}}>id:{clientId || 'no id'}</h4>
-                <PcStatus />
-            </div>
-        </React.Fragment>
-    }
+export default function Status({conn, showDetail}: StatusProps) {
+    return <div css={{display:showDetail ? 'block':'none'}}>
+        <h2 css={h2Style}>status</h2>
+        <h4 css={h4Style}>id:{clientId || 'no id'}</h4>
+        <PcStatus conn={conn} />
+    </div>
 }
