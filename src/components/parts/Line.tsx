@@ -17,6 +17,13 @@ const bodyStyle = css({marginLeft:'22px', padding:'6px'});
 const footerStyle = css({display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'});
 const footerItemStyle = css({display:'flex', alignItems:'center', cursor:'initial'});
 
+const HTagLink = ({tag, children}: {tag:string, children:React.ReactNode}) => (
+    <Link to={{pathname:'/search', search:'?word=' + tag}} 
+        onClick={(ev) => {ev.stopPropagation()}}>
+        {children}
+    </Link>
+);
+
 type LineType = {name: string, say: SayType, authorIcon: string, likeIcon: JSX.Element};
 
 export default function Line({name, say, authorIcon, likeIcon}: LineType) {
@@ -34,7 +41,13 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
     const msgBody = msgls.reduce((acc: JSX.Element[], crnt: string, i: number) => {
         const tests = crnt.split(' ').map(e => e.match(/^#.*/)).filter(e => e !== null);
         if (tests.length > 0) {
-            acc.push(<React.Fragment key={i}>{tests.map((e, ii) => <span key={ii}>{e![0]} </span>)}<br /></React.Fragment>);
+            acc.push(<React.Fragment key={i}>
+                {tests.map((e, ii) => <React.Fragment key={ii}>
+                    <HTagLink tag={e![0]}>{e![0]}</HTagLink>
+                    <span> </span>
+                </React.Fragment>)}
+                <br />
+            </React.Fragment>);
         } else {
             acc.push(<React.Fragment key={i}><span>{crnt}</span><br/></React.Fragment>);
         }
