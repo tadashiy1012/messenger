@@ -17,6 +17,13 @@ const bodyStyle = css({marginLeft:'22px', padding:'6px'});
 const footerStyle = css({display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'});
 const footerItemStyle = css({display:'flex', alignItems:'center', cursor:'initial'});
 
+const HTagLink = ({tag, children}: {tag:string, children:React.ReactNode}) => (
+    <Link to={{pathname:'/search', search:'?word=' + tag}} 
+        onClick={(ev) => {ev.stopPropagation()}}>
+        {children}
+    </Link>
+);
+
 type LineType = {name: string, say: SayType, authorIcon: string, likeIcon: JSX.Element};
 
 export default function Line({name, say, authorIcon, likeIcon}: LineType) {
@@ -30,6 +37,23 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
     const likeClick = (ev: React.MouseEvent) => {
         ev.stopPropagation();
     };
+    const msgls = escapeHtml(say.say).split('\n');
+    const msgBody = msgls.reduce((acc: JSX.Element[], crnt: string, i: number) => {
+        const tests = crnt.split(' ').map(e => e.match(/^#.*/)).filter(e => e !== null);
+        if (tests.length > 0) {
+            acc.push(<React.Fragment key={i}>
+                {tests.map((e, ii) => <React.Fragment key={ii}>
+                    <HTagLink tag={e![0]}>{e![0]}</HTagLink>
+                    <span> </span>
+                </React.Fragment>)}
+                <br />
+            </React.Fragment>);
+        } else {
+            acc.push(<React.Fragment key={i}><span>{crnt}</span><br/></React.Fragment>);
+        }
+        return acc;
+    }, []);
+
     return (<li css={liStyle} onClick={liClick}>
         <div css={linkStyle}>
             <Link to={{pathname:'/user', search: '?tgt=' + say.authorId}} css={linkStyle} onClick={linkClick}>
@@ -39,7 +63,7 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
             <span css={dateStyle}>{getFullDateStr(say.date)}</span>
         </div>
         <div css={bodyStyle}>
-            <span dangerouslySetInnerHTML={{__html: escapeHtml(say.say).replace('\n', '<br/>')}}></span>
+            <span>{msgBody}</span>
         </div>
         <div css={footerStyle}>
             <div css={footerItemStyle}>
