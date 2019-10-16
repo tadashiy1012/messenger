@@ -4,7 +4,7 @@ import { css, jsx } from '@emotion/core';
 import { SayType } from '../../types';
 import { Link } from 'react-router-dom';
 import { history } from '../../stores';
-import { escapeHtml, getFullDateStr } from '../../utils';
+import { escapeHtml, getFullDateStr, Finder } from '../../utils';
 
 const liStyle = css({
     borderBottom:'solid 1px #ddd', padding:'6px', cursor:'pointer', '&:hover':{backgroundColor: '#eee'}
@@ -17,12 +17,30 @@ const bodyStyle = css({marginLeft:'22px', padding:'6px'});
 const footerStyle = css({display:'flex', justifyContent:'space-around', fontSize:'11px', color:'#999'});
 const footerItemStyle = css({display:'flex', alignItems:'center', cursor:'initial'});
 
-const HTagLink = ({tag, children}: {tag:string, children:React.ReactNode}) => (
-    <Link to={{pathname:'/search', search:'?word=' + tag}} 
-        onClick={(ev) => {ev.stopPropagation()}}>
-        {children}
-    </Link>
-);
+const HTagLink = ({tag, children}: {tag:string, children:React.ReactNode}) => {
+    const linkClick = (ev: React.MouseEvent) => {
+        ev.stopPropagation();
+    };
+    return (
+        <Link to={{pathname:'/search', search:'?word=' + tag}} 
+            onClick={linkClick}>
+            {children}
+        </Link>
+    );
+}
+
+const MentionLink = ({tgt, children}: {tgt:string, children:React.ReactNode}) => {
+    const tgtUser = Finder.findUserByName(tgt.substring(1));
+    const linkClick = (ev: React.MouseEvent) => {
+        ev.stopPropagation();
+    };
+    return (
+        <Link to={{pathname:'/user', search:'?tgt=' + (tgtUser ? tgtUser.serial : '')}}
+            onClick={linkClick}>
+            {children}
+        </Link>
+    );
+};
 
 type LineType = {name: string, say: SayType, authorIcon: string, likeIcon: JSX.Element};
 
@@ -39,11 +57,24 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
     };
     const msgls = escapeHtml(say.say).split('\n');
     const msgBody = msgls.reduce((acc: JSX.Element[], crnt: string, i: number) => {
-        const tests = crnt.split(' ').map(e => e.match(/^#.*/)).filter(e => e !== null);
-        if (tests.length > 0) {
+        const testsA = crnt.split(' ').map(e => e.match(/^#.*/)).filter(e => e !== null);
+        const testsB = crnt.split(' ').map(e => e.match(/^@.*/) || e);
+        console.log(testsB);
+        if (testsA.length > 0) {
             acc.push(<React.Fragment key={i}>
-                {tests.map((e, ii) => <React.Fragment key={ii}>
+                {testsA.map((e, ii) => <React.Fragment key={ii}>
                     <HTagLink tag={e![0]}>{e![0]}</HTagLink>
+                    <span> </span>
+                </React.Fragment>)}
+                <br />
+            </React.Fragment>);
+        } else if (testsB.length > 0) {
+            acc.push(<React.Fragment key={i}>
+                {testsB.map((e, ii) => <React.Fragment key={ii}>
+                    {typeof e === 'string'
+                        ? <span>{e}</span>
+                        : <MentionLink tgt={e[0]}>{e[0]}</MentionLink>
+                    }
                     <span> </span>
                 </React.Fragment>)}
                 <br />
