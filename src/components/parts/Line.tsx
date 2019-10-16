@@ -30,6 +30,17 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
     const likeClick = (ev: React.MouseEvent) => {
         ev.stopPropagation();
     };
+    const msgls = escapeHtml(say.say).split('\n');
+    const msgBody = msgls.reduce((acc: JSX.Element[], crnt: string, i: number) => {
+        const tests = crnt.split(' ').map(e => e.match(/^#.*/)).filter(e => e !== null);
+        if (tests.length > 0) {
+            acc.push(<React.Fragment key={i}>{tests.map((e, ii) => <span key={ii}>{e![0]} </span>)}<br /></React.Fragment>);
+        } else {
+            acc.push(<React.Fragment key={i}><span>{crnt}</span><br/></React.Fragment>);
+        }
+        return acc;
+    }, []);
+
     return (<li css={liStyle} onClick={liClick}>
         <div css={linkStyle}>
             <Link to={{pathname:'/user', search: '?tgt=' + say.authorId}} css={linkStyle} onClick={linkClick}>
@@ -39,7 +50,7 @@ export default function Line({name, say, authorIcon, likeIcon}: LineType) {
             <span css={dateStyle}>{getFullDateStr(say.date)}</span>
         </div>
         <div css={bodyStyle}>
-            <span dangerouslySetInnerHTML={{__html: escapeHtml(say.say).replace('\n', '<br/>')}}></span>
+            <span>{msgBody}</span>
         </div>
         <div css={footerStyle}>
             <div css={footerItemStyle}>
