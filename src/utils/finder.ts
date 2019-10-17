@@ -91,7 +91,9 @@ export default class Finder {
             acc.push(...e.says);
             return acc;
         }, []);
-        return says.filter(e => e.say.indexOf(keyword) > -1);
+        return says.filter(e => e.say.indexOf(keyword) > -1).sort((a, b) => {
+            return b.date - a.date;
+        });
     }
 
     public static searchReply(userSerial: string): SayType[] {

@@ -15,6 +15,7 @@ import Finder from './finder';
 import exportData from './exportData';
 import importData from './importData';
 import makeTlChild from './makeTlChild';
+import { getAlike, getNALike } from './getLike';
 
 export {
     makePC, PCBuilder,
@@ -32,4 +33,5 @@ export {
     exportData,
     importData,
     makeTlChild,
+    getAlike, getNALike,
 }
